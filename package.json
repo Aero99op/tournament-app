@@ -1,0 +1,19 @@
+{
+  "name": "vortex-esports-os",
+  "version": "1.0.0",
+  "description": "Next-Gen Esports Tournament Operating System",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "esports",
+    "tournament",
+    "free-fire",
+    "leaderboard",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT"
+}
