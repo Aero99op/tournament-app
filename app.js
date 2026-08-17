@@ -14,7 +14,270 @@ let currentUser = { name : "Kiryu_FF" , uid : "77489210" , role : "Organizer" , 
 
 let tournamentsDb = [ { id : 1 , title : "VORTEX GRANDMASTERS CHAMPIONSHIP" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Bermuda, Purgatory, Kalahari, Alpine" , slots : 12 , prize : "₹25,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL (In-Game Leader)" } , { name : "Zen_99" , uid : "77489211" , role : "Entry Fragger / Rusher" } , { name : "Taro_X" , uid : "77489212" , role : "Support / Healer" } , { name : "Ken" , uid : "77489213" , role : "Sniper / Marksman" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL (In-Game Leader)" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper / Marksman" } , { name : "Aero_Ghost" , uid : "66120103" , role : "Entry Fragger / Rusher" } , { name : "Rex" , uid : "66120104" , role : "Support / Healer" } ] } , { slot : 3 , name : "Titan Squad" , tag : "TITAN" , captain : "Titan_Max" , players : [ { name : "Titan_Max" , uid : "5510101" , role : "IGL (In-Game Leader)" } , { name : "Titan_Bolt" , uid : "5510102" , role : "Entry Fragger / Rusher" } , { name : "Titan_Frost" , uid : "5510103" , role : "Support / Healer" } , { name : "Spike" , uid : "5510104" , role : "Sniper / Marksman" } ] } , { slot : 4 , name : "Nova Gaming" , tag : "NOVA" , captain : "Nova_Flash" , players : [ { name : "Nova_Flash" , uid : "4419010" , role : "IGL (In-Game Leader)" } , { name : "Nova_Strike" , uid : "4419011" , role : "Entry Fragger / Rusher" } , { name : "Nova_Viper" , uid : "4419012" , role : "Support / Healer" } ] } , { slot : 5 , name : "Phoenix Esports" , tag : "PHX" , captain : "Phx_Flame" , players : [ { name : "Phx_Flame" , uid : "3310001" , role : "IGL (In-Game Leader)" } , { name : "Phx_Blaze" , uid : "3310002" , role : "Entry Fragger / Rusher" } , { name : "Spark" , uid : "3310003" , role : "Support / Healer" } ] } , { slot : 6 , name : "GodLike Elite" , tag : "GDL" , captain : "God_Zeus" , players : [ { name : "God_Zeus" , uid : "2218001" , role : "IGL (In-Game Leader)" } , { name : "God_Thor" , uid : "2218002" , role : "Entry Fragger / Rusher" } , { name : "Ares" , uid : "2218003" , role : "Support / Healer" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Bermuda Battle" , map : "Bermuda" , time : "8:00 PM IST" , roomId : "8849201" , roomPass : "VORTEX77" , status : "COMPLETED" , scores : [ { team : "Shadow Ninjas" , place : 1 , kills : 9 , bonus : 0 , penalty : 0 } , { team : "Aero Esports" , place : 2 , kills : 8 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 4 , kills : 5 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 5 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 6 , kills : 3 , bonus : 0 , penalty : 0 } ] } , { id : 2 , title : "Match 2 - Purgatory Clash" , map : "Purgatory" , time : "8:40 PM IST" , roomId : "8849202" , roomPass : "VORTEX88" , status : "LIVE" , scores : [ { team : "Aero Esports" , place : 1 , kills : 11 , bonus : 0 , penalty : 0 } , { team : "Shadow Ninjas" , place : 2 , kills : 7 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 4 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 5 , kills : 3 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 6 , kills : 2 , bonus : 0 , penalty : 0 } ] } , { id : 3 , title : "Match 3 - Kalahari Desert" , map : "Kalahari" , time : "9:20 PM IST" , roomId : "8849203" , roomPass : "VORTEX99" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ { title : "Initial Baseline (Before Match 1)" , timestamp : "8:00 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } , { team : "Aero Esports" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } ] } , { title : "Post Match 1 Standings" , timestamp : "8:35 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 1 , wwcd : 1 , kills : 9 , killPts : 9 , placePts : 12 , totalPts : 21 } , { team : "Aero Esports" , played : 1 , wwcd : 0 , kills : 8 , killPts : 8 , placePts : 9 , totalPts : 17 } , { team : "Titan Squad" , played : 1 , wwcd : 0 , kills : 6 , killPts : 6 , placePts : 8 , totalPts : 14 } ] } ] } , { id : 2 , title : "AERO PRO LEAGUE SEASON 4" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Purgatory, Alpine, NexTerra" , slots : 12 , prize : "₹10,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } , { slot : 2 , name : "Dark Hunters" , tag : "DHK" , captain : "Hunter_07" , players : [ { name : "Hunter_07" , uid : "119001" , role : "IGL" } , { name : "Hunter_Wolf" , uid : "119002" , role : "Rusher" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Purgatory" , map : "Purgatory" , time : "7:00 PM IST" , roomId : "9910441" , roomPass : "AERO99" , status : "COMPLETED" , scores : [ ] } ] , checkpoints : [ ] } , { id : 3 , title : "MIDNIGHT CLASH SCRIMS" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Kalahari, Alpine" , slots : 12 , prize : "₹5,000" , status : "UPCOMING" , statusClass : "open" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ ] , matches : [ ] , checkpoints : [ ] } ];
 
-function saveStateToStorage() {
+const SUPABASE_URL = "https://vufeeywjdrxxxdkwwkzx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1ZmVleXdqZHJ4eHhka3d3a3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjI1ODQsImV4cCI6MjEwMjUzODU4NH0.kKTxCwYDaDuVEcanoEn33F_et3RCfHTyIlZyBqq_XNs";
+
+let supabaseClient = null;
+let isSupabaseLive = false;
+
+function updateSyncStatus(status, text) {
+  const el = document.getElementById("db-sync-status");
+  if (el) {
+    el.className = "db-sync-badge " + status;
+    el.textContent = text;
+  }
+}
+
+async function initSupabase() {
+  if (typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      updateSyncStatus("connecting", "⚡ CONNECTING CLOUD...");
+      await fetchTournamentsFromSupabase();
+      setupRealtimeSubscription();
+    } catch (err) {
+      console.warn("Supabase init error:", err);
+      updateSyncStatus("offline", "💾 LOCAL STORAGE");
+    }
+  } else {
+    updateSyncStatus("offline", "💾 LOCAL STORAGE");
+  }
+}
+
+async function fetchTournamentsFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('tournaments')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) {
+      console.warn("Supabase fetch notice (fallback to LocalStorage until SQL table is created):", error.message);
+      updateSyncStatus("offline", "💾 LOCAL (Run SQL in Supabase)");
+      return;
+    }
+
+    if (data && data.length > 0) {
+      tournamentsDb = data.map(row => ({
+        id: row.id,
+        title: row.title,
+        game: row.game,
+        format: row.format,
+        maps: row.maps,
+        slots: row.slots,
+        prize: row.prize,
+        status: row.status,
+        statusClass: row.status_class || row.statusClass || "live",
+        killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
+        placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
+        teams: Array.isArray(row.teams) ? row.teams : [],
+        matches: Array.isArray(row.matches) ? row.matches : [],
+        checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
+      }));
+      saveStateToStorage(false);
+      renderLandingFeatured();
+      renderManageList();
+      if (currentView === "view-workspace") {
+        openWorkspaceWithId(activeTourneyId);
+      }
+      isSupabaseLive = true;
+      updateSyncStatus("online", "🟢 SUPABASE LIVE");
+      showToast("☁️ Connected to Supabase Cloud Database!");
+    } else {
+      await seedInitialTournamentsToSupabase();
+    }
+  } catch (err) {
+    console.warn("Network error during Supabase sync:", err);
+    updateSyncStatus("offline", "💾 LOCAL STORAGE");
+  }
+}
+
+async function seedInitialTournamentsToSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const defaultData = JSON.parse(JSON.stringify(tournamentsDb));
+    for (const t of defaultData) {
+      await supabaseClient.from('tournaments').insert([{
+        title: t.title,
+        game: t.game,
+        format: t.format,
+        maps: t.maps,
+        slots: t.slots,
+        prize: t.prize,
+        status: t.status,
+        status_class: t.statusClass,
+        kill_multiplier: t.killMultiplier,
+        placement_points: t.placementPoints,
+        teams: t.teams,
+        matches: t.matches,
+        checkpoints: t.checkpoints
+      }]);
+    }
+    const { data } = await supabaseClient.from('tournaments').select('*').order('id', { ascending: false });
+    if (data && data.length > 0) {
+      tournamentsDb = data.map(row => ({
+        id: row.id,
+        title: row.title,
+        game: row.game,
+        format: row.format,
+        maps: row.maps,
+        slots: row.slots,
+        prize: row.prize,
+        status: row.status,
+        statusClass: row.status_class || "live",
+        killMultiplier: row.kill_multiplier,
+        placementPoints: row.placement_points,
+        teams: row.teams,
+        matches: row.matches,
+        checkpoints: row.checkpoints
+      }));
+      saveStateToStorage(false);
+      renderLandingFeatured();
+      renderManageList();
+    }
+    isSupabaseLive = true;
+    updateSyncStatus("online", "🟢 SUPABASE LIVE");
+  } catch (e) {
+    console.warn("Seed error:", e);
+  }
+}
+
+function setupRealtimeSubscription() {
+  if (!supabaseClient) return;
+  try {
+    supabaseClient
+      .channel('tournaments_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, payload => {
+        if (payload.eventType === 'INSERT') {
+          const row = payload.new;
+          if (!tournamentsDb.some(t => t.id === row.id)) {
+            tournamentsDb.unshift({
+              id: row.id,
+              title: row.title,
+              game: row.game,
+              format: row.format,
+              maps: row.maps,
+              slots: row.slots,
+              prize: row.prize,
+              status: row.status,
+              statusClass: row.status_class || "live",
+              killMultiplier: row.kill_multiplier,
+              placementPoints: row.placement_points,
+              teams: row.teams || [],
+              matches: row.matches || [],
+              checkpoints: row.checkpoints || []
+            });
+            saveStateToStorage(false);
+            renderLandingFeatured();
+            renderManageList();
+            showToast("⚡ New tournament synced from cloud!");
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          const row = payload.new;
+          const idx = tournamentsDb.findIndex(t => t.id === row.id);
+          if (idx !== -1) {
+            tournamentsDb[idx] = {
+              id: row.id,
+              title: row.title,
+              game: row.game,
+              format: row.format,
+              maps: row.maps,
+              slots: row.slots,
+              prize: row.prize,
+              status: row.status,
+              statusClass: row.status_class || "live",
+              killMultiplier: row.kill_multiplier,
+              placementPoints: row.placement_points,
+              teams: row.teams || [],
+              matches: row.matches || [],
+              checkpoints: row.checkpoints || []
+            };
+            saveStateToStorage(false);
+            renderLandingFeatured();
+            renderManageList();
+            if (activeTourneyId === row.id && currentView === "view-workspace") {
+              renderWorkspaceOverview();
+              renderWorkspaceTeams();
+              renderWorkspaceMatches();
+              renderWorkspaceMatchStandings();
+              renderWorkspaceOverallStandings();
+            }
+          }
+        } else if (payload.eventType === 'DELETE') {
+          tournamentsDb = tournamentsDb.filter(t => t.id !== payload.old.id);
+          saveStateToStorage(false);
+          renderLandingFeatured();
+          renderManageList();
+        }
+      })
+      .subscribe();
+  } catch (err) {
+    console.warn("Realtime sub error:", err);
+  }
+}
+
+async function syncTourneyToSupabase(tourney) {
+  if (!supabaseClient || !tourney) return;
+  try {
+    const payload = {
+      title: tourney.title,
+      game: tourney.game,
+      format: tourney.format,
+      maps: tourney.maps,
+      slots: tourney.slots,
+      prize: tourney.prize,
+      status: tourney.status,
+      status_class: tourney.statusClass,
+      kill_multiplier: tourney.killMultiplier,
+      placement_points: tourney.placementPoints,
+      teams: tourney.teams,
+      matches: tourney.matches,
+      checkpoints: tourney.checkpoints
+    };
+
+    if (tourney.id && typeof tourney.id === 'number' && tourney.id > 0) {
+      await supabaseClient
+        .from('tournaments')
+        .update(payload)
+        .eq('id', tourney.id);
+    }
+  } catch (e) {
+    console.warn("Supabase background sync notice:", e);
+  }
+}
+
+async function insertNewTourneyToSupabase(newTourney) {
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient.from('tournaments').insert([{
+      title: newTourney.title,
+      game: newTourney.game,
+      format: newTourney.format,
+      maps: newTourney.maps,
+      slots: newTourney.slots,
+      prize: newTourney.prize,
+      status: newTourney.status,
+      status_class: newTourney.statusClass,
+      kill_multiplier: newTourney.killMultiplier,
+      placement_points: newTourney.placementPoints,
+      teams: newTourney.teams,
+      matches: newTourney.matches,
+      checkpoints: newTourney.checkpoints
+    }]).select();
+
+    if (!error && data && data.length > 0) {
+      newTourney.id = data[0].id;
+      saveStateToStorage(false);
+      return data[0].id;
+    }
+  } catch (e) {
+    console.warn("Supabase insert notice:", e);
+  }
+  return null;
+}
+
+function saveStateToStorage(shouldSyncCloud = true) {
   try {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("vortex_tournaments", JSON.stringify(tournamentsDb));
@@ -22,6 +285,12 @@ function saveStateToStorage() {
     }
   } catch (e) {
     console.warn("Storage save error:", e);
+  }
+  if (shouldSyncCloud) {
+    const activeT = getActiveTourney();
+    if (activeT) {
+      syncTourneyToSupabase(activeT);
+    }
   }
 }
 
@@ -1487,6 +1756,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
       let newTourney = { id : newId , title : tTitle , game : tGame , format : tFormat , maps : tMaps , slots : tSlots , prize : tPrize , status : "LIVE" , statusClass : "live" , killMultiplier : tKillMultiplier , placementPoints : customPlacementMap , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL" } , { name : "Zen_99" , uid : "77489211" , role : "Rusher" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } ] , matches : [ { id : 1 , title : "Match 1 - " + tMaps.split ( "," ) [ 0 ] , map : tMaps.split ( "," ) [ 0 ] , time : "8:00 PM IST" , roomId : String ( Math.floor ( 1000000 + Math.random ( ) * 9000000 ) ) , roomPass : "VORTEX2026" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ ] };
       tournamentsDb.unshift ( newTourney );
       saveStateToStorage();
+      insertNewTourneyToSupabase(newTourney);
       renderLandingFeatured();
       renderManageList();
       openWorkspaceWithId(newId);
@@ -1496,6 +1766,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
 })();
 
 loadStateFromStorage();
+initSupabase();
 
 renderLandingFeatured();
 
