@@ -146,7 +146,7 @@ function parseSupabaseRow(row) {
     registrationDeadline: row.registration_deadline || meta.registrationDeadline || "",
     entryType: row.entry_type || meta.entryType || "FREE",
     entryFee: row.entry_fee !== undefined ? row.entry_fee : (meta.entryFee || 0),
-    upiId: row.upi_id || meta.upiId || "spandanprayas2079@ybl",
+    upiId: row.upi_id || meta.upiId || "7848033183@fam",
     upiName: row.upi_name || meta.upiName || "Spandan Prayas",
     pools: Array.isArray(row.pools) ? row.pools : (Array.isArray(meta.pools) ? meta.pools : []),
     user_id: row.user_id || meta.userId || null,
@@ -162,7 +162,7 @@ function buildSupabasePayload(tourney) {
   points._meta = {
     entryType: tourney.entryType || "FREE",
     entryFee: Number(tourney.entryFee) || 0,
-    upiId: tourney.upiId || "spandanprayas2079@ybl",
+    upiId: tourney.upiId || "7848033183@fam",
     upiName: tourney.upiName || "Spandan Prayas",
     pools: Array.isArray(tourney.pools) ? tourney.pools : [],
     whatsappLink: tourney.whatsappLink || "",
@@ -745,7 +745,7 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
       const amtBadge = document.getElementById("reg-pay-amt-badge");
       if (amtBadge) amtBadge.textContent = "₹" + tourney.entryFee + " / SQUAD";
 
-      const upiId = tourney.upiId || "spandanprayas2079@ybl";
+      const upiId = tourney.upiId || "7848033183@fam";
       const upiName = tourney.upiName || "Spandan Prayas";
       const upiDisplay = document.getElementById("reg-upi-id-display");
       if (upiDisplay) upiDisplay.textContent = upiId;
