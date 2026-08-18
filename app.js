@@ -28,7 +28,7 @@ let tempTeamScores = [];
 let currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organizer", loggedIn: false };
 let currentAuthTab = "login";
 
-let tournamentsDb = [ { id : 1 , title : "VORTEX GRANDMASTERS CHAMPIONSHIP" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Bermuda, Purgatory, Kalahari, Alpine" , slots : 12 , prize : "₹25,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL (In-Game Leader)" } , { name : "Zen_99" , uid : "77489211" , role : "Entry Fragger / Rusher" } , { name : "Taro_X" , uid : "77489212" , role : "Support / Healer" } , { name : "Ken" , uid : "77489213" , role : "Sniper / Marksman" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL (In-Game Leader)" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper / Marksman" } , { name : "Aero_Ghost" , uid : "66120103" , role : "Entry Fragger / Rusher" } , { name : "Rex" , uid : "66120104" , role : "Support / Healer" } ] } , { slot : 3 , name : "Titan Squad" , tag : "TITAN" , captain : "Titan_Max" , players : [ { name : "Titan_Max" , uid : "5510101" , role : "IGL (In-Game Leader)" } , { name : "Titan_Bolt" , uid : "5510102" , role : "Entry Fragger / Rusher" } , { name : "Titan_Frost" , uid : "5510103" , role : "Support / Healer" } , { name : "Spike" , uid : "5510104" , role : "Sniper / Marksman" } ] } , { slot : 4 , name : "Nova Gaming" , tag : "NOVA" , captain : "Nova_Flash" , players : [ { name : "Nova_Flash" , uid : "4419010" , role : "IGL (In-Game Leader)" } , { name : "Nova_Strike" , uid : "4419011" , role : "Entry Fragger / Rusher" } , { name : "Nova_Viper" , uid : "4419012" , role : "Support / Healer" } ] } , { slot : 5 , name : "Phoenix Esports" , tag : "PHX" , captain : "Phx_Flame" , players : [ { name : "Phx_Flame" , uid : "3310001" , role : "IGL (In-Game Leader)" } , { name : "Phx_Blaze" , uid : "3310002" , role : "Entry Fragger / Rusher" } , { name : "Spark" , uid : "3310003" , role : "Support / Healer" } ] } , { slot : 6 , name : "GodLike Elite" , tag : "GDL" , captain : "God_Zeus" , players : [ { name : "God_Zeus" , uid : "2218001" , role : "IGL (In-Game Leader)" } , { name : "God_Thor" , uid : "2218002" , role : "Entry Fragger / Rusher" } , { name : "Ares" , uid : "2218003" , role : "Support / Healer" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Bermuda Battle" , map : "Bermuda" , time : "8:00 PM IST" , roomId : "8849201" , roomPass : "VORTEX77" , status : "COMPLETED" , scores : [ { team : "Shadow Ninjas" , place : 1 , kills : 9 , bonus : 0 , penalty : 0 } , { team : "Aero Esports" , place : 2 , kills : 8 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 4 , kills : 5 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 5 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 6 , kills : 3 , bonus : 0 , penalty : 0 } ] } , { id : 2 , title : "Match 2 - Purgatory Clash" , map : "Purgatory" , time : "8:40 PM IST" , roomId : "8849202" , roomPass : "VORTEX88" , status : "LIVE" , scores : [ { team : "Aero Esports" , place : 1 , kills : 11 , bonus : 0 , penalty : 0 } , { team : "Shadow Ninjas" , place : 2 , kills : 7 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 4 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 5 , kills : 3 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 6 , kills : 2 , bonus : 0 , penalty : 0 } ] } , { id : 3 , title : "Match 3 - Kalahari Desert" , map : "Kalahari" , time : "9:20 PM IST" , roomId : "8849203" , roomPass : "VORTEX99" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ { title : "Initial Baseline (Before Match 1)" , timestamp : "8:00 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } , { team : "Aero Esports" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } ] } , { title : "Post Match 1 Standings" , timestamp : "8:35 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 1 , wwcd : 1 , kills : 9 , killPts : 9 , placePts : 12 , totalPts : 21 } , { team : "Aero Esports" , played : 1 , wwcd : 0 , kills : 8 , killPts : 8 , placePts : 9 , totalPts : 17 } , { team : "Titan Squad" , played : 1 , wwcd : 0 , kills : 6 , killPts : 6 , placePts : 8 , totalPts : 14 } ] } ] } , { id : 2 , title : "AERO PRO LEAGUE SEASON 4" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Purgatory, Alpine, NexTerra" , slots : 12 , prize : "₹10,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } , { slot : 2 , name : "Dark Hunters" , tag : "DHK" , captain : "Hunter_07" , players : [ { name : "Hunter_07" , uid : "119001" , role : "IGL" } , { name : "Hunter_Wolf" , uid : "119002" , role : "Rusher" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Purgatory" , map : "Purgatory" , time : "7:00 PM IST" , roomId : "9910441" , roomPass : "AERO99" , status : "COMPLETED" , scores : [ ] } ] , checkpoints : [ ] } , { id : 3 , title : "MIDNIGHT CLASH SCRIMS" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Kalahari, Alpine" , slots : 12 , prize : "₹5,000" , status : "UPCOMING" , statusClass : "open" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ ] , matches : [ ] , checkpoints : [ ] } ];
+let tournamentsDb = [];
 
 const SUPABASE_URL = "https://vufeeywjdrxxxdkwwkzx.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1ZmVleXdqZHJ4eHhka3d3a3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjI1ODQsImV4cCI6MjEwMjUzODU4NH0.kKTxCwYDaDuVEcanoEn33F_et3RCfHTyIlZyBqq_XNs";
@@ -58,6 +58,12 @@ function updateHeaderAuthUI() {
     if (loginBtn) loginBtn.style.display = "inline-block";
   }
 }
+
+function openAuthModal() {
+  const modal = document.getElementById("modal-auth");
+  if (modal) modal.classList.add('show');
+}
+window.vortexOpenAuthModal = openAuthModal;
 
 function setUserFromSession(user) {
   if (!user) return;
@@ -134,7 +140,7 @@ async function fetchTournamentsFromSupabase() {
       return;
     }
 
-    if (data && data.length > 0) {
+    if (Array.isArray(data)) {
       tournamentsDb = data.map(row => ({
         id: row.id,
         title: row.title,
@@ -160,70 +166,19 @@ async function fetchTournamentsFromSupabase() {
       renderLandingFeatured();
       renderManageList();
       if (currentView === "view-workspace") {
-        openWorkspaceWithId(activeTourneyId);
+        if (!tournamentsDb.some(t => String(t.id) === String(activeTourneyId))) {
+          switchView("view-landing");
+        } else {
+          openWorkspaceWithId(activeTourneyId);
+        }
       }
       handleUrlRouting();
       isSupabaseLive = true;
       updateSyncStatus("online", "🟢 CONNECTED TO CLOUD");
-    } else {
-      if (currentUser && currentUser.loggedIn) {
-        await seedInitialTournamentsToSupabase();
-      }
     }
   } catch (err) {
     console.warn("Network error during Cloud sync:", err);
     updateSyncStatus("offline", "💾 LOCAL STORAGE");
-  }
-}
-
-async function seedInitialTournamentsToSupabase() {
-  if (!supabaseClient) return;
-  try {
-    const defaultData = JSON.parse(JSON.stringify(tournamentsDb));
-    for (const t of defaultData) {
-      await supabaseClient.from('tournaments').insert([{
-        title: t.title,
-        game: t.game,
-        format: t.format,
-        maps: t.maps,
-        slots: t.slots,
-        prize: t.prize,
-        status: t.status,
-        status_class: t.statusClass,
-        kill_multiplier: t.killMultiplier,
-        placement_points: t.placementPoints,
-        teams: t.teams,
-        matches: t.matches,
-        checkpoints: t.checkpoints,
-        user_id: currentUser?.id || null
-      }]);
-    }
-    const { data } = await supabaseClient.from('tournaments').select('*').order('id', { ascending: false });
-    if (data && data.length > 0) {
-      tournamentsDb = data.map(row => ({
-        id: row.id,
-        title: row.title,
-        game: row.game,
-        format: row.format,
-        maps: row.maps,
-        slots: row.slots,
-        prize: row.prize,
-        status: row.status,
-        statusClass: row.status_class || "live",
-        killMultiplier: row.kill_multiplier,
-        placementPoints: row.placement_points,
-        teams: row.teams,
-        matches: row.matches,
-        checkpoints: row.checkpoints
-      }));
-      saveStateToStorage(false);
-      renderLandingFeatured();
-      renderManageList();
-    }
-    isSupabaseLive = true;
-    updateSyncStatus("online", "🟢 CONNECTED TO CLOUD");
-  } catch (e) {
-    console.warn("Seed error:", e);
   }
 }
 
@@ -405,7 +360,7 @@ function loadStateFromStorage() {
       const saved = localStorage.getItem("vortex_tournaments");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           tournamentsDb = parsed;
         }
       }
@@ -432,12 +387,13 @@ function showToast(message) {
 }
 
 function getActiveTourney() {
+  if (!tournamentsDb || tournamentsDb.length === 0) return null;
   for (const t of tournamentsDb) {
     if (t.id == activeTourneyId) {
       return t;
     }
   }
-  return tournamentsDb [ 0 ];
+  return tournamentsDb[0];
 }
 
 function switchView(targetId) {
@@ -653,6 +609,11 @@ window.vortexShareTourney = openShareTourneyModal;
 let pendingDeleteTourneyId = null;
 
 function openDeleteTourneyModal(tourneyId) {
+  if (!currentUser || !currentUser.loggedIn) {
+    showToast("🔑 Please login to manage or delete tournaments.");
+    openAuthModal();
+    return;
+  }
   const tourney = tournamentsDb.find(t => t.id === tourneyId);
   if (!tourney) return;
 
@@ -684,7 +645,10 @@ async function confirmDeleteTourney() {
 
   if (supabaseClient) {
     try {
-      await supabaseClient.from('tournaments').delete().eq('id', deletedId);
+      const { error } = await supabaseClient.from('tournaments').delete().eq('id', Number(deletedId) || deletedId);
+      if (error) {
+        console.warn("Cloud delete error:", error.message);
+      }
     } catch (e) {
       console.warn("Supabase delete notice:", e);
     }
@@ -707,6 +671,11 @@ async function confirmDeleteTourney() {
 }
 
 function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
+  if (!currentUser || !currentUser.loggedIn) {
+    showToast("🔑 Please login or sign up to register your squad.");
+    openAuthModal();
+    return;
+  }
   const tourney = tournamentsDb.find(t => t.id === tourneyId) || getActiveTourney();
   if (!tourney) return;
 
@@ -797,6 +766,11 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
 }
 
 async function handleSquadRegistrationSubmit() {
+  if (!currentUser || !currentUser.loggedIn) {
+    showToast("🔑 Please login or sign up to submit squad registration.");
+    openAuthModal();
+    return;
+  }
   const tId = Number((document.getElementById("reg-target-tourney-id") || {}).value) || activeTourneyId;
   const tourney = tournamentsDb.find(t => t.id === tId);
   if (!tourney) return;
@@ -968,6 +942,19 @@ window.vortexOpenRegisterModal = openSquadRegistrationModal;
 window.vortexOpenDeleteModal = openDeleteTourneyModal;
 
 function renderLandingFeatured() {
+  const landingGrid = document.getElementById("landing-tourney-grid");
+  if (!landingGrid) return;
+  if (!tournamentsDb || tournamentsDb.length === 0) {
+    landingGrid.innerHTML = `
+      <div style='grid-column:1/-1; text-align:center; padding:48px 16px; background:#12121e; border:1.5px dashed #28283c; border-radius:12px;'>
+        <div style='font-size:36px; margin-bottom:10px;'>🏆</div>
+        <div style='font-size:16px; font-weight:900; color:#fff; margin-bottom:4px;'>NO TOURNAMENTS AVAILABLE</div>
+        <p style='font-size:13px; color:#94a3b8; margin-bottom:16px;'>No active tournaments hosted yet. Sign up or log in to create and host your first tournament.</p>
+        <button class='btn-action-primary' onclick='window.vortexNavigateCreate()'>➕ CREATE FIRST TOURNAMENT</button>
+      </div>
+    `;
+    return;
+  }
   let htmlBuffer = "";
   for (const tourney of tournamentsDb) {
     const isOwner = isTourneyOwner(tourney);
@@ -1005,11 +992,23 @@ function renderLandingFeatured() {
       </div>
     `;
   }
-  const landingGrid = document.getElementById("landing-tourney-grid");
-  if (landingGrid) landingGrid.innerHTML = htmlBuffer;
+  landingGrid.innerHTML = htmlBuffer;
 }
 
 function renderManageList() {
+  const manageGrid = document.getElementById("manage-tournaments-grid");
+  if (!manageGrid) return;
+  if (!tournamentsDb || tournamentsDb.length === 0) {
+    manageGrid.innerHTML = `
+      <div style='grid-column:1/-1; text-align:center; padding:48px 16px; background:#12121e; border:1.5px dashed #28283c; border-radius:12px;'>
+        <div style='font-size:36px; margin-bottom:10px;'>🏆</div>
+        <div style='font-size:16px; font-weight:900; color:#fff; margin-bottom:4px;'>NO TOURNAMENTS FOUND</div>
+        <p style='font-size:13px; color:#94a3b8; margin-bottom:16px;'>All tournaments have been cleared. Sign up or log in to create and manage new tournaments.</p>
+        <button class='btn-action-primary' onclick='window.vortexNavigateCreate()'>➕ HOST A NEW TOURNAMENT</button>
+      </div>
+    `;
+    return;
+  }
   let htmlBuffer = "";
   for (const tourney of tournamentsDb) {
     const isOwner = isTourneyOwner(tourney);
@@ -1048,8 +1047,7 @@ function renderManageList() {
       </div>
     `;
   }
-  const manageGrid = document.getElementById("manage-tournaments-grid");
-  if (manageGrid) manageGrid.innerHTML = htmlBuffer;
+  manageGrid.innerHTML = htmlBuffer;
 }
 
 function openWorkspaceWithId(tourneyId) {
@@ -1179,8 +1177,12 @@ function openWorkspaceWithId(tourneyId) {
   } else {
     if (permBanner) {
       permBanner.style.display = "block";
-      const ownerSpan = document.getElementById("ws-owner-name");
-      if (ownerSpan) ownerSpan.textContent = activeT.creatorName || (activeT.user_id ? "Organizer" : "Official Host");
+      const isLoggedIn = currentUser && currentUser.loggedIn;
+      if (!isLoggedIn) {
+        permBanner.innerHTML = `👁️ <strong>GUEST VIEW MODE:</strong> You are currently viewing in read-only mode. <button class="btn-auth-pill" style="margin-left:8px; padding:3px 10px; font-size:11px; vertical-align:middle;" onclick="window.vortexOpenAuthModal()">🔑 LOGIN / SIGNUP</button> to register your squad or create tournaments.`;
+      } else {
+        permBanner.innerHTML = `🔒 <strong>SPECTATOR MODE:</strong> You are viewing an official tournament organized by <strong>${activeT.creatorName || (activeT.user_id ? "Organizer" : "Official Host")}</strong>. Host controls are reserved for the tournament owner.`;
+      }
     }
     if (delBtn) delBtn.style.display = "none";
     if (quickAdd) quickAdd.style.display = "none";
@@ -2534,11 +2536,20 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   }
 })();
 
+window.vortexNavigateCreate = function() {
+  if (!currentUser || !currentUser.loggedIn) {
+    showToast("🔑 Please login or sign up to create and host tournaments.");
+    openAuthModal();
+    return;
+  }
+  switchView("view-create");
+};
+
 (function() {
   const targetEl = (document.getElementById("nav-create") || document.querySelector("nav-create"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      switchView("view-create");
+      window.vortexNavigateCreate();
     });
   }
 })();
@@ -2556,7 +2567,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   const targetEl = (document.getElementById("card-act-create") || document.querySelector("card-act-create"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      switchView("view-create");
+      window.vortexNavigateCreate();
     });
   }
 })();
@@ -2583,7 +2594,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   const targetEl = (document.getElementById("btn-manage-to-create") || document.querySelector("btn-manage-to-create"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      switchView("view-create");
+      window.vortexNavigateCreate();
     });
   }
 })();
@@ -3440,7 +3451,12 @@ window.removeInitialSquadFromDraft = function(idx) {
 (function() {
   const targetEl = (document.getElementById("btn-submit-create-tourney") || document.querySelector("btn-submit-create-tourney"));
   if (targetEl != null) {
-    targetEl.addEventListener('click', function(event) {
+    targetEl.addEventListener('click', async function(event) {
+      if (!currentUser || !currentUser.loggedIn) {
+        showToast("🔑 Please login or sign up to create a tournament.");
+        openAuthModal();
+        return;
+      }
       let tTitle = (document.getElementById("new-tourney-title") || document.querySelector("new-tourney-title")).value?.trim();
       let tGame = (document.getElementById("new-tourney-game") || document.querySelector("new-tourney-game")).value;
       let tFormat = (document.getElementById("new-tourney-format") || document.querySelector("new-tourney-format")).value;
