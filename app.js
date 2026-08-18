@@ -63,7 +63,7 @@ async function initSupabase() {
   if (typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      updateSyncStatus("connecting", "⚡ CONNECTING CLOUD...");
+      updateSyncStatus("connecting", "⚡ CONNECTING TO CLOUD...");
       
       // Auto-restore session from token stored in browser
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -77,7 +77,7 @@ async function initSupabase() {
       setupRealtimeSubscription();
       setupAuthListener();
     } catch (err) {
-      console.warn("Supabase init error:", err);
+      console.warn("Cloud init error:", err);
       updateSyncStatus("offline", "💾 LOCAL STORAGE");
     }
   } else {
@@ -115,8 +115,8 @@ async function fetchTournamentsFromSupabase() {
     const { data, error } = await query.order('id', { ascending: false });
 
     if (error) {
-      console.warn("Supabase fetch notice (fallback to LocalStorage until SQL table is created):", error.message);
-      updateSyncStatus("offline", "💾 LOCAL (Run SQL in Supabase)");
+      console.warn("Cloud fetch notice:", error.message);
+      updateSyncStatus("offline", "💾 LOCAL STORAGE");
       return;
     }
 
@@ -150,14 +150,14 @@ async function fetchTournamentsFromSupabase() {
       }
       handleUrlRouting();
       isSupabaseLive = true;
-      updateSyncStatus("online", "🟢 SUPABASE LIVE");
+      updateSyncStatus("online", "🟢 CONNECTED TO CLOUD");
     } else {
       if (currentUser && currentUser.loggedIn) {
         await seedInitialTournamentsToSupabase();
       }
     }
   } catch (err) {
-    console.warn("Network error during Supabase sync:", err);
+    console.warn("Network error during Cloud sync:", err);
     updateSyncStatus("offline", "💾 LOCAL STORAGE");
   }
 }
@@ -207,7 +207,7 @@ async function seedInitialTournamentsToSupabase() {
       renderManageList();
     }
     isSupabaseLive = true;
-    updateSyncStatus("online", "🟢 SUPABASE LIVE");
+    updateSyncStatus("online", "🟢 CONNECTED TO CLOUD");
   } catch (e) {
     console.warn("Seed error:", e);
   }
@@ -907,6 +907,245 @@ async function handleSquadRegistrationSubmit() {
   if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
     openWorkspaceWithId(tourney.id);
   }
+}
+
+window.vortexOpenRegisterModal = openSquadRegistrationModal;
+window.vortexOpenDeleteModal = openDeleteTourneyModal;
+
+function renderLandingFeatured() {
+  let htmlBuffer = "";
+  for (const tourney of tournamentsDb) {
+    const isOwner = isTourneyOwner(tourney);
+    const deadlinePassed = isDeadlinePassed(tourney);
+    const regSquad = getUserRegisteredSquadForTourney(tourney);
+
+    htmlBuffer += `
+      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
+        <div class='card-top-row'>
+          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
+          <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+            ${tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : ''}
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            <span class='badge-tag open'>${tourney.format}</span>
+          </div>
+        </div>
+        <div class='t-card-title'>${tourney.title}</div>
+        <div class='t-card-meta'>Game: ${tourney.game} • Maps: ${tourney.maps}</div>
+        <div class='t-card-metrics'>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+          ${regSquad ? `<div class='t-metric' style='grid-column:1/-1;'><span class='tm-label'>YOUR STATUS</span><span class='tm-val' style='color:#34d399;'>✅ Registered (Slot #${regSquad.squad.slot})</span></div>` : ''}
+        </div>
+        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
+          ${regSquad ? `
+            <button class='btn-card-register' style='background:#34d399;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>
+          ` : `
+            <button class='btn-card-register' ${deadlinePassed ? "disabled style='background:#475569; color:#94a3b8;'" : ""} onclick='window.vortexOpenRegisterModal(${tourney.id})'>${deadlinePassed ? "🔒 CLOSED" : "📝 REGISTER"}</button>
+          `}
+          <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
+          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>OPEN ➔</button>
+          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  const landingGrid = document.getElementById("landing-tourney-grid");
+  if (landingGrid) landingGrid.innerHTML = htmlBuffer;
+}
+
+function renderManageList() {
+  let htmlBuffer = "";
+  for (const tourney of tournamentsDb) {
+    const isOwner = isTourneyOwner(tourney);
+    const deadlinePassed = isDeadlinePassed(tourney);
+    const regSquad = getUserRegisteredSquadForTourney(tourney);
+
+    htmlBuffer += `
+      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
+        <div class='card-top-row'>
+          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
+          <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+            ${tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : ''}
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            <span class='badge-tag open'>${tourney.game}</span>
+          </div>
+        </div>
+        <div class='t-card-title'>${tourney.title}</div>
+        <div class='t-card-meta'>Format: ${tourney.format} • Maps: ${tourney.maps}</div>
+        <div class='t-card-metrics'>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+          <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches.length} Scheduled</span></div>
+          <div class='t-metric'><span class='tm-label'>ROLE</span><span class='tm-val' style='color:${isOwner ? "#34d399" : "#94a3b8"};'>${isOwner ? "👑 Owner" : (regSquad ? "🎮 Player" : "👁️ Public")}</span></div>
+        </div>
+        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
+          ${regSquad ? `
+            <button class='btn-card-register' style='background:#34d399;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>
+          ` : `
+            <button class='btn-card-register' ${deadlinePassed ? "disabled style='background:#475569; color:#94a3b8;'" : ""} onclick='window.vortexOpenRegisterModal(${tourney.id})'>${deadlinePassed ? "🔒 CLOSED" : "📝 REGISTER SQUAD"}</button>
+          `}
+          <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
+          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>${isOwner ? "MANAGE ➔" : "VIEW ➔"}</button>
+          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  const manageGrid = document.getElementById("manage-tournaments-grid");
+  if (manageGrid) manageGrid.innerHTML = htmlBuffer;
+}
+
+function openWorkspaceWithId(tourneyId) {
+  activeTourneyId = tourneyId;
+  let activeT = tournamentsDb.find(t => t.id == tourneyId);
+  if (!activeT) return;
+
+  const isOwner = isTourneyOwner(activeT);
+  const deadlinePassed = isDeadlinePassed(activeT);
+  const regSquad = getUserRegisteredSquadForTourney(activeT);
+
+  const titleEl = document.getElementById("ws-tourney-title");
+  if (titleEl) titleEl.textContent = activeT.title;
+
+  const metaEl = document.getElementById("ws-game-meta");
+  if (metaEl) metaEl.textContent = activeT.game + " • " + activeT.format + " • Prize: " + activeT.prize + " • Maps: " + activeT.maps;
+
+  const statusBadge = document.getElementById("ws-status-badge");
+  if (statusBadge) statusBadge.textContent = activeT.status;
+
+  // Deadline Badge
+  const dlBadge = document.getElementById("ws-deadline-badge");
+  if (dlBadge) {
+    if (activeT.registrationDeadline) {
+      dlBadge.style.display = "inline-flex";
+      if (deadlinePassed) {
+        dlBadge.textContent = "🔒 Edit Closed";
+        dlBadge.style.background = "#281216";
+        dlBadge.style.color = "#ff2d55";
+        dlBadge.style.borderColor = "#ff2d55";
+      } else {
+        dlBadge.textContent = "⏳ Closes: " + formatDeadlineText(activeT);
+        dlBadge.style.background = "#241428";
+        dlBadge.style.color = "#ffde59";
+        dlBadge.style.borderColor = "#ffd700";
+      }
+    } else {
+      dlBadge.style.display = "none";
+    }
+  }
+
+  // Social Links
+  const waBtn = document.getElementById("ws-btn-whatsapp");
+  if (waBtn) {
+    if (activeT.whatsappLink) {
+      waBtn.style.display = "inline-flex";
+      waBtn.href = activeT.whatsappLink;
+    } else {
+      waBtn.style.display = "none";
+    }
+  }
+
+  const dcBtn = document.getElementById("ws-btn-discord");
+  if (dcBtn) {
+    if (activeT.discordLink) {
+      dcBtn.style.display = "inline-flex";
+      dcBtn.href = activeT.discordLink;
+    } else {
+      dcBtn.style.display = "none";
+    }
+  }
+
+  // Registered Squad Banner
+  const regBanner = document.getElementById("ws-user-registered-banner");
+  const editRegBtn = document.getElementById("ws-btn-edit-registered-squad");
+  const wsRegBtn = document.getElementById("ws-btn-register-squad");
+
+  if (regSquad) {
+    if (regBanner) regBanner.style.display = "flex";
+    const squadNameSpan = document.getElementById("ws-reg-squad-name");
+    if (squadNameSpan) squadNameSpan.textContent = regSquad.squad.name;
+    const slotSpan = document.getElementById("ws-reg-slot-num");
+    if (slotSpan) slotSpan.textContent = "Slot #" + regSquad.squad.slot;
+    const capSpan = document.getElementById("ws-reg-captain-name");
+    if (capSpan) capSpan.textContent = regSquad.squad.captain;
+
+    if (editRegBtn) {
+      if (deadlinePassed) {
+        editRegBtn.disabled = true;
+        editRegBtn.textContent = "🔒 ROSTER LOCKED (DEADLINE PASSED)";
+        editRegBtn.style.background = "#475569";
+        editRegBtn.style.color = "#94a3b8";
+        editRegBtn.onclick = null;
+      } else {
+        editRegBtn.disabled = false;
+        editRegBtn.textContent = "✏️ EDIT MY SQUAD ROSTER";
+        editRegBtn.style.background = "#34d399";
+        editRegBtn.style.color = "#000000";
+        editRegBtn.onclick = () => openSquadRegistrationModal(activeT.id, true, regSquad.teamIdx);
+      }
+    }
+    if (wsRegBtn) wsRegBtn.style.display = "none";
+  } else {
+    if (regBanner) regBanner.style.display = "none";
+    if (wsRegBtn) {
+      if (!isOwner && !deadlinePassed && activeT.teams.length < activeT.slots) {
+        wsRegBtn.style.display = "inline-block";
+      } else {
+        wsRegBtn.style.display = "none";
+      }
+    }
+  }
+
+  // Permission Banner & Controls Visibility
+  const permBanner = document.getElementById("ws-permission-banner");
+  const delBtn = document.getElementById("ws-btn-delete-tourney");
+  const quickAdd = document.getElementById("quick-act-add-team");
+  const quickMatch = document.getElementById("quick-act-new-match");
+  const quickScore = document.getElementById("quick-act-edit-points");
+  const addSquadBtn = document.getElementById("btn-open-add-team-modal");
+  const addMatchBtn = document.getElementById("btn-open-add-match-modal");
+  const saveRulesBtn = document.getElementById("btn-ws-save-point-rules");
+  const createCheckBtn = document.getElementById("btn-ws-create-checkpoint");
+  const revertBtn = document.getElementById("btn-ws-open-revert-modal");
+
+  if (isOwner) {
+    if (permBanner) permBanner.style.display = "none";
+    if (delBtn) delBtn.style.display = "inline-block";
+    if (quickAdd) quickAdd.style.display = "inline-block";
+    if (quickMatch) quickMatch.style.display = "inline-block";
+    if (quickScore) quickScore.style.display = "inline-block";
+    if (addSquadBtn) addSquadBtn.style.display = "inline-block";
+    if (addMatchBtn) addMatchBtn.style.display = "inline-block";
+    if (saveRulesBtn) saveRulesBtn.style.display = "inline-block";
+    if (createCheckBtn) createCheckBtn.style.display = "inline-block";
+    if (revertBtn) revertBtn.style.display = "inline-block";
+  } else {
+    if (permBanner) {
+      permBanner.style.display = "block";
+      const ownerSpan = document.getElementById("ws-owner-name");
+      if (ownerSpan) ownerSpan.textContent = activeT.creatorName || (activeT.user_id ? "Organizer" : "Official Host");
+    }
+    if (delBtn) delBtn.style.display = "none";
+    if (quickAdd) quickAdd.style.display = "none";
+    if (quickMatch) quickMatch.style.display = "none";
+    if (quickScore) quickScore.style.display = "none";
+    if (addSquadBtn) addSquadBtn.style.display = "none";
+    if (addMatchBtn) addMatchBtn.style.display = "none";
+    if (saveRulesBtn) saveRulesBtn.style.display = "none";
+    if (createCheckBtn) createCheckBtn.style.display = "none";
+    if (revertBtn) revertBtn.style.display = "none";
+  }
+
+  renderWorkspaceOverview();
+  renderWorkspaceTeams();
+  renderWorkspaceMatches();
+  renderWorkspaceMatchStandings();
+  renderWorkspaceOverallStandings();
+  renderWorkspacePointRules();
+  switchWsTab("panel-ws-overview");
+  switchView("view-workspace");
 }
 
 function renderWorkspaceOverview() {
