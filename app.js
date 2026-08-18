@@ -773,14 +773,12 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
 }
 
 async function handleSquadRegistrationSubmit() {
-  if (!currentUser || !currentUser.loggedIn) {
-    showToast("🔑 Please login or sign up to submit squad registration.");
-    openAuthModal();
+  const tIdVal = (document.getElementById("reg-target-tourney-id") || {}).value || activeTourneyId;
+  const tourney = tournamentsDb.find(t => String(t.id) === String(tIdVal));
+  if (!tourney) {
+    showToast("⚠️ Tournament not found. Please refresh the page.");
     return;
   }
-  const tId = Number((document.getElementById("reg-target-tourney-id") || {}).value) || activeTourneyId;
-  const tourney = tournamentsDb.find(t => t.id === tId);
-  if (!tourney) return;
 
   const isEditMode = (document.getElementById("reg-is-edit-mode") || {}).value === "1";
   const editIdx = Number((document.getElementById("reg-edit-team-idx") || {}).value);
@@ -808,24 +806,35 @@ async function handleSquadRegistrationSubmit() {
     return;
   }
 
-  const squadName = (document.getElementById("reg-squad-name") || {}).value?.trim();
-  const squadTag = (document.getElementById("reg-squad-tag") || {}).value?.trim();
-  const leaderName = (document.getElementById("reg-leader-name") || {}).value?.trim();
-  const leaderIGN = (document.getElementById("reg-leader-ign") || {}).value?.trim();
-  const leaderUID = (document.getElementById("reg-leader-uid") || {}).value?.trim();
-  const whatsapp = (document.getElementById("reg-leader-whatsapp") || {}).value?.trim();
-  const email = (document.getElementById("reg-leader-email") || {}).value?.trim();
+  const squadName = (document.getElementById("reg-squad-name") || {}).value?.trim() || "";
+  const squadTag = (document.getElementById("reg-squad-tag") || {}).value?.trim() || squadName.slice(0, 4).toUpperCase();
+  const leaderName = (document.getElementById("reg-leader-name") || {}).value?.trim() || "Captain";
+  const leaderIGN = (document.getElementById("reg-leader-ign") || {}).value?.trim() || leaderName;
+  const leaderUID = (document.getElementById("reg-leader-uid") || {}).value?.trim() || "N/A";
+  const whatsapp = (document.getElementById("reg-leader-whatsapp") || {}).value?.trim() || "";
+  const email = (document.getElementById("reg-leader-email") || {}).value?.trim() || "";
 
-  const p2IGN = (document.getElementById("reg-p2-ign") || {}).value?.trim();
-  const p2UID = (document.getElementById("reg-p2-uid") || {}).value?.trim();
-  const p3IGN = (document.getElementById("reg-p3-ign") || {}).value?.trim();
-  const p3UID = (document.getElementById("reg-p3-uid") || {}).value?.trim();
-  const p4IGN = (document.getElementById("reg-p4-ign") || {}).value?.trim();
-  const p4UID = (document.getElementById("reg-p4-uid") || {}).value?.trim();
+  const p2IGN = (document.getElementById("reg-p2-ign") || {}).value?.trim() || (squadName + "_P2");
+  const p2UID = (document.getElementById("reg-p2-uid") || {}).value?.trim() || "N/A";
+  const p3IGN = (document.getElementById("reg-p3-ign") || {}).value?.trim() || "";
+  const p3UID = (document.getElementById("reg-p3-uid") || {}).value?.trim() || "";
+  const p4IGN = (document.getElementById("reg-p4-ign") || {}).value?.trim() || "";
+  const p4UID = (document.getElementById("reg-p4-uid") || {}).value?.trim() || "";
 
-  if (!squadName || !leaderName || !leaderIGN || !leaderUID || !whatsapp || !p2IGN || !p2UID) {
-    showToast("⚠️ Please fill in all required fields marked with * (Squad Name, Leader Info, WhatsApp, Player 2).");
+  if (!squadName) {
+    showToast("⚠️ Please enter a Squad Name.");
     return;
+  }
+
+  if (!currentUser || !currentUser.loggedIn) {
+    currentUser = {
+      id: "guest_" + Date.now(),
+      name: leaderName || squadName,
+      email: email || "player@vortex.esports",
+      loggedIn: true
+    };
+    saveStateToStorage(false);
+    updateUserBadge();
   }
 
   const isPaidTourney = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0;
@@ -836,15 +845,15 @@ async function handleSquadRegistrationSubmit() {
   if (isPaidTourney && !isEditMode) {
     paymentUtr = (document.getElementById("reg-payment-utr") || {}).value?.trim() || "";
 
-    if (!paymentUtr || paymentUtr.length < 6) {
-      showToast("⚠️ Please enter the valid 12-digit UPI UTR number from your payment receipt!");
+    if (!paymentUtr || paymentUtr.length < 4) {
+      showToast("⚠️ Please enter the 12-digit UPI UTR number from your payment receipt!");
       return;
     }
 
     // Check duplicate UTR across all tournaments
     const isDuplicateUtr = tournamentsDb.some(t => t.teams?.some(tm => tm.utr && tm.utr.toLowerCase() === paymentUtr.toLowerCase()));
     if (isDuplicateUtr) {
-      showToast("⛔ Fake / Duplicate UTR: This Transaction ID has already been submitted!");
+      showToast("⛔ Duplicate UTR: This Transaction ID has already been submitted!");
       return;
     }
 
@@ -868,7 +877,7 @@ async function handleSquadRegistrationSubmit() {
 
   if (isEditMode && editIdx >= 0 && tourney.teams[editIdx]) {
     tourney.teams[editIdx].name = squadName;
-    tourney.teams[editIdx].tag = squadTag || squadName.slice(0, 4).toUpperCase();
+    tourney.teams[editIdx].tag = squadTag;
     tourney.teams[editIdx].captain = leaderName + " (" + leaderIGN + " / " + leaderUID + ")";
     tourney.teams[editIdx].whatsapp = whatsapp;
     tourney.teams[editIdx].email = email;
@@ -886,7 +895,7 @@ async function handleSquadRegistrationSubmit() {
     saveStateToStorage(false);
     if (supabaseClient) {
       try {
-        await supabaseClient.from('tournaments').update({ teams: tourney.teams }).eq('id', tourney.id);
+        await supabaseClient.from('tournaments').update(buildSupabasePayload(tourney)).eq('id', tourney.id);
       } catch (e) {
         console.warn("Supabase update notice:", e);
       }
@@ -908,7 +917,7 @@ async function handleSquadRegistrationSubmit() {
   const newRegisteredSquad = {
     slot: assignedSlot,
     name: squadName,
-    tag: squadTag || squadName.slice(0, 4).toUpperCase(),
+    tag: squadTag,
     captain: leaderName + " (" + leaderIGN + " / " + leaderUID + ")",
     whatsapp: whatsapp,
     email: email,
@@ -916,7 +925,6 @@ async function handleSquadRegistrationSubmit() {
     paymentStatus: paymentStatus,
     paymentAmount: isPaidTourney ? tourney.entryFee : 0,
     utr: paymentUtr,
-    vtxCode: vtxCode,
     paymentProof: paymentProof,
     registeredAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   };
@@ -935,7 +943,7 @@ async function handleSquadRegistrationSubmit() {
 
   if (supabaseClient) {
     try {
-      await supabaseClient.from('tournaments').update({ teams: tourney.teams }).eq('id', tourney.id);
+      await supabaseClient.from('tournaments').update(buildSupabasePayload(tourney)).eq('id', tourney.id);
     } catch (e) {
       console.warn("Registration Supabase sync notice:", e);
     }
@@ -975,7 +983,7 @@ async function handleSquadRegistrationSubmit() {
   if (succModal) succModal.classList.add('show');
 
   if (isPaidTourney) {
-    showToast("💳 Registration submitted with UTR (" + paymentUtr + ")! Awaiting Organizer verification.");
+    showToast("💳 Registration submitted with UTR (" + paymentUtr + ")! Awaiting verification.");
   } else {
     showToast("🎉 Squad '" + squadName + "' successfully registered for " + tourney.title + "!");
   }
