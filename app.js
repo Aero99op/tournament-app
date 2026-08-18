@@ -126,6 +126,70 @@ function setupAuthListener() {
   }
 }
 
+function parseSupabaseRow(row) {
+  const pts = row.placement_points || {};
+  const meta = pts._meta || {};
+  return {
+    id: row.id,
+    title: row.title || "VORTEX TOURNAMENT",
+    game: row.game || "Free Fire MAX",
+    format: row.format || "Squad (Battle Royale)",
+    maps: row.maps || "Bermuda",
+    slots: Number(row.slots) || 12,
+    prize: row.prize || "₹10,000",
+    status: row.status || "LIVE",
+    statusClass: row.status_class || row.statusClass || "live",
+    killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
+    placementPoints: pts,
+    whatsappLink: row.whatsapp_link || meta.whatsappLink || "",
+    discordLink: row.discord_link || meta.discordLink || "",
+    registrationDeadline: row.registration_deadline || meta.registrationDeadline || "",
+    entryType: row.entry_type || meta.entryType || "FREE",
+    entryFee: row.entry_fee !== undefined ? row.entry_fee : (meta.entryFee || 0),
+    upiId: row.upi_id || meta.upiId || "spandanprayas2079@ybl",
+    upiName: row.upi_name || meta.upiName || "Spandan Prayas",
+    pools: Array.isArray(row.pools) ? row.pools : (Array.isArray(meta.pools) ? meta.pools : []),
+    user_id: row.user_id || meta.userId || null,
+    creatorName: row.creator_name || meta.creatorName || "Organizer",
+    teams: Array.isArray(row.teams) ? row.teams : [],
+    matches: Array.isArray(row.matches) ? row.matches : [],
+    checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
+  };
+}
+
+function buildSupabasePayload(tourney) {
+  const points = Object.assign({}, tourney.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 });
+  points._meta = {
+    entryType: tourney.entryType || "FREE",
+    entryFee: Number(tourney.entryFee) || 0,
+    upiId: tourney.upiId || "spandanprayas2079@ybl",
+    upiName: tourney.upiName || "Spandan Prayas",
+    pools: Array.isArray(tourney.pools) ? tourney.pools : [],
+    whatsappLink: tourney.whatsappLink || "",
+    discordLink: tourney.discordLink || "",
+    registrationDeadline: tourney.registrationDeadline || "",
+    creatorName: tourney.creatorName || "Organizer",
+    userId: tourney.user_id || null
+  };
+
+  return {
+    title: tourney.title,
+    game: tourney.game,
+    format: tourney.format,
+    maps: tourney.maps,
+    slots: Number(tourney.slots) || 12,
+    prize: tourney.prize || "₹10,000",
+    status: tourney.status || "LIVE",
+    status_class: tourney.statusClass || "live",
+    kill_multiplier: tourney.killMultiplier !== undefined ? tourney.killMultiplier : 1,
+    placement_points: points,
+    teams: Array.isArray(tourney.teams) ? tourney.teams : [],
+    matches: Array.isArray(tourney.matches) ? tourney.matches : [],
+    checkpoints: Array.isArray(tourney.checkpoints) ? tourney.checkpoints : [],
+    user_id: (tourney.user_id && String(tourney.user_id).length > 20) ? tourney.user_id : null
+  };
+}
+
 async function fetchTournamentsFromSupabase() {
   if (!supabaseClient) return;
   try {
@@ -141,32 +205,7 @@ async function fetchTournamentsFromSupabase() {
     }
 
     if (Array.isArray(data)) {
-      tournamentsDb = data.map(row => ({
-        id: row.id,
-        title: row.title,
-        game: row.game,
-        format: row.format,
-        maps: row.maps,
-        slots: row.slots,
-        prize: row.prize,
-        status: row.status,
-        statusClass: row.status_class || row.statusClass || "live",
-        killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
-        placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"5":5,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
-        whatsappLink: row.whatsapp_link || row.whatsappLink || "",
-        discordLink: row.discord_link || row.discordLink || "",
-        registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
-        entryType: row.entry_type || row.entryType || "FREE",
-        entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
-        upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
-        upiName: row.upi_name || row.upiName || "Spandan Prayas",
-        pools: Array.isArray(row.pools) ? row.pools : [],
-        user_id: row.user_id || null,
-        creatorName: row.creator_name || row.creatorName || "Organizer",
-        teams: Array.isArray(row.teams) ? row.teams : [],
-        matches: Array.isArray(row.matches) ? row.matches : [],
-        checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
-      }));
+      tournamentsDb = data.map(row => parseSupabaseRow(row));
       saveStateToStorage(false);
       renderLandingFeatured();
       renderManageList();
@@ -196,32 +235,7 @@ function setupRealtimeSubscription() {
         if (payload.eventType === 'INSERT') {
           const row = payload.new;
           if (!tournamentsDb.some(t => String(t.id) === String(row.id))) {
-            tournamentsDb.unshift({
-              id: row.id,
-              title: row.title,
-              game: row.game,
-              format: row.format,
-              maps: row.maps,
-              slots: row.slots,
-              prize: row.prize,
-              status: row.status,
-              statusClass: row.status_class || row.statusClass || "live",
-              killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
-              placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
-              whatsappLink: row.whatsapp_link || row.whatsappLink || "",
-              discordLink: row.discord_link || row.discordLink || "",
-              registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
-              entryType: row.entry_type || row.entryType || "FREE",
-              entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
-              upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
-              upiName: row.upi_name || row.upiName || "Spandan Prayas",
-              pools: Array.isArray(row.pools) ? row.pools : [],
-              user_id: row.user_id || null,
-              creatorName: row.creator_name || row.creatorName || "Organizer",
-              teams: Array.isArray(row.teams) ? row.teams : [],
-              matches: Array.isArray(row.matches) ? row.matches : [],
-              checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
-            });
+            tournamentsDb.unshift(parseSupabaseRow(row));
             saveStateToStorage(false);
             renderLandingFeatured();
             renderManageList();
@@ -231,32 +245,7 @@ function setupRealtimeSubscription() {
           const row = payload.new;
           const idx = tournamentsDb.findIndex(t => String(t.id) === String(row.id));
           if (idx !== -1) {
-            tournamentsDb[idx] = {
-              id: row.id,
-              title: row.title,
-              game: row.game,
-              format: row.format,
-              maps: row.maps,
-              slots: row.slots,
-              prize: row.prize,
-              status: row.status,
-              statusClass: row.status_class || row.statusClass || "live",
-              killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
-              placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
-              whatsappLink: row.whatsapp_link || row.whatsappLink || "",
-              discordLink: row.discord_link || row.discordLink || "",
-              registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
-              entryType: row.entry_type || row.entryType || "FREE",
-              entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
-              upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
-              upiName: row.upi_name || row.upiName || "Spandan Prayas",
-              pools: Array.isArray(row.pools) ? row.pools : [],
-              user_id: row.user_id || null,
-              creatorName: row.creator_name || row.creatorName || "Organizer",
-              teams: Array.isArray(row.teams) ? row.teams : [],
-              matches: Array.isArray(row.matches) ? row.matches : [],
-              checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
-            };
+            tournamentsDb[idx] = parseSupabaseRow(row);
             saveStateToStorage(false);
             renderLandingFeatured();
             renderManageList();
@@ -298,31 +287,7 @@ async function syncTourneyToSupabase(tourney) {
     return;
   }
   try {
-    const payload = {
-      title: tourney.title,
-      game: tourney.game,
-      format: tourney.format,
-      maps: tourney.maps,
-      slots: tourney.slots,
-      prize: tourney.prize,
-      status: tourney.status,
-      status_class: tourney.statusClass || "live",
-      kill_multiplier: tourney.killMultiplier,
-      placement_points: tourney.placementPoints,
-      whatsapp_link: tourney.whatsappLink || null,
-      discord_link: tourney.discordLink || null,
-      registration_deadline: tourney.registrationDeadline || null,
-      entry_type: tourney.entryType || "FREE",
-      entry_fee: tourney.entryFee || 0,
-      upi_id: tourney.upiId || "spandanprayas2079@ybl",
-      upi_name: tourney.upiName || "Spandan Prayas",
-      pools: tourney.pools || [],
-      teams: tourney.teams || [],
-      matches: tourney.matches || [],
-      checkpoints: tourney.checkpoints || [],
-      creator_name: tourney.creatorName || currentUser?.name || "Organizer"
-    };
-
+    const payload = buildSupabasePayload(tourney);
     if (tourney.id && (typeof tourney.id === 'number' || typeof tourney.id === 'string')) {
       const { error } = await supabaseClient
         .from('tournaments')
@@ -341,36 +306,7 @@ async function syncTourneyToSupabase(tourney) {
 async function insertNewTourneyToSupabase(newTourney) {
   if (!supabaseClient) return null;
   try {
-    const payload = {
-      title: newTourney.title,
-      game: newTourney.game,
-      format: newTourney.format,
-      maps: newTourney.maps,
-      slots: newTourney.slots,
-      prize: newTourney.prize,
-      status: newTourney.status,
-      status_class: newTourney.statusClass || "live",
-      kill_multiplier: newTourney.killMultiplier,
-      placement_points: newTourney.placementPoints,
-      whatsapp_link: newTourney.whatsappLink || null,
-      discord_link: newTourney.discordLink || null,
-      registration_deadline: newTourney.registrationDeadline || null,
-      entry_type: newTourney.entryType || "FREE",
-      entry_fee: newTourney.entryFee || 0,
-      upi_id: newTourney.upiId || "spandanprayas2079@ybl",
-      upi_name: newTourney.upiName || "Spandan Prayas",
-      pools: newTourney.pools || [],
-      teams: newTourney.teams || [],
-      matches: newTourney.matches || [],
-      checkpoints: newTourney.checkpoints || [],
-      creator_name: newTourney.creatorName || currentUser?.name || "Organizer"
-    };
-
-    // Include user_id only if valid uuid or session user
-    if (currentUser && currentUser.id && currentUser.id.length > 20) {
-      payload.user_id = currentUser.id;
-    }
-
+    const payload = buildSupabasePayload(newTourney);
     const { data, error } = await supabaseClient
       .from('tournaments')
       .insert([payload])
@@ -4233,12 +4169,13 @@ window.removeInitialSquadFromDraft = function(idx) {
         checkpoints: []
       };
       tournamentsDb.unshift(newTourney);
-      saveStateToStorage();
-      insertNewTourneyToSupabase(newTourney);
+      saveStateToStorage(false);
+      showToast("⏳ Publishing tournament to cloud...");
+      const insertedId = await insertNewTourneyToSupabase(newTourney);
       renderLandingFeatured();
       renderManageList();
-      openWorkspaceWithId(newId);
-      showToast("🚀 Tournament '" + tTitle + "' successfully created with " + initialTeams.length + " squads!");
+      openWorkspaceWithId(insertedId || newId);
+      showToast("🚀 Tournament '" + tTitle + "' successfully published to cloud with " + initialTeams.length + " squads!");
     });
   }
 })();
