@@ -1,4 +1,4 @@
-// Serverless Webhook Endpoint for Automatic Bank SMS & UPI UTR Auto-Verification
+// Serverless Webhook Endpoint for Bank SMS & PhonePe App Notification Auto-Verification
 // Works on Vercel Serverless & Cloudflare Pages Edge Runtime (Zero dependencies, pure Web Standards)
 
 const SUPABASE_URL = "https://vufeeywjdrxxxdkwwkzx.supabase.co";
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
       status: 'active',
-      service: 'Vortex Esports Bank SMS Auto-Verification Webhook',
+      service: 'Vortex Esports PhonePe & Bank SMS Auto-Verification Webhook',
       timestamp: new Date().toISOString()
     });
   }
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const rawSms = body.sms || body.message || body.text || body.body || (typeof body === 'string' ? body : '');
+    const rawText = body.sms || body.notification || body.message || body.text || body.body || (typeof body === 'string' ? body : '');
     const secretKey = body.secret || req.headers['x-secret-key'] || '';
 
     // Simple optional security key
@@ -42,29 +42,21 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized secret key' });
     }
 
-    if (!rawSms) {
-      return res.status(400).json({ error: 'Missing SMS text in payload (e.g. { sms: "..." })' });
+    if (!rawText) {
+      return res.status(400).json({ error: 'Missing text in payload (e.g. { sms: "..." })' });
     }
 
     // 1. Intelligent 12-Digit UTR Extraction Regex
     const utrRegex = /(?:UPI(?:\s*Ref(?:\s*No|\s*ID)?|\/)|UTR(?:\s*No|\s*ID)?|Ref(?:\s*No|\s*ID)?|Txn(?:\s*ID|\s*No)?|Reference(?:\s*No)?)[ :\/#-]*([0-9]{12})/i;
     const generic12Digits = /\b([0-9]{12})\b/;
 
-    const utrMatch = rawSms.match(utrRegex) || rawSms.match(generic12Digits);
+    const utrMatch = rawText.match(utrRegex) || rawText.match(generic12Digits);
     const utr = utrMatch ? utrMatch[1] : null;
 
-    // 2. Amount Extraction Regex
+    // 2. Amount Extraction Regex (Handles: "₹50", "Rs 50", "50.00 received", "credited with Rs 50")
     const amtRegex = /(?:Rs\.?|INR|₹|credited\s*(?:by|with)?\s*(?:Rs\.?|INR|₹)?)\s*([0-9]+(?:\.[0-9]{1,2})?)/i;
-    const amtMatch = rawSms.match(amtRegex);
+    const amtMatch = rawText.match(amtRegex);
     const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
-
-    if (!utr) {
-      return res.status(422).json({
-        success: false,
-        error: 'No 12-digit UPI UTR found in SMS',
-        parsed: { rawSms, amount }
-      });
-    }
 
     // 3. Search and Auto-Update Supabase Database directly
     let matchedSquad = null;
@@ -83,13 +75,33 @@ export default async function handler(req, res) {
         for (const t of tournaments) {
           if (Array.isArray(t.teams)) {
             let modified = false;
-            for (const tm of t.teams) {
-              if (tm.utr && String(tm.utr).trim() === String(utr).trim()) {
-                tm.paymentStatus = "APPROVED";
-                tm.autoVerified = true;
-                tm.verifiedAt = new Date().toISOString();
-                tm.verifiedAmount = amount || tm.paymentAmount || 50;
-                matchedSquad = tm;
+            
+            // Priority 1: Exact UTR Match
+            if (utr) {
+              for (const tm of t.teams) {
+                if (tm.utr && String(tm.utr).trim() === String(utr).trim()) {
+                  tm.paymentStatus = "APPROVED";
+                  tm.autoVerified = true;
+                  tm.verifiedAt = new Date().toISOString();
+                  tm.verifiedAmount = amount || tm.paymentAmount || 50;
+                  matchedSquad = tm;
+                  matchedTourney = t;
+                  modified = true;
+                  break;
+                }
+              }
+            }
+
+            // Priority 2: PhonePe Instant Notification Amount Match for oldest pending squad
+            if (!modified && amount > 0) {
+              const pendingSquad = t.teams.find(tm => tm.paymentStatus === "PENDING");
+              if (pendingSquad) {
+                pendingSquad.paymentStatus = "APPROVED";
+                pendingSquad.autoVerified = true;
+                pendingSquad.verifiedAt = new Date().toISOString();
+                pendingSquad.verifiedAmount = amount;
+                if (utr && !pendingSquad.utr) pendingSquad.utr = utr;
+                matchedSquad = pendingSquad;
                 matchedTourney = t;
                 modified = true;
               }
@@ -117,16 +129,17 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      action: 'UTR_EXTRACTED_AND_VERIFIED',
-      utr: utr,
+      action: 'NOTIFICATION_VERIFIED',
+      utr: utr || 'PHONEPE_INSTANT_ALERT',
       amount: amount,
       matched: matchedSquad ? true : false,
       squadName: matchedSquad ? matchedSquad.name : null,
       tourneyTitle: matchedTourney ? matchedTourney.title : null,
+      rawText: rawText,
       verifiedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error('SMS Webhook error:', error);
-    return res.status(500).json({ error: 'Internal server error processing SMS' });
+    console.error('PhonePe Webhook error:', error);
+    return res.status(500).json({ error: 'Internal server error processing notification' });
   }
 }
