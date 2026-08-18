@@ -429,14 +429,19 @@
           <!-- 1-Click Cloud Connect & Android Webhook Grid -->
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-bottom:14px;">
             <!-- 1-Click Gmail Connect for 0-App Cloud Auto-Verify -->
-            <div style="background:#0f172a; border:1.5px solid #38bdf8; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:#0f172a; border:1.5px solid #38bdf8; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <div>
                 <div style="font-size:11px; color:#38bdf8; font-weight:900;">☁️ 1-CLICK CLOUD AUTO-VERIFY (ZERO APP NEEDED):</div>
-                <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Sync Bank & PhonePe credit alerts directly via Cloud</div>
+                <div id="cloud-connected-email-txt" style="font-size:11px; color:#cbd5e1; margin-top:2px;">Sync Bank & PhonePe credit alerts directly via Cloud</div>
               </div>
-              <button class="btn-action-primary-sm" id="btn-cloud-connect-google" style="background:#38bdf8; color:#000; font-weight:900; font-size:11px; padding:6px 10px; white-space:nowrap;">
-                ⚡ CONNECT GMAIL
-              </button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-secondary-sm" id="btn-scan-gmail-now" style="font-size:11px; padding:6px 10px; border-color:#38bdf8; color:#38bdf8;" title="Scan recent payment alerts">
+                  🔄 SCAN GMAIL NOW
+                </button>
+                <button class="btn-action-primary-sm" id="btn-cloud-connect-google" style="background:#38bdf8; color:#000; font-weight:900; font-size:11px; padding:6px 10px; white-space:nowrap;">
+                  ⚡ CONNECT GMAIL
+                </button>
+              </div>
             </div>
 
             <!-- Live Webhook for Android Forwarder -->
