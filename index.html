@@ -418,18 +418,74 @@
           </div>
         </div>
         <div class="ws-panel" id="panel-ws-exports">
-          <div class="hero-action-cards">
+          <div class="hero-action-cards" style="margin-bottom:24px;">
             <div class="hero-action-card">
               <div class="card-icon">📊</div>
-              <h3 class="card-heading">DOWNLOAD CSV STANDINGS</h3>
-              <p class="card-desc">Export complete overall standings table with kills, placement points, and ranks into a CSV file.</p>
-              <button class="btn-card-launch" id="btn-export-full-csv">📥 DOWNLOAD FULL CSV</button>
+              <h3 class="card-heading">DOWNLOAD OVERALL CSV</h3>
+              <p class="card-desc">Export latest overall tournament standings table (16 squads, kills, placement pts, total pts) with UTF-8 support.</p>
+              <button class="btn-card-launch" id="btn-export-full-csv">📥 DOWNLOAD OVERALL CSV</button>
+            </div>
+            <div class="hero-action-card">
+              <div class="card-icon">🎯</div>
+              <h3 class="card-heading">DOWNLOAD MATCH CSV</h3>
+              <p class="card-desc">Export current selected match results & scoresheet directly into a clean CSV spreadsheet.</p>
+              <button class="btn-card-launch" id="btn-export-match-csv">📥 DOWNLOAD MATCH CSV</button>
             </div>
             <div class="hero-action-card">
               <div class="card-icon">📋</div>
-              <h3 class="card-heading">COPY DISCORD / WHATSAPP REPORT</h3>
-              <p class="card-desc">Copy beautifully formatted emoji text leaderboard directly to your clipboard for sharing.</p>
+              <h3 class="card-heading">COPY DISCORD / WHATSAPP</h3>
+              <p class="card-desc">Copy beautifully formatted emoji text leaderboard directly to your clipboard for instant sharing.</p>
               <button class="btn-card-launch" id="btn-export-text-report">📋 COPY TEXT REPORT</button>
+            </div>
+          </div>
+
+          <div class="form-card" style="background:#0c0c14; border:1px solid #242436; border-radius:14px; padding:24px;">
+            <div class="section-header-row" style="margin-bottom:16px;">
+              <div>
+                <h2 class="section-title" style="font-size:18px; color:#fff; display:flex; align-items:center; gap:8px;">
+                  <span>🏆</span> 16-TEAMS ESPORTS GRAPHIC POSTER & IMAGE STUDIO
+                </h2>
+                <p class="section-sub" style="font-size:13px; color:#94a3b8; margin-top:2px;">
+                  Select an esports template below. The engine will dynamically render your latest 16-squad live standings into a high-res broadcast poster!
+                </p>
+              </div>
+            </div>
+
+            <div class="studio-controls-bar">
+              <div class="form-group" style="margin-bottom:0; min-width:240px;">
+                <label class="form-label" style="font-size:11px; margin-bottom:4px;">SELECT DATA TO EXPORT:</label>
+                <select class="form-select" id="export-target-select">
+                  <option value="overall">🏆 Overall Cumulative Standings (16 Squads)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0; min-width:200px;">
+                <label class="form-label" style="font-size:11px; margin-bottom:4px;">FILTER TEMPLATES:</label>
+                <div class="template-filter-pills" id="template-filter-pills">
+                  <button class="pill-btn active" data-filter="all">ALL (10)</button>
+                  <button class="pill-btn" data-filter="ff">FREE FIRE (5)</button>
+                  <button class="pill-btn" data-filter="bgmi">BGMI (5)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="templates-grid-selector" id="templates-grid-selector">
+              <!-- 10 Minimalist Esports Graphic Templates (5 FF, 5 BGMI) -->
+            </div>
+
+            <div class="canvas-preview-wrapper" style="margin-top:20px; background:#07070a; border:1px solid #1e1e2c; border-radius:12px; padding:16px; text-align:center;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div style="text-align:left;">
+                  <span style="font-size:13px; font-weight:800; color:#ffffff;" id="canvas-preview-theme-title">🔥 FREE FIRE: CRIMSON BLAZE</span>
+                  <span style="font-size:11px; color:#94a3b8; margin-left:8px;">(1920x1080 Full HD Esports Layout)</span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn-secondary-sm" id="btn-copy-canvas-img">📋 COPY IMAGE</button>
+                  <button class="btn-action-primary-sm" id="btn-download-canvas-img" style="background:#ff2d55; box-shadow:0 0 16px rgba(255,45,85,0.4);">📸 DOWNLOAD 1080P POSTER (PNG)</button>
+                </div>
+              </div>
+              <div class="canvas-container-responsive" style="max-width:100%; overflow:hidden; border-radius:8px; border:1px solid #28283a; box-shadow:0 12px 36px rgba(0,0,0,0.6);">
+                <canvas id="esports-standings-canvas" width="1920" height="1080" style="width:100%; height:auto; display:block; aspect-ratio:16/9;"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -464,16 +520,6 @@
             <div class="form-group">
               <label class="form-label">Create Password (Min 6 chars) *</label>
               <input type="password" class="form-input" id="auth-signup-password" placeholder="••••••••" autocomplete="new-password">
-            </div>
-            <div class="form-row-2">
-              <div class="form-group">
-                <label class="form-label">In-Game Name / Guild Handle</label>
-                <input type="text" class="form-input" id="auth-signup-username" placeholder="e.g. Kiryu_FF">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Free Fire UID</label>
-                <input type="text" class="form-input" id="auth-signup-uid" placeholder="e.g. 77489210">
-              </div>
             </div>
           </div>
           <div class="auth-error-box" id="auth-error-msg"></div>

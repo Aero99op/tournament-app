@@ -482,6 +482,7 @@ function switchWsTab(panelId) {
     (document.getElementById("panel-ws-exports") || document.querySelector("panel-ws-exports")).style.display = 'block';
     (document.getElementById("panel-ws-exports") || document.querySelector("panel-ws-exports")).classList.add('active');
     (document.getElementById("ws-tab-exports") || document.querySelector("ws-tab-exports")).classList.add('active');
+    renderExportsStudio();
   }
 }
 
@@ -1003,41 +1004,621 @@ function renderRevertModalList() {
   }
 }
 
-function downloadTournamentCSV() {
-  let activeT = getActiveTourney ( );
+const ESPORTS_TEMPLATES = [
+  // 5 Free Fire Minimalist Templates
+  {
+    id: "ff_crimson_blaze",
+    name: "🔥 Crimson Blaze",
+    game: "ff",
+    gameTag: "FREE FIRE MAX",
+    subTag: "BATTLE ROYALE TOURNAMENT",
+    accent: "#ff2d55",
+    subAccent: "#ff758c",
+    bg1: "#0a0407",
+    bg2: "#18050e",
+    bg3: "#260815",
+    cardBg: "rgba(255, 45, 85, 0.08)",
+    border: "#ff2d55",
+    previewGrad: "linear-gradient(135deg, #18050e, #ff2d55)"
+  },
+  {
+    id: "ff_cyber_bermuda",
+    name: "⚡ Cyber Bermuda",
+    game: "ff",
+    gameTag: "FREE FIRE MAX",
+    subTag: "BERMUDA PRO LEAGUE",
+    accent: "#00f0ff",
+    subAccent: "#7000ff",
+    bg1: "#030812",
+    bg2: "#071626",
+    bg3: "#0c243d",
+    cardBg: "rgba(0, 240, 255, 0.08)",
+    border: "#00f0ff",
+    previewGrad: "linear-gradient(135deg, #071626, #00f0ff)"
+  },
+  {
+    id: "ff_grandmasters_gold",
+    name: "👑 Grandmasters Gold",
+    game: "ff",
+    gameTag: "FREE FIRE MAX",
+    subTag: "GRANDMASTERS CHAMPIONSHIP",
+    accent: "#ffd700",
+    subAccent: "#ffae00",
+    bg1: "#0a0903",
+    bg2: "#161307",
+    bg3: "#241e0a",
+    cardBg: "rgba(255, 215, 0, 0.08)",
+    border: "#ffd700",
+    previewGrad: "linear-gradient(135deg, #161307, #ffd700)"
+  },
+  {
+    id: "ff_kalahari_sunset",
+    name: "🌋 Kalahari Sunset",
+    game: "ff",
+    gameTag: "FREE FIRE MAX",
+    subTag: "KALAHARI CLASH ROYALE",
+    accent: "#ff6b35",
+    subAccent: "#f7c59f",
+    bg1: "#100703",
+    bg2: "#1f0c05",
+    bg3: "#301307",
+    cardBg: "rgba(255, 107, 53, 0.08)",
+    border: "#ff6b35",
+    previewGrad: "linear-gradient(135deg, #1f0c05, #ff6b35)"
+  },
+  {
+    id: "ff_nebula_void",
+    name: "🌌 Nebula Void",
+    game: "ff",
+    gameTag: "FREE FIRE MAX",
+    subTag: "ELITE ESPORTS SERIES",
+    accent: "#a855f7",
+    subAccent: "#c084fc",
+    bg1: "#0a0312",
+    bg2: "#150826",
+    bg3: "#230d3d",
+    cardBg: "rgba(168, 85, 247, 0.08)",
+    border: "#a855f7",
+    previewGrad: "linear-gradient(135deg, #150826, #a855f7)"
+  },
+  // 5 BGMI Minimalist Templates
+  {
+    id: "bgmi_erangel_tactical",
+    name: "🪖 Erangel Tactical",
+    game: "bgmi",
+    gameTag: "BATTLEGROUNDS MOBILE INDIA",
+    subTag: "PRO SERIES INVITATIONAL",
+    accent: "#4ade80",
+    subAccent: "#22c55e",
+    bg1: "#040d07",
+    bg2: "#0a1c0e",
+    bg3: "#102b16",
+    cardBg: "rgba(74, 222, 128, 0.08)",
+    border: "#4ade80",
+    previewGrad: "linear-gradient(135deg, #0a1c0e, #4ade80)"
+  },
+  {
+    id: "bgmi_champions_royale",
+    name: "🏆 Champions Royale",
+    game: "bgmi",
+    gameTag: "BATTLEGROUNDS MOBILE INDIA",
+    subTag: "CHAMPIONS CUP GRAND FINALS",
+    accent: "#f59e0b",
+    subAccent: "#fbbf24",
+    bg1: "#0e0a03",
+    bg2: "#1b1406",
+    bg3: "#291e09",
+    cardBg: "rgba(245, 158, 11, 0.08)",
+    border: "#f59e0b",
+    previewGrad: "linear-gradient(135deg, #1b1406, #f59e0b)"
+  },
+  {
+    id: "bgmi_blue_zone",
+    name: "⚡ Blue Zone Cyber",
+    game: "bgmi",
+    gameTag: "BATTLEGROUNDS MOBILE INDIA",
+    subTag: "MASTERS TOURNAMENT",
+    accent: "#38bdf8",
+    subAccent: "#0284c7",
+    bg1: "#030c16",
+    bg2: "#07182b",
+    bg3: "#0b2440",
+    cardBg: "rgba(56, 189, 248, 0.08)",
+    border: "#38bdf8",
+    previewGrad: "linear-gradient(135deg, #07182b, #38bdf8)"
+  },
+  {
+    id: "bgmi_miramar_mirage",
+    name: "🏜️ Miramar Mirage",
+    game: "bgmi",
+    gameTag: "BATTLEGROUNDS MOBILE INDIA",
+    subTag: "DESERT CLASH ROYALE",
+    accent: "#fbbf24",
+    subAccent: "#d97706",
+    bg1: "#100c03",
+    bg2: "#1f1706",
+    bg3: "#2e2209",
+    cardBg: "rgba(251, 191, 36, 0.08)",
+    border: "#fbbf24",
+    previewGrad: "linear-gradient(135deg, #1f1706, #fbbf24)"
+  },
+  {
+    id: "bgmi_shadow_stealth",
+    name: "🥷 Shadow Stealth",
+    game: "bgmi",
+    gameTag: "BATTLEGROUNDS MOBILE INDIA",
+    subTag: "SHADOW WAR SCRIMS",
+    accent: "#e11d48",
+    subAccent: "#9f1239",
+    bg1: "#050508",
+    bg2: "#0c0c12",
+    bg3: "#14141e",
+    cardBg: "rgba(225, 29, 72, 0.08)",
+    border: "#e11d48",
+    previewGrad: "linear-gradient(135deg, #0c0c12, #e11d48)"
+  }
+];
+
+let activeExportTheme = "ff_crimson_blaze";
+let activeExportTarget = "overall";
+let activeTemplateFilter = "all";
+
+function renderExportsStudio() {
+  renderExportTargetDropdown();
+  renderTemplateSelectorGrid();
+  renderEsportsStandingsCanvas();
+}
+
+function renderExportTargetDropdown() {
+  const targetSelect = document.getElementById("export-target-select");
+  if (!targetSelect) return;
+  const activeT = getActiveTourney();
+  if (!activeT) return;
+
+  let html = "<option value='overall'" + (activeExportTarget === 'overall' ? ' selected' : '') + ">🏆 Overall Cumulative Standings (16 Squads)</option>";
+  let mIdx = 0;
+  for (const m of activeT.matches) {
+    const val = "match_" + mIdx;
+    const isSel = activeExportTarget === val ? " selected" : "";
+    html += "<option value='" + val + "'" + isSel + ">🎯 Match " + (mIdx + 1) + ": " + m.title + " (" + m.map + ")</option>";
+    mIdx++;
+  }
+  targetSelect.innerHTML = html;
+}
+
+function renderTemplateSelectorGrid() {
+  const grid = document.getElementById("templates-grid-selector");
+  if (!grid) return;
+
+  const filtered = ESPORTS_TEMPLATES.filter(t => {
+    if (activeTemplateFilter === "all") return true;
+    return t.game === activeTemplateFilter;
+  });
+
+  let html = "";
+  for (const t of filtered) {
+    const isAct = t.id === activeExportTheme ? " active" : "";
+    html += "<div class='template-card-choice" + isAct + "' onclick='window.vortexSelectExportTheme(\"" + t.id + "\")'>";
+    html += "<div class='tc-preview-box' style='background:" + t.previewGrad + "; color:#fff; text-shadow:0 1px 4px #000;'>16 TEAMS</div>";
+    html += "<div class='tc-title'>" + t.name + "</div>";
+    html += "<span class='tc-game-badge " + t.game + "'>" + (t.game === 'ff' ? 'FREE FIRE' : 'BGMI') + "</span>";
+    html += "</div>";
+  }
+  grid.innerHTML = html;
+}
+
+window.vortexSelectExportTheme = function(themeId) {
+  activeExportTheme = themeId;
+  renderTemplateSelectorGrid();
+  renderEsportsStandingsCanvas();
+};
+
+function renderEsportsStandingsCanvas() {
+  const canvas = document.getElementById("esports-standings-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const activeT = getActiveTourney();
+  if (!activeT) return;
+
+  const theme = ESPORTS_TEMPLATES.find(t => t.id === activeExportTheme) || ESPORTS_TEMPLATES[0];
+
+  const titleEl = document.getElementById("canvas-preview-theme-title");
+  if (titleEl) titleEl.textContent = theme.name.toUpperCase();
+
+  // Canvas size: 1920x1080 Full HD
+  const W = 1920;
+  const H = 1080;
+
+  // 1. Background Gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, theme.bg1);
+  bgGrad.addColorStop(0.5, theme.bg2);
+  bgGrad.addColorStop(1, theme.bg3);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Cyber Grid & Diagonal Accents
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 60) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 60) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  // Laser speed stripes
+  ctx.save();
+  ctx.strokeStyle = theme.accent;
+  ctx.globalAlpha = 0.08;
+  ctx.lineWidth = 3;
+  for (let i = -W; i < W * 2; i += 180) {
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i + 500, H);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 3. Top Outer Laser Frame
+  ctx.strokeStyle = theme.border;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, W - 60, H - 60);
+
+  // Corner Accent Brackets
+  const cornerLen = 40;
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = theme.accent;
+  // Top-Left
+  ctx.beginPath(); ctx.moveTo(25, 25 + cornerLen); ctx.lineTo(25, 25); ctx.lineTo(25 + cornerLen, 25); ctx.stroke();
+  // Top-Right
+  ctx.beginPath(); ctx.moveTo(W - 25 - cornerLen, 25); ctx.lineTo(W - 25, 25); ctx.lineTo(W - 25, 25 + cornerLen); ctx.stroke();
+  // Bottom-Left
+  ctx.beginPath(); ctx.moveTo(25, H - 25 - cornerLen); ctx.lineTo(25, H - 25); ctx.lineTo(25 + cornerLen, H - 25); ctx.stroke();
+  // Bottom-Right
+  ctx.beginPath(); ctx.moveTo(W - 25 - cornerLen, H - 25); ctx.lineTo(W - 25, H - 25); ctx.lineTo(W - 25, H - 25 - cornerLen); ctx.stroke();
+
+  // 4. Header Block
+  // Capsule Badge
+  ctx.fillStyle = theme.accent;
+  ctx.beginPath();
+  ctx.roundRect(W / 2 - 180, 50, 360, 32, 16);
+  ctx.fill();
+
+  ctx.fillStyle = "#000000";
+  ctx.font = "900 13px 'Space Grotesk', sans-serif";
+  ctx.textAlign = "center";
+  ctx.letterSpacing = "2px";
+  ctx.fillText(theme.gameTag + " • " + (activeT.format || "SQUAD BR"), W / 2, 71);
+
+  // Tournament Title
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 44px 'Space Grotesk', sans-serif";
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 18;
+  ctx.fillText(activeT.title.toUpperCase(), W / 2, 128);
+  ctx.shadowBlur = 0;
+
+  // Subtitle / Scope
+  let subText = "OFFICIAL OVERALL STANDINGS • 16 SQUADS";
+  if (activeExportTarget.startsWith("match_")) {
+    const mIdx = parseInt(activeExportTarget.split("_")[1], 10);
+    const m = activeT.matches[mIdx];
+    if (m) {
+      subText = "MATCH " + (mIdx + 1) + ": " + m.title.toUpperCase() + " (" + m.map.toUpperCase() + ") • LIVE SCORESHEET";
+    }
+  }
+  ctx.fillStyle = theme.subAccent || theme.accent;
+  ctx.font = "800 15px 'Space Grotesk', sans-serif";
+  ctx.letterSpacing = "3px";
+  ctx.fillText(subText, W / 2, 160);
+
+  // Left & Right Header Meta Badges
+  // Prize Pool (Left)
+  ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(60, 60, 220, 75, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "700 11px 'Space Grotesk', sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("TOTAL PRIZE POOL", 78, 86);
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "900 24px 'Space Grotesk', sans-serif";
+  ctx.fillText(activeT.prize || "₹25,000", 78, 118);
+
+  // Status & Map (Right)
+  ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+  ctx.beginPath(); ctx.roundRect(W - 280, 60, 220, 75, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "700 11px 'Space Grotesk', sans-serif";
+  ctx.fillText("MAP ROTATION", W - 262, 86);
+  ctx.fillStyle = theme.accent;
+  ctx.font = "900 18px 'Space Grotesk', sans-serif";
+  const mapStr = (activeT.maps || "Bermuda, Purgatory").split(",")[0];
+  ctx.fillText(mapStr.toUpperCase(), W - 262, 116);
+
+  // 5. Gather 16 Squad Rows Data
+  let rawStandings = [];
+  if (activeExportTarget.startsWith("match_")) {
+    const mIdx = parseInt(activeExportTarget.split("_")[1], 10);
+    const m = activeT.matches[mIdx];
+    if (m && m.scores) {
+      rawStandings = m.scores.map(s => {
+        const pKey = String(s.place);
+        const pPts = activeT.placementPoints[pKey] || 0;
+        const kPts = Number(s.kills || 0) * Number(activeT.killMultiplier || 1);
+        const tot = pPts + kPts + Number(s.bonus || 0) - Number(s.penalty || 0);
+        return {
+          team: s.team,
+          place: Number(s.place),
+          kills: Number(s.kills || 0),
+          placePts: pPts,
+          totalPts: tot,
+          subLabel: "Rank " + s.place
+        };
+      });
+      rawStandings.sort((a, b) => b.totalPts - a.totalPts || a.place - b.place);
+    }
+  } else {
+    rawStandings = computeOverallStandings(activeT).map(s => ({
+      team: s.team,
+      kills: s.kills,
+      placePts: s.placePts,
+      wwcd: s.wwcd,
+      totalPts: s.totalPts,
+      subLabel: "WWCD: " + s.wwcd + " | PL: " + s.played
+    }));
+  }
+
+  // Ensure full 16 slots
+  const full16 = [];
+  for (let i = 0; i < 16; i++) {
+    if (rawStandings[i]) {
+      full16.push({ rank: i + 1, ...rawStandings[i] });
+    } else {
+      full16.push({
+        rank: i + 1,
+        team: "Slot #" + (i + 1),
+        kills: 0,
+        placePts: 0,
+        totalPts: 0,
+        subLabel: "Standby Squad"
+      });
+    }
+  }
+
+  // 6. Draw 16 Squad Rows in 2 Equal Columns (Left 8, Right 8)
+  const colWidth = 860;
+  const colLeftX = 65;
+  const colRightX = 995;
+  const startY = 205;
+  const rowHeight = 84;
+  const rowGap = 10;
+
+  function drawColumn(items, startRank, startX) {
+    // Column Sub-Header
+    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.beginPath();
+    ctx.roundRect(startX, startY, colWidth, 32, 6);
+    ctx.fill();
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "800 11px 'Space Grotesk', sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("RANK", startX + 16, startY + 20);
+    ctx.fillText("SQUAD NAME", startX + 75, startY + 20);
+    ctx.textAlign = "center";
+    ctx.fillText("STATS / WWCD", startX + 460, startY + 20);
+    ctx.fillText("KILLS", startX + 640, startY + 20);
+    ctx.textAlign = "right";
+    ctx.fillText("TOTAL PTS", startX + colWidth - 20, startY + 20);
+
+    let currentY = startY + 42;
+    for (const item of items) {
+      const isTop1 = item.rank === 1;
+      const isTop2 = item.rank === 2;
+      const isTop3 = item.rank === 3;
+
+      // Row Background Card
+      ctx.fillStyle = isTop1 ? "rgba(255, 215, 0, 0.12)" : (isTop2 ? "rgba(226, 232, 240, 0.08)" : (isTop3 ? "rgba(217, 119, 6, 0.08)" : theme.cardBg));
+      ctx.strokeStyle = isTop1 ? "#ffd700" : (isTop2 ? "#cbd5e1" : (isTop3 ? "#d97706" : "rgba(255, 255, 255, 0.08)"));
+      ctx.lineWidth = isTop1 ? 2 : 1;
+      ctx.beginPath();
+      ctx.roundRect(startX, currentY, colWidth, rowHeight, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Rank Badge
+      const badgeW = 46;
+      const badgeH = 46;
+      const badgeX = startX + 12;
+      const badgeY = currentY + (rowHeight - badgeH) / 2;
+
+      ctx.fillStyle = isTop1 ? "#ffd700" : (isTop2 ? "#e2e8f0" : (isTop3 ? "#d97706" : "#181826"));
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 8);
+      ctx.fill();
+
+      ctx.fillStyle = isTop1 || isTop2 ? "#000000" : "#ffffff";
+      ctx.font = "900 18px 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText((isTop1 ? "👑" : "") + item.rank, badgeX + badgeW / 2, badgeY + 29);
+
+      // Squad Name
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 22px 'Space Grotesk', sans-serif";
+      let displayTeam = item.team;
+      if (displayTeam.length > 20) displayTeam = displayTeam.slice(0, 19) + "…";
+      ctx.fillText(displayTeam, startX + 75, currentY + 36);
+
+      // Sub-label
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "700 12px 'Space Grotesk', sans-serif";
+      ctx.fillText(item.subLabel || "Official Squad", startX + 75, currentY + 60);
+
+      // WWCD / Stats (Center)
+      ctx.textAlign = "center";
+      ctx.fillStyle = isTop1 ? "#ffd700" : theme.accent;
+      ctx.font = "800 16px 'Space Grotesk', sans-serif";
+      ctx.fillText(item.wwcd !== undefined ? "🏆 " + item.wwcd + " WWCD" : "Place #" + (item.place || item.rank), startX + 460, currentY + 48);
+
+      // Kills
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 20px 'Space Grotesk', sans-serif";
+      ctx.fillText(item.kills + " 🎯", startX + 640, currentY + 48);
+
+      // Total PTS Pill (Right)
+      const pillW = 120;
+      const pillH = 46;
+      const pillX = startX + colWidth - pillW - 14;
+      const pillY = currentY + (rowHeight - pillH) / 2;
+
+      ctx.fillStyle = isTop1 ? "#ffd700" : theme.accent;
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+      ctx.fill();
+
+      ctx.fillStyle = "#000000";
+      ctx.font = "900 20px 'Space Grotesk', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(item.totalPts + " PTS", pillX + pillW / 2, pillY + 30);
+
+      currentY += rowHeight + rowGap;
+    }
+  }
+
+  // Draw Left (1-8) & Right (9-16)
+  drawColumn(full16.slice(0, 8), 1, colLeftX);
+  drawColumn(full16.slice(8, 16), 9, colRightX);
+
+  // 7. Footer Banner
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(60, H - 70);
+  ctx.lineTo(W - 60, H - 70);
+  ctx.stroke();
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "700 12px 'Space Grotesk', sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("⚡ POWERED BY VORTEX ESPORTS OS • OFFICIAL CLOUD VERIFIED SCORESHEET", 65, H - 45);
+
+  ctx.textAlign = "right";
+  const nowStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  ctx.fillText("GENERATED: " + nowStr + " • 16 SQUADS", W - 65, H - 45);
+}
+
+function downloadCanvasPoster() {
+  const canvas = document.getElementById("esports-standings-canvas");
+  if (!canvas) return;
+  const activeT = getActiveTourney();
+  const titleSlug = activeT ? activeT.title.replaceAll(" ", "_") : "Tournament";
+  const scopeSlug = activeExportTarget === "overall" ? "Overall_16Teams" : activeExportTarget;
+
+  const dataUrl = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.download = titleSlug + "_" + scopeSlug + "_Poster.png";
+  link.href = dataUrl;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast("📸 High-Res 1080p Esports Standings Poster Downloaded!");
+}
+
+async function copyCanvasPosterToClipboard() {
+  const canvas = document.getElementById("esports-standings-canvas");
+  if (!canvas) return;
+  try {
+    canvas.toBlob(async blob => {
+      if (blob && navigator.clipboard && navigator.clipboard.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        showToast("📋 Esports Poster copied to clipboard! (Ready to paste in Discord/WhatsApp)");
+      } else {
+        downloadCanvasPoster();
+      }
+    });
+  } catch (err) {
+    downloadCanvasPoster();
+  }
+}
+
+function downloadTournamentCSV(targetType = 'overall') {
+  let activeT = getActiveTourney();
   if (activeT != null) {
-    let overallList = computeOverallStandings ( activeT );
-    let csvContent = "Overall_Rank,Squad,Matches_Played,Booyah_WWCD,Total_Kills,Kill_Points,Placement_Points,Total_Points\n";
-    let rank = 1;
-    for (const row of overallList) {
-      csvContent = csvContent + rank + "," + row.team + "," + row.played + "," + row.wwcd + "," + row.kills + "," + row.killPts + "," + row.placePts + "," + row.totalPts + "\n";
-      rank = rank + 1;
+    let csvContent = "\uFEFF"; // UTF-8 BOM for flawless Excel & Google Sheets opening
+    let fileName = "";
+
+    if (targetType === 'match') {
+      const activeMatch = activeT.matches[activeMatchIdx] || activeT.matches[0];
+      if (!activeMatch) {
+        showToast("⚠️ No match found to export.");
+        return;
+      }
+      fileName = activeT.title.replaceAll(" ", "_") + "_Match_" + (activeMatchIdx + 1) + "_Scores.csv";
+      csvContent += "Match_Title,Map,Status,Room_ID,Room_Password\n";
+      csvContent += '"' + activeMatch.title + '","' + activeMatch.map + '","' + activeMatch.status + '","' + activeMatch.roomId + '","' + activeMatch.roomPass + '"\n\n';
+      csvContent += "Rank,Squad,Placement,Kills,Kill_Points,Placement_Points,Bonus_Points,Penalty_Points,Total_Points\n";
+
+      let rank = 1;
+      for (const s of (activeMatch.scores || [])) {
+        const pKey = String(s.place);
+        const pPts = activeT.placementPoints[pKey] || 0;
+        const kPts = Number(s.kills || 0) * Number(activeT.killMultiplier || 1);
+        const tot = pPts + kPts + Number(s.bonus || 0) - Number(s.penalty || 0);
+        csvContent += rank + ',"' + s.team.replaceAll('"', '""') + '",' + s.place + ',' + s.kills + ',' + kPts + ',' + pPts + ',' + (s.bonus || 0) + ',' + (s.penalty || 0) + ',' + tot + "\n";
+        rank++;
+      }
+    } else {
+      // Overall cumulative standings
+      fileName = activeT.title.replaceAll(" ", "_") + "_Overall_16Teams_Standings.csv";
+      csvContent += "Tournament_Title,Game,Format,Prize_Pool,Total_Matches\n";
+      csvContent += '"' + activeT.title + '","' + activeT.game + '","' + activeT.format + '","' + (activeT.prize || "") + '",' + activeT.matches.length + "\n\n";
+      csvContent += "Overall_Rank,Squad,Matches_Played,Booyah_WWCD,Total_Kills,Kill_Points,Placement_Points,Total_Points\n";
+
+      let overallList = computeOverallStandings(activeT);
+      let rank = 1;
+      for (const row of overallList) {
+        csvContent += rank + ',"' + row.team.replaceAll('"', '""') + '",' + row.played + ',' + row.wwcd + ',' + row.kills + ',' + row.killPts + ',' + row.placePts + ',' + row.totalPts + "\n";
+        rank++;
+      }
     }
-    let blob = new Blob ( [ csvContent ] , { type : "text/csv;charset=utf-8;" } );
-    let blobUrl = URL.createObjectURL ( blob );
-    let downloadHtml = "<a id='csv-temp-download' href='" + blobUrl + "' download='" + activeT.title.replaceAll ( " " , "_" ) + "_Standings.csv' style='display:none;'></a>";
-    (document.getElementById("toast-container") || document.querySelector("toast-container")).innerHTML = downloadHtml;
-    let dlLink = (document.getElementById("csv-temp-download") || document.querySelector("csv-temp-download"));
-    if (dlLink != null) {
-      dlLink.click ( );
-    }
-    showToast("📥 Full Tournament CSV Downloaded!");
+
+    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    let blobUrl = URL.createObjectURL(blob);
+    let downloadLink = document.createElement("a");
+    downloadLink.href = blobUrl;
+    downloadLink.download = fileName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    showToast("📥 CSV Exported: " + fileName);
   }
 }
 
 function copyTextLeaderboardReport() {
-  let activeT = getActiveTourney ( );
+  let activeT = getActiveTourney();
   if (activeT != null) {
-    let overallList = computeOverallStandings ( activeT );
+    let overallList = computeOverallStandings(activeT);
     let report = "🏆 " + activeT.title + " 🏆\n";
-    report = report + "🎮 " + activeT.game + " • Format: " + activeT.format + " • Prize: " + activeT.prize + "\n";
-    report = report + "═══════════════════════════════════════\n\n";
+    report += "🎮 " + activeT.game + " • Format: " + activeT.format + " • Prize: " + activeT.prize + "\n";
+    report += "═══════════════════════════════════════\n\n";
     let rank = 1;
     for (const row of overallList) {
-      report = report + "#" + rank + " " + row.team + " | WWCD: " + row.wwcd + " | Kills: " + row.kills + " | Total: " + row.totalPts + " PTS\n";
-      rank = rank + 1;
+      report += "#" + rank + " " + row.team + " | WWCD: " + row.wwcd + " | Kills: " + row.kills + " | Total: " + row.totalPts + " PTS\n";
+      rank++;
     }
-    report = report + "\n═══════════════════════════════════════\nGenerated via Vortex Esports OS";
+    report += "\n═══════════════════════════════════════\nGenerated via Vortex Esports OS";
     navigator.clipboard.writeText(report);
     showToast("📋 Formatted Text Report copied to clipboard!");
   }
@@ -1386,8 +1967,8 @@ async function handleAuthSubmit() {
   } else {
     const email = (document.getElementById("auth-signup-email") || {}).value?.trim();
     const password = (document.getElementById("auth-signup-password") || {}).value;
-    const name = (document.getElementById("auth-signup-username") || {}).value?.trim() || (email ? email.split('@')[0] : "Organizer");
-    const uid = (document.getElementById("auth-signup-uid") || {}).value?.trim() || String(Math.floor(10000000 + Math.random() * 90000000));
+    const name = email ? email.split('@')[0] : "Organizer";
+    const uid = String(Math.floor(10000000 + Math.random() * 90000000));
 
     if (!email || !password) {
       showAuthError("Please enter email and password.");
@@ -1639,28 +2220,80 @@ async function handleLogout() {
 })();
 
 (function() {
-  const targetEl = (document.getElementById("quick-act-download-csv") || document.querySelector("quick-act-download-csv"));
+  const targetEl = document.getElementById("quick-act-download-csv");
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      downloadTournamentCSV();
+      downloadTournamentCSV('overall');
     });
   }
 })();
 
 (function() {
-  const targetEl = (document.getElementById("btn-export-full-csv") || document.querySelector("btn-export-full-csv"));
+  const targetEl = document.getElementById("btn-export-full-csv");
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      downloadTournamentCSV();
+      downloadTournamentCSV('overall');
     });
   }
 })();
 
 (function() {
-  const targetEl = (document.getElementById("btn-export-text-report") || document.querySelector("btn-export-text-report"));
+  const targetEl = document.getElementById("btn-export-match-csv");
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      downloadTournamentCSV('match');
+    });
+  }
+})();
+
+(function() {
+  const targetEl = document.getElementById("btn-export-text-report");
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
       copyTextLeaderboardReport();
+    });
+  }
+})();
+
+(function() {
+  const targetEl = document.getElementById("btn-download-canvas-img");
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      downloadCanvasPoster();
+    });
+  }
+})();
+
+(function() {
+  const targetEl = document.getElementById("btn-copy-canvas-img");
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      copyCanvasPosterToClipboard();
+    });
+  }
+})();
+
+(function() {
+  const targetEl = document.getElementById("export-target-select");
+  if (targetEl != null) {
+    targetEl.addEventListener('change', function(event) {
+      activeExportTarget = this.value;
+      renderEsportsStandingsCanvas();
+    });
+  }
+})();
+
+(function() {
+  const filterPills = document.getElementById("template-filter-pills");
+  if (filterPills != null) {
+    filterPills.addEventListener('click', function(event) {
+      const btn = event.target.closest('.pill-btn');
+      if (btn && btn.dataset.filter) {
+        filterPills.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTemplateFilter = btn.dataset.filter;
+        renderTemplateSelectorGrid();
+      }
     });
   }
 })();
