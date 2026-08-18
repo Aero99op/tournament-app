@@ -152,10 +152,15 @@ async function fetchTournamentsFromSupabase() {
         status: row.status,
         statusClass: row.status_class || row.statusClass || "live",
         killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
-        placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
+        placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"5":5,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
         whatsappLink: row.whatsapp_link || row.whatsappLink || "",
         discordLink: row.discord_link || row.discordLink || "",
         registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
+        entryType: row.entry_type || row.entryType || "FREE",
+        entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
+        upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
+        upiName: row.upi_name || row.upiName || "Spandan Prayas",
+        pools: Array.isArray(row.pools) ? row.pools : [],
         user_id: row.user_id || null,
         creatorName: row.creator_name || row.creatorName || "Organizer",
         teams: Array.isArray(row.teams) ? row.teams : [],
@@ -760,8 +765,8 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
       const vtxCodeEl = document.getElementById("reg-vtx-tr-code");
       if (vtxCodeEl) vtxCodeEl.textContent = vtxCode;
 
-      const upiId = tourney.upiId || "organizer@upi";
-      const upiName = tourney.upiName || "VORTEX_ESPORTS";
+      const upiId = tourney.upiId || "spandanprayas2079@ybl";
+      const upiName = tourney.upiName || "Spandan Prayas";
       const upiDisplay = document.getElementById("reg-upi-id-display");
       if (upiDisplay) upiDisplay.textContent = upiId;
 
