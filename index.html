@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VORTEX ESPORTS | Tournament Operating Platform</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+      (function() {
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; }, true);
+        window.addEventListener('keydown', function(e) {
+          if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); e.stopPropagation(); return false; }
+          if ((e.ctrlKey || e.metaKey) && (e.shiftKey || e.altKey)) {
+            const k = (e.key || '').toLowerCase();
+            if (['i', 'j', 'c', 'k', 's', 'u', 'p', 'e'].includes(k) || [73, 74, 67, 75, 83, 85, 80, 69].includes(e.keyCode)) {
+              e.preventDefault(); e.stopPropagation(); return false;
+            }
+          }
+          if ((e.ctrlKey || e.metaKey) && ['u', 's', 'p'].includes((e.key || '').toLowerCase())) {
+            e.preventDefault(); e.stopPropagation(); return false;
+          }
+        }, true);
+      })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>

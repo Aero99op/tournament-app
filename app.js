@@ -1,3 +1,68 @@
+// VORTEX SECURITY & ANTI-TAMPER SHIELD
+(function initSecurityShield() {
+  if (typeof window === "undefined") return;
+
+  // 1. Intercept and block DevTools / View Source / Inspection shortcuts
+  window.addEventListener('keydown', function(e) {
+    // Block F12
+    if (e.key === 'F12' || e.keyCode === 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    // Block Ctrl+Shift+I / J / C / K / S / U / P / E
+    if ((e.ctrlKey || e.metaKey) && (e.shiftKey || e.altKey)) {
+      const k = (e.key || '').toLowerCase();
+      if (['i', 'j', 'c', 'k', 's', 'u', 'p', 'e'].includes(k) || [73, 74, 67, 75, 83, 85, 80, 69].includes(e.keyCode)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+    // Block Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print)
+    if ((e.ctrlKey || e.metaKey) && ['u', 's', 'p'].includes((e.key || '').toLowerCase())) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
+
+  // 2. Disable Right-Click Context Menu
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  }, true);
+
+  // 3. Neutralize & Clean Console to Prevent Arbitrary Injections
+  const securityWarning = function() {
+    try {
+      console.clear();
+    } catch(err){}
+  };
+
+  ['log', 'info', 'warn', 'error', 'debug', 'dir', 'dirxml', 'trace', 'table', 'profile'].forEach(function(fn) {
+    try {
+      if (window.console && typeof window.console[fn] === 'function') {
+        window.console[fn] = securityWarning;
+      }
+    } catch(e){}
+  });
+
+  // 4. DevTools Timing & Anti-Debugger Protection Loop
+  setInterval(function() {
+    const startTime = performance.now();
+    (function() {
+      Function("debugger")();
+    })();
+    const endTime = performance.now();
+    if (endTime - startTime > 100) {
+      try {
+        console.clear();
+      } catch(e){}
+    }
+  }, 1000);
+})();
+
 let currentView = "view-landing";
 
 let currentWsTab = "panel-ws-overview";
@@ -8,9 +73,9 @@ let activeMatchIdx = 0;
 
 let editingTeamName = "";
 
-let tempTeamScores = [ ];
+let tempTeamScores = [];
 
-let currentUser = { id : null , email : "" , name : "Guest" , uid : "" , role : "Organizer" , loggedIn : false };
+let currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organizer", loggedIn: false };
 let currentAuthTab = "login";
 
 let tournamentsDb = [ { id : 1 , title : "VORTEX GRANDMASTERS CHAMPIONSHIP" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Bermuda, Purgatory, Kalahari, Alpine" , slots : 12 , prize : "₹25,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL (In-Game Leader)" } , { name : "Zen_99" , uid : "77489211" , role : "Entry Fragger / Rusher" } , { name : "Taro_X" , uid : "77489212" , role : "Support / Healer" } , { name : "Ken" , uid : "77489213" , role : "Sniper / Marksman" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL (In-Game Leader)" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper / Marksman" } , { name : "Aero_Ghost" , uid : "66120103" , role : "Entry Fragger / Rusher" } , { name : "Rex" , uid : "66120104" , role : "Support / Healer" } ] } , { slot : 3 , name : "Titan Squad" , tag : "TITAN" , captain : "Titan_Max" , players : [ { name : "Titan_Max" , uid : "5510101" , role : "IGL (In-Game Leader)" } , { name : "Titan_Bolt" , uid : "5510102" , role : "Entry Fragger / Rusher" } , { name : "Titan_Frost" , uid : "5510103" , role : "Support / Healer" } , { name : "Spike" , uid : "5510104" , role : "Sniper / Marksman" } ] } , { slot : 4 , name : "Nova Gaming" , tag : "NOVA" , captain : "Nova_Flash" , players : [ { name : "Nova_Flash" , uid : "4419010" , role : "IGL (In-Game Leader)" } , { name : "Nova_Strike" , uid : "4419011" , role : "Entry Fragger / Rusher" } , { name : "Nova_Viper" , uid : "4419012" , role : "Support / Healer" } ] } , { slot : 5 , name : "Phoenix Esports" , tag : "PHX" , captain : "Phx_Flame" , players : [ { name : "Phx_Flame" , uid : "3310001" , role : "IGL (In-Game Leader)" } , { name : "Phx_Blaze" , uid : "3310002" , role : "Entry Fragger / Rusher" } , { name : "Spark" , uid : "3310003" , role : "Support / Healer" } ] } , { slot : 6 , name : "GodLike Elite" , tag : "GDL" , captain : "God_Zeus" , players : [ { name : "God_Zeus" , uid : "2218001" , role : "IGL (In-Game Leader)" } , { name : "God_Thor" , uid : "2218002" , role : "Entry Fragger / Rusher" } , { name : "Ares" , uid : "2218003" , role : "Support / Healer" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Bermuda Battle" , map : "Bermuda" , time : "8:00 PM IST" , roomId : "8849201" , roomPass : "VORTEX77" , status : "COMPLETED" , scores : [ { team : "Shadow Ninjas" , place : 1 , kills : 9 , bonus : 0 , penalty : 0 } , { team : "Aero Esports" , place : 2 , kills : 8 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 4 , kills : 5 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 5 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 6 , kills : 3 , bonus : 0 , penalty : 0 } ] } , { id : 2 , title : "Match 2 - Purgatory Clash" , map : "Purgatory" , time : "8:40 PM IST" , roomId : "8849202" , roomPass : "VORTEX88" , status : "LIVE" , scores : [ { team : "Aero Esports" , place : 1 , kills : 11 , bonus : 0 , penalty : 0 } , { team : "Shadow Ninjas" , place : 2 , kills : 7 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 4 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 5 , kills : 3 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 6 , kills : 2 , bonus : 0 , penalty : 0 } ] } , { id : 3 , title : "Match 3 - Kalahari Desert" , map : "Kalahari" , time : "9:20 PM IST" , roomId : "8849203" , roomPass : "VORTEX99" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ { title : "Initial Baseline (Before Match 1)" , timestamp : "8:00 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } , { team : "Aero Esports" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } ] } , { title : "Post Match 1 Standings" , timestamp : "8:35 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 1 , wwcd : 1 , kills : 9 , killPts : 9 , placePts : 12 , totalPts : 21 } , { team : "Aero Esports" , played : 1 , wwcd : 0 , kills : 8 , killPts : 8 , placePts : 9 , totalPts : 17 } , { team : "Titan Squad" , played : 1 , wwcd : 0 , kills : 6 , killPts : 6 , placePts : 8 , totalPts : 14 } ] } ] } , { id : 2 , title : "AERO PRO LEAGUE SEASON 4" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Purgatory, Alpine, NexTerra" , slots : 12 , prize : "₹10,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } , { slot : 2 , name : "Dark Hunters" , tag : "DHK" , captain : "Hunter_07" , players : [ { name : "Hunter_07" , uid : "119001" , role : "IGL" } , { name : "Hunter_Wolf" , uid : "119002" , role : "Rusher" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Purgatory" , map : "Purgatory" , time : "7:00 PM IST" , roomId : "9910441" , roomPass : "AERO99" , status : "COMPLETED" , scores : [ ] } ] , checkpoints : [ ] } , { id : 3 , title : "MIDNIGHT CLASH SCRIMS" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Kalahari, Alpine" , slots : 12 , prize : "₹5,000" , status : "UPCOMING" , statusClass : "open" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ ] , matches : [ ] , checkpoints : [ ] } ];
@@ -108,11 +173,10 @@ function setupAuthListener() {
 async function fetchTournamentsFromSupabase() {
   if (!supabaseClient) return;
   try {
-    let query = supabaseClient.from('tournaments').select('*');
-    if (currentUser && currentUser.id) {
-      query = query.or("user_id.eq." + currentUser.id + ",user_id.is.null");
-    }
-    const { data, error } = await query.order('id', { ascending: false });
+    const { data, error } = await supabaseClient
+      .from('tournaments')
+      .select('*')
+      .order('id', { ascending: false });
 
     if (error) {
       console.warn("Cloud fetch notice:", error.message);
@@ -275,10 +339,19 @@ function setupRealtimeSubscription() {
             }
           }
         } else if (payload.eventType === 'DELETE') {
-          tournamentsDb = tournamentsDb.filter(t => t.id !== payload.old.id);
-          saveStateToStorage(false);
-          renderLandingFeatured();
-          renderManageList();
+          const deletedId = payload.old ? (payload.old.id || payload.old) : null;
+          if (deletedId) {
+            tournamentsDb = tournamentsDb.filter(t => String(t.id) !== String(deletedId));
+            saveStateToStorage(false);
+            renderLandingFeatured();
+            renderManageList();
+            if (String(activeTourneyId) === String(deletedId)) {
+              showToast("⚠️ This tournament has been removed by its organizer.");
+              if (currentView === "view-workspace") {
+                switchView("view-landing");
+              }
+            }
+          }
         }
       })
       .subscribe();
@@ -289,6 +362,10 @@ function setupRealtimeSubscription() {
 
 async function syncTourneyToSupabase(tourney) {
   if (!supabaseClient || !tourney) return;
+  // Security guard: If tournament has an owner and current user is NOT that owner, block syncing full tournament updates
+  if (tourney.user_id && !isTourneyOwner(tourney)) {
+    return;
+  }
   try {
     const payload = {
       title: tourney.title,
@@ -317,7 +394,7 @@ async function syncTourneyToSupabase(tourney) {
         .eq('id', tourney.id);
     }
   } catch (e) {
-    console.warn("Supabase background sync notice:", e);
+    console.warn("Cloud background sync notice:", e);
   }
 }
 
@@ -504,8 +581,8 @@ function isTourneyOwner(tourney) {
   if (tourney.user_id) {
     return !!(currentUser && currentUser.loggedIn && currentUser.id === tourney.user_id);
   }
-  // Local tournaments or legacy tournaments without user_id
-  return true;
+  // For tournaments created locally without a user_id
+  return !!(currentUser && currentUser.loggedIn);
 }
 
 function isDeadlinePassed(tourney) {
@@ -646,7 +723,13 @@ async function confirmDeleteTourney() {
   const tIdx = tournamentsDb.findIndex(t => t.id === pendingDeleteTourneyId);
   if (tIdx === -1) return;
 
-  const tourneyTitle = tournamentsDb[tIdx].title;
+  const tourney = tournamentsDb[tIdx];
+  if (!isTourneyOwner(tourney)) {
+    showToast("⛔ Permission denied: Only the tournament creator can delete this tournament.");
+    return;
+  }
+
+  const tourneyTitle = tourney.title;
   const deletedId = pendingDeleteTourneyId;
 
   if (supabaseClient) {
@@ -685,6 +768,15 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
   if (!isEdit && tourney.teams.length >= tourney.slots) {
     showToast("⚠️ Registration Closed: All " + tourney.slots + " squad slots are full!");
     return;
+  }
+
+  if (isEdit) {
+    const isOwner = isTourneyOwner(tourney);
+    const regSquad = getUserRegisteredSquadForTourney(tourney);
+    if (!isOwner && (!regSquad || regSquad.teamIdx !== teamIdx)) {
+      showToast("⛔ Permission Denied: You can only edit your own registered squad.");
+      return;
+    }
   }
 
   const idInput = document.getElementById("reg-target-tourney-id");
@@ -765,6 +857,19 @@ async function handleSquadRegistrationSubmit() {
   if (isDeadlinePassed(tourney)) {
     showToast("🔒 Roster modification closed: Tournament registration deadline has passed.");
     return;
+  }
+
+  if (isEditMode) {
+    if (editIdx < 0 || !tourney.teams[editIdx]) {
+      showToast("⛔ Invalid squad edit target.");
+      return;
+    }
+    const isOwner = isTourneyOwner(tourney);
+    const regSquad = getUserRegisteredSquadForTourney(tourney);
+    if (!isOwner && (!regSquad || regSquad.teamIdx !== editIdx)) {
+      showToast("⛔ Permission Denied: You cannot modify another squad's roster.");
+      return;
+    }
   }
 
   if (!isEditMode && tourney.teams.length >= tourney.slots) {
@@ -1418,9 +1523,14 @@ function renderWorkspaceOverallStandings() {
 }
 
 function openTeamMatchesModal(targetTeam) {
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can edit match scores.");
+    return;
+  }
   editingTeamName = targetTeam;
-  tempTeamScores = [ ];
-  let activeT = getActiveTourney ( );
+  tempTeamScores = [];
   if (activeT != null) {
     (document.getElementById("modal-team-matches-title") || document.querySelector("modal-team-matches-title")).textContent = "EDIT ALL MATCH SCORES — " + targetTeam;
     let htmlBuffer = "";
@@ -1432,19 +1542,19 @@ function openTeamMatchesModal(targetTeam) {
       let penaltyVal = 0;
       for (const sc of m.scores) {
         if (sc.team == targetTeam) {
-          placeVal = Number ( sc.place );
-          killsVal = Number ( sc.kills );
-          bonusVal = Number ( sc.bonus );
-          penaltyVal = Number ( sc.penalty );
+          placeVal = Number(sc.place);
+          killsVal = Number(sc.kills);
+          bonusVal = Number(sc.bonus);
+          penaltyVal = Number(sc.penalty);
         }
       }
-      tempTeamScores.push ( { place : placeVal , kills : killsVal , bonus : bonusVal , penalty : penaltyVal } );
-      let pKey = String ( placeVal );
+      tempTeamScores.push({ place: placeVal, kills: killsVal, bonus: bonusVal, penalty: penaltyVal });
+      let pKey = String(placeVal);
       let placePts = 0;
-      if (activeT.placementPoints [ pKey ] != undefined) {
-        placePts = activeT.placementPoints [ pKey ];
+      if (activeT.placementPoints[pKey] != undefined) {
+        placePts = activeT.placementPoints[pKey];
       }
-      let killPts = killsVal * Number ( activeT.killMultiplier );
+      let killPts = killsVal * Number(activeT.killMultiplier);
       let totalMatchPts = placePts + killPts + bonusVal - penaltyVal;
       let statusBadge = "open";
       if (m.status == "LIVE") {
@@ -1471,15 +1581,15 @@ function openTeamMatchesModal(targetTeam) {
 }
 
 function updateTeamModalScore(mIdx, field, val) {
-  if (tempTeamScores [ mIdx ] != undefined) {
-    let targetScore = tempTeamScores [ mIdx ];
-    targetScore[field] = Number(val)
+  if (tempTeamScores[mIdx] != undefined) {
+    let targetScore = tempTeamScores[mIdx];
+    targetScore[field] = Number(val);
     refreshTeamModalSummary();
   }
 }
 
 function refreshTeamModalSummary() {
-  let activeT = getActiveTourney ( );
+  let activeT = getActiveTourney();
   if (activeT != null) {
     let cumPlayed = 0;
     let cumWwcd = 0;
@@ -1489,22 +1599,22 @@ function refreshTeamModalSummary() {
     let cumTotalPts = 0;
     let idx = 0;
     for (const sc of tempTeamScores) {
-      let pKey = String ( sc.place );
+      let pKey = String(sc.place);
       let placePts = 0;
-      if (activeT.placementPoints [ pKey ] != undefined) {
-        placePts = activeT.placementPoints [ pKey ];
+      if (activeT.placementPoints[pKey] != undefined) {
+        placePts = activeT.placementPoints[pKey];
       }
-      let killPts = Number ( sc.kills ) * Number ( activeT.killMultiplier );
-      let rowTotal = placePts + killPts + Number ( sc.bonus ) - Number ( sc.penalty );
-      let rowEl = document.getElementById ( "modal-m-pts-" + idx );
+      let killPts = Number(sc.kills) * Number(activeT.killMultiplier);
+      let rowTotal = placePts + killPts + Number(sc.bonus) - Number(sc.penalty);
+      let rowEl = document.getElementById("modal-m-pts-" + idx);
       if (rowEl != null) {
         rowEl.textContent = rowTotal + " PTS";
       }
       cumPlayed = cumPlayed + 1;
-      if (Number ( sc.place ) == 1) {
+      if (Number(sc.place) == 1) {
         cumWwcd = cumWwcd + 1;
       }
-      cumKills = cumKills + Number ( sc.kills );
+      cumKills = cumKills + Number(sc.kills);
       cumKillPts = cumKillPts + killPts;
       cumPlacePts = cumPlacePts + placePts;
       cumTotalPts = cumTotalPts + rowTotal;
@@ -1521,13 +1631,18 @@ function refreshTeamModalSummary() {
 }
 
 function saveTeamAllMatches() {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && editingTeamName != "") {
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can edit match scores.");
+    return;
+  }
+  if (editingTeamName != "") {
     let mIdx = 0;
     for (const sc of tempTeamScores) {
-      if (activeT.matches [ mIdx ] != undefined) {
+      if (activeT.matches[mIdx] != undefined) {
         let found = false;
-        for (const matchScore of activeT.matches [ mIdx ] .scores) {
+        for (const matchScore of activeT.matches[mIdx].scores) {
           if (matchScore.team == editingTeamName) {
             matchScore.place = sc.place;
             matchScore.kills = sc.kills;
@@ -1537,9 +1652,9 @@ function saveTeamAllMatches() {
           }
         }
         if (found == false) {
-          activeT.matches[mIdx].scores.push({ team: editingTeamName, place: sc.place, kills: sc.kills, bonus: sc.bonus, penalty: sc.penalty })
+          activeT.matches[mIdx].scores.push({ team: editingTeamName, place: sc.place, kills: sc.kills, bonus: sc.bonus, penalty: sc.penalty });
         }
-        activeT.matches[mIdx].scores.sort(function(itemA, itemB) { return itemA.place - itemB.place; })
+        activeT.matches[mIdx].scores.sort(function(itemA, itemB) { return itemA.place - itemB.place; });
       }
       mIdx = mIdx + 1;
     }
@@ -1564,8 +1679,8 @@ function renderWorkspacePointRules() {
     let htmlBuffer = "";
     for (const r of [ 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 ]) {
       let val = 0;
-      if (activeT.placementPoints [ String ( r ) ] != undefined) {
-        val = activeT.placementPoints [ String ( r ) ];
+      if (activeT.placementPoints[String(r)] != undefined) {
+        val = activeT.placementPoints[String(r)];
       }
       htmlBuffer = htmlBuffer + "<div class='pt-box'>";
       htmlBuffer = htmlBuffer + "<span class='pt-lbl'>#" + r + " Rank</span>";
@@ -1577,18 +1692,21 @@ function renderWorkspacePointRules() {
 }
 
 function createStandingsCheckpoint(customTitle) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null) {
-    let overallSnapshot = computeOverallStandings ( activeT );
-    let titleText = customTitle;
-    if (titleText == undefined || titleText == "") {
-      titleText = "Manual Checkpoint #" + ( activeT.checkpoints.length + 1 );
-    }
-    let timeStr = new Date ( ) .toLocaleTimeString ( );
-    activeT.checkpoints.push ( { title : titleText , timestamp : timeStr , standings : JSON.parse ( JSON.stringify ( overallSnapshot ) ) } );
-    saveStateToStorage();
-    showToast("🔖 Checkpoint saved: " + titleText);
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can save checkpoints.");
+    return;
   }
+  let overallSnapshot = computeOverallStandings(activeT);
+  let titleText = customTitle;
+  if (titleText == undefined || titleText == "") {
+    titleText = "Manual Checkpoint #" + (activeT.checkpoints.length + 1);
+  }
+  let timeStr = new Date().toLocaleTimeString();
+  activeT.checkpoints.push({ title: titleText, timestamp: timeStr, standings: JSON.parse(JSON.stringify(overallSnapshot)) });
+  saveStateToStorage();
+  showToast("🔖 Checkpoint saved: " + titleText);
 }
 
 function renderRevertModalList() {
@@ -2242,9 +2360,14 @@ function copyTextLeaderboardReport() {
 }
 
 function editTeamModal(teamIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.teams [ teamIdx ] != undefined) {
-    let sq = activeT.teams [ teamIdx ];
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can edit squad details.");
+    return;
+  }
+  if (activeT.teams[teamIdx] != undefined) {
+    let sq = activeT.teams[teamIdx];
     (document.getElementById("edit-team-idx") || document.querySelector("edit-team-idx")).value = teamIdx;
     (document.getElementById("team-input-slot") || document.querySelector("team-input-slot")).value = sq.slot;
     (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value = sq.tag;
@@ -2256,10 +2379,15 @@ function editTeamModal(teamIdx) {
 }
 
 function deleteTeam(teamIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.teams [ teamIdx ] != undefined) {
-    let name = activeT.teams [ teamIdx ] .name;
-    activeT.teams.splice ( teamIdx , 1 );
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can delete squads.");
+    return;
+  }
+  if (activeT.teams[teamIdx] != undefined) {
+    let name = activeT.teams[teamIdx].name;
+    activeT.teams.splice(teamIdx, 1);
     saveStateToStorage();
     renderWorkspaceOverview();
     renderWorkspaceTeams();
@@ -2270,6 +2398,12 @@ function deleteTeam(teamIdx) {
 }
 
 function openAddPlayerModal(teamIdx) {
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can add players.");
+    return;
+  }
   (document.getElementById("edit-player-team-idx") || document.querySelector("edit-player-team-idx")).value = teamIdx;
   (document.getElementById("edit-player-idx") || document.querySelector("edit-player-idx")).value = "-1";
   (document.getElementById("player-input-name") || document.querySelector("player-input-name")).value = "";
@@ -2279,9 +2413,14 @@ function openAddPlayerModal(teamIdx) {
 }
 
 function editPlayerModal(teamIdx, playerIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.teams [ teamIdx ] != undefined) {
-    let p = activeT.teams [ teamIdx ] .players [ playerIdx ];
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can edit players.");
+    return;
+  }
+  if (activeT.teams[teamIdx] != undefined) {
+    let p = activeT.teams[teamIdx].players[playerIdx];
     if (p != undefined) {
       (document.getElementById("edit-player-team-idx") || document.querySelector("edit-player-team-idx")).value = teamIdx;
       (document.getElementById("edit-player-idx") || document.querySelector("edit-player-idx")).value = playerIdx;
@@ -2295,9 +2434,14 @@ function editPlayerModal(teamIdx, playerIdx) {
 }
 
 function deletePlayer(teamIdx, playerIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.teams [ teamIdx ] != undefined) {
-    let pName = activeT.teams [ teamIdx ] .players [ playerIdx ] .name;
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can delete players.");
+    return;
+  }
+  if (activeT.teams[teamIdx] != undefined) {
+    let pName = activeT.teams[teamIdx].players[playerIdx].name;
     activeT.teams[teamIdx].players.splice(playerIdx, 1);
     saveStateToStorage();
     renderWorkspaceTeams();
@@ -2306,36 +2450,42 @@ function deletePlayer(teamIdx, playerIdx) {
 }
 
 function toggleMatchStatus(matchId) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null) {
-    for (const m of activeT.matches) {
-      if (m.id == matchId) {
-        if (m.status == "SCHEDULED") {
-          m.status = "LIVE";
-        }
-        else if (m.status == "LIVE") {
-          m.status = "COMPLETED";
-        }
-        else {
-          m.status = "SCHEDULED";
-        }
-        saveStateToStorage();
-        renderWorkspaceOverview();
-        renderWorkspaceMatches();
-        renderWorkspaceMatchStandings();
-        renderWorkspaceOverallStandings();
-        showToast(m.title + " status changed to: " + m.status);
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can change match status.");
+    return;
+  }
+  for (const m of activeT.matches) {
+    if (m.id == matchId) {
+      if (m.status == "SCHEDULED") {
+        m.status = "LIVE";
+      } else if (m.status == "LIVE") {
+        m.status = "COMPLETED";
+      } else {
+        m.status = "SCHEDULED";
       }
+      saveStateToStorage();
+      renderWorkspaceOverview();
+      renderWorkspaceMatches();
+      renderWorkspaceMatchStandings();
+      renderWorkspaceOverallStandings();
+      showToast(m.title + " status changed to: " + m.status);
     }
   }
 }
 
 function updateMatchScore(scoreIdx, field, val) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.matches [ activeMatchIdx ] != undefined) {
-    let row = activeT.matches [ activeMatchIdx ] .scores [ scoreIdx ];
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can update match scores.");
+    return;
+  }
+  if (activeT.matches[activeMatchIdx] != undefined) {
+    let row = activeT.matches[activeMatchIdx].scores[scoreIdx];
     if (row != undefined) {
-      row[field] = Number(val)
+      row[field] = Number(val);
       activeT.matches[activeMatchIdx].scores.sort(function(itemA, itemB) { return itemA.place - itemB.place; });
       saveStateToStorage();
       renderWorkspaceOverview();
@@ -2347,8 +2497,13 @@ function updateMatchScore(scoreIdx, field, val) {
 }
 
 function deleteMatchRow(scoreIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.matches [ activeMatchIdx ] != undefined) {
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can delete match rows.");
+    return;
+  }
+  if (activeT.matches[activeMatchIdx] != undefined) {
     activeT.matches[activeMatchIdx].scores.splice(scoreIdx, 1);
     saveStateToStorage();
     renderWorkspaceMatchStandings();
@@ -2358,9 +2513,14 @@ function deleteMatchRow(scoreIdx) {
 }
 
 function applyRevert(checkpointIdx) {
-  let activeT = getActiveTourney ( );
-  if (activeT != null && activeT.checkpoints [ checkpointIdx ] != undefined) {
-    let cp = activeT.checkpoints [ checkpointIdx ];
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+  if (!isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the tournament organizer can restore checkpoints.");
+    return;
+  }
+  if (activeT.checkpoints[checkpointIdx] != undefined) {
+    let cp = activeT.checkpoints[checkpointIdx];
     let htmlBuffer = "";
     let rank = 1;
     for (const row of cp.standings) {
@@ -3034,30 +3194,34 @@ window.removeInitialSquadFromDraft = function(idx) {
       }
 
       let activeT = getActiveTourney();
-      if (activeT != null) {
-        if (editIdx >= 0 && activeT.teams[editIdx]) {
-          activeT.teams[editIdx].slot = slotVal;
-          activeT.teams[editIdx].tag = tagVal;
-          activeT.teams[editIdx].name = nameVal;
-          activeT.teams[editIdx].captain = capVal;
-          showToast("✓ Squad " + nameVal + " updated!");
-        } else {
-          activeT.teams.push({
-            slot: slotVal,
-            tag: tagVal,
-            name: nameVal,
-            captain: capVal,
-            players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
-          });
-          showToast("✓ Squad " + nameVal + " added to Slot " + slotVal + "!");
-        }
-        saveStateToStorage();
-        renderWorkspaceOverview();
-        renderWorkspaceTeams();
-        renderWorkspaceMatchStandings();
-        renderWorkspaceOverallStandings();
-        (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.remove('show');
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can add or edit squads.");
+        return;
       }
+
+      if (editIdx >= 0 && activeT.teams[editIdx]) {
+        activeT.teams[editIdx].slot = slotVal;
+        activeT.teams[editIdx].tag = tagVal;
+        activeT.teams[editIdx].name = nameVal;
+        activeT.teams[editIdx].captain = capVal;
+        showToast("✓ Squad " + nameVal + " updated!");
+      } else {
+        activeT.teams.push({
+          slot: slotVal,
+          tag: tagVal,
+          name: nameVal,
+          captain: capVal,
+          players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
+        });
+        showToast("✓ Squad " + nameVal + " added to Slot " + slotVal + "!");
+      }
+      saveStateToStorage();
+      renderWorkspaceOverview();
+      renderWorkspaceTeams();
+      renderWorkspaceMatchStandings();
+      renderWorkspaceOverallStandings();
+      (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.remove('show');
     });
   }
 })();
@@ -3084,9 +3248,14 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-save-player") || document.querySelector("btn-save-player"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let activeT = getActiveTourney ( );
-      let tIdx = Number ( (document.getElementById("edit-player-team-idx") || document.querySelector("edit-player-team-idx")).value );
-      let pIdx = Number ( (document.getElementById("edit-player-idx") || document.querySelector("edit-player-idx")).value );
+      let activeT = getActiveTourney();
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can edit players.");
+        return;
+      }
+      let tIdx = Number((document.getElementById("edit-player-team-idx") || document.querySelector("edit-player-team-idx")).value);
+      let pIdx = Number((document.getElementById("edit-player-idx") || document.querySelector("edit-player-idx")).value);
       let pName = (document.getElementById("player-input-name") || document.querySelector("player-input-name")).value;
       let pUid = (document.getElementById("player-input-uid") || document.querySelector("player-input-uid")).value;
       let pRole = (document.getElementById("player-input-role") || document.querySelector("player-input-role")).value;
@@ -3094,18 +3263,17 @@ window.removeInitialSquadFromDraft = function(idx) {
         pName = "Striker_99";
       }
       if (pUid == "") {
-        pUid = String ( Math.floor ( 10000000 + Math.random ( ) * 90000000 ) );
+        pUid = String(Math.floor(10000000 + Math.random() * 90000000));
       }
-      if (activeT != null && activeT.teams [ tIdx ] != undefined) {
+      if (activeT.teams[tIdx] != undefined) {
         if (pIdx >= 0) {
           activeT.teams[tIdx].players[pIdx].name = pName;
           activeT.teams[tIdx].players[pIdx].uid = pUid;
           activeT.teams[tIdx].players[pIdx].role = pRole;
           showToast("✓ Player " + pName + " updated!");
-        }
-        else {
+        } else {
           activeT.teams[tIdx].players.push({ name: pName, uid: pUid, role: pRole });
-          showToast("✓ Added " + pName + " to " + activeT.teams [ tIdx ] .name + " roster!");
+          showToast("✓ Added " + pName + " to " + activeT.teams[tIdx].name + " roster!");
         }
         saveStateToStorage();
         renderWorkspaceTeams();
@@ -3119,6 +3287,11 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-open-add-match-modal") || document.querySelector("btn-open-add-match-modal"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      let activeT = getActiveTourney();
+      if (!activeT || !isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can add matches.");
+        return;
+      }
       (document.getElementById("modal-match-edit") || document.querySelector("modal-match-edit")).classList.add('show');
     });
   }
@@ -3146,30 +3319,33 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-save-match") || document.querySelector("btn-save-match"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let activeT = getActiveTourney ( );
+      let activeT = getActiveTourney();
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can create matches.");
+        return;
+      }
       let mTitle = (document.getElementById("match-input-title") || document.querySelector("match-input-title")).value;
       let mMap = (document.getElementById("match-input-map") || document.querySelector("match-input-map")).value;
       let mTime = (document.getElementById("match-input-time") || document.querySelector("match-input-time")).value;
       let mRoomId = (document.getElementById("match-input-room-id") || document.querySelector("match-input-room-id")).value;
       let mPass = (document.getElementById("match-input-room-pass") || document.querySelector("match-input-room-pass")).value;
       if (mTitle == "") {
-        mTitle = "Match " + ( activeT.matches.length + 1 ) + " - " + mMap;
+        mTitle = "Match " + (activeT.matches.length + 1) + " - " + mMap;
       }
       if (mRoomId == "") {
-        mRoomId = String ( Math.floor ( 1000000 + Math.random ( ) * 9000000 ) );
+        mRoomId = String(Math.floor(1000000 + Math.random() * 9000000));
       }
       if (mPass == "") {
         mPass = "VORTEX2026";
       }
-      if (activeT != null) {
-        activeT.matches.push ( { id : activeT.matches.length + 1 , title : mTitle , map : mMap , time : mTime , roomId : mRoomId , roomPass : mPass , status : "SCHEDULED" , scores : [ ] } );
-        saveStateToStorage();
-        renderWorkspaceOverview();
-        renderWorkspaceMatches();
-        renderWorkspaceMatchStandings();
-        (document.getElementById("modal-match-edit") || document.querySelector("modal-match-edit")).classList.remove('show');
-        showToast("🎮 Custom Match scheduled & Room ID " + mRoomId + " generated!");
-      }
+      activeT.matches.push({ id: activeT.matches.length + 1, title: mTitle, map: mMap, time: mTime, roomId: mRoomId, roomPass: mPass, status: "SCHEDULED", scores: [] });
+      saveStateToStorage();
+      renderWorkspaceOverview();
+      renderWorkspaceMatches();
+      renderWorkspaceMatchStandings();
+      (document.getElementById("modal-match-edit") || document.querySelector("modal-match-edit")).classList.remove('show');
+      showToast("🎮 Custom Match scheduled & Room ID " + mRoomId + " generated!");
     });
   }
 })();
@@ -3205,6 +3381,12 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-ws-save-match-results") || document.querySelector("btn-ws-save-match-results"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      let activeT = getActiveTourney();
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can save match scores.");
+        return;
+      }
       renderWorkspaceOverallStandings();
       renderWorkspaceOverview();
       showToast("💾 Match scores saved and overall leaderboard recalculated!");
@@ -3216,10 +3398,15 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-ws-publish-match") || document.querySelector("btn-ws-publish-match"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let activeT = getActiveTourney ( );
-      if (activeT != null && activeT.matches [ activeMatchIdx ] != undefined) {
+      let activeT = getActiveTourney();
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can publish matches.");
+        return;
+      }
+      if (activeT.matches[activeMatchIdx] != undefined) {
         activeT.matches[activeMatchIdx].status = "COMPLETED";
-        createStandingsCheckpoint(( "Snapshot After " + activeT.matches [ activeMatchIdx ] .title ));
+        createStandingsCheckpoint("Snapshot After " + activeT.matches[activeMatchIdx].title);
         saveStateToStorage();
         renderWorkspaceOverview();
         renderWorkspaceMatches();
@@ -3244,6 +3431,11 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-ws-open-revert-modal") || document.querySelector("btn-ws-open-revert-modal"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      let activeT = getActiveTourney();
+      if (!activeT || !isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can restore checkpoints.");
+        return;
+      }
       renderRevertModalList();
       (document.getElementById("modal-revert-standings") || document.querySelector("modal-revert-standings")).classList.add('show');
     });
@@ -3273,21 +3465,24 @@ window.removeInitialSquadFromDraft = function(idx) {
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
       let activeT = getActiveTourney();
-      if (activeT != null) {
-        activeT.killMultiplier = Number((document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value);
-        activeT.placementPoints = { "1" : Number ( (document.getElementById("ws-pt-rank-1") || document.querySelector("ws-pt-rank-1")).value ) , "2" : Number ( (document.getElementById("ws-pt-rank-2") || document.querySelector("ws-pt-rank-2")).value ) , "3" : Number ( (document.getElementById("ws-pt-rank-3") || document.querySelector("ws-pt-rank-3")).value ) , "4" : Number ( (document.getElementById("ws-pt-rank-4") || document.querySelector("ws-pt-rank-4")).value ) , "5" : Number ( (document.getElementById("ws-pt-rank-5") || document.querySelector("ws-pt-rank-5")).value ) , "6" : Number ( (document.getElementById("ws-pt-rank-6") || document.querySelector("ws-pt-rank-6")).value ) , "7" : Number ( (document.getElementById("ws-pt-rank-7") || document.querySelector("ws-pt-rank-7")).value ) , "8" : Number ( (document.getElementById("ws-pt-rank-8") || document.querySelector("ws-pt-rank-8")).value ) , "9" : Number ( (document.getElementById("ws-pt-rank-9") || document.querySelector("ws-pt-rank-9")).value ) , "10" : Number ( (document.getElementById("ws-pt-rank-10") || document.querySelector("ws-pt-rank-10")).value ) , "11" : Number ( (document.getElementById("ws-pt-rank-11") || document.querySelector("ws-pt-rank-11")).value ) , "12" : Number ( (document.getElementById("ws-pt-rank-12") || document.querySelector("ws-pt-rank-12")).value ) };
-        const dlVal = (document.getElementById("ws-rules-deadline") || {}).value;
-        if (dlVal !== undefined) {
-          activeT.registrationDeadline = dlVal || "";
-        }
-        saveStateToStorage();
-        renderWorkspaceOverview();
-        renderWorkspaceMatchStandings();
-        renderWorkspaceOverallStandings();
-        renderLandingFeatured();
-        renderManageList();
-        showToast("✓ Point system rules & deadline updated!");
+      if (!activeT) return;
+      if (!isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only the tournament organizer can change point rules.");
+        return;
       }
+      activeT.killMultiplier = Number((document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value);
+      activeT.placementPoints = { "1" : Number((document.getElementById("ws-pt-rank-1") || document.querySelector("ws-pt-rank-1")).value), "2" : Number((document.getElementById("ws-pt-rank-2") || document.querySelector("ws-pt-rank-2")).value), "3" : Number((document.getElementById("ws-pt-rank-3") || document.querySelector("ws-pt-rank-3")).value), "4" : Number((document.getElementById("ws-pt-rank-4") || document.querySelector("ws-pt-rank-4")).value), "5" : Number((document.getElementById("ws-pt-rank-5") || document.querySelector("ws-pt-rank-5")).value), "6" : Number((document.getElementById("ws-pt-rank-6") || document.querySelector("ws-pt-rank-6")).value), "7" : Number((document.getElementById("ws-pt-rank-7") || document.querySelector("ws-pt-rank-7")).value), "8" : Number((document.getElementById("ws-pt-rank-8") || document.querySelector("ws-pt-rank-8")).value), "9" : Number((document.getElementById("ws-pt-rank-9") || document.querySelector("ws-pt-rank-9")).value), "10" : Number((document.getElementById("ws-pt-rank-10") || document.querySelector("ws-pt-rank-10")).value), "11" : Number((document.getElementById("ws-pt-rank-11") || document.querySelector("ws-pt-rank-11")).value), "12" : Number((document.getElementById("ws-pt-rank-12") || document.querySelector("ws-pt-rank-12")).value) };
+      const dlVal = (document.getElementById("ws-rules-deadline") || {}).value;
+      if (dlVal !== undefined) {
+        activeT.registrationDeadline = dlVal || "";
+      }
+      saveStateToStorage();
+      renderWorkspaceOverview();
+      renderWorkspaceMatchStandings();
+      renderWorkspaceOverallStandings();
+      renderLandingFeatured();
+      renderManageList();
+      showToast("✓ Point system rules & deadline updated!");
     });
   }
 })();
