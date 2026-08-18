@@ -759,19 +759,13 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
       const amtBadge = document.getElementById("reg-pay-amt-badge");
       if (amtBadge) amtBadge.textContent = "₹" + tourney.entryFee + " / SQUAD";
 
-      // Generate unique VTX-TR Code with random 4 hex digits
-      const randHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase();
-      const vtxCode = "VTX-TR-" + tourney.id + "-" + randHex;
-      const vtxCodeEl = document.getElementById("reg-vtx-tr-code");
-      if (vtxCodeEl) vtxCodeEl.textContent = vtxCode;
-
       const upiId = tourney.upiId || "spandanprayas2079@ybl";
       const upiName = tourney.upiName || "Spandan Prayas";
       const upiDisplay = document.getElementById("reg-upi-id-display");
       if (upiDisplay) upiDisplay.textContent = upiId;
 
-      // Dynamic UPI Intent Link with VTX-TR code in Transaction Note
-      const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tn=" + encodeURIComponent(vtxCode);
+      // Clean Standard UPI Intent URL
+      const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tn=" + encodeURIComponent("Tourney Registration Fee");
       const payLinkBtn = document.getElementById("btn-upi-intent-pay");
       if (payLinkBtn) payLinkBtn.href = upiIntentUrl;
 
@@ -850,13 +844,11 @@ async function handleSquadRegistrationSubmit() {
 
   const isPaidTourney = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0;
   let paymentUtr = "";
-  let vtxCode = "";
   let paymentStatus = isPaidTourney ? "PENDING" : "FREE";
   let paymentProof = "";
 
   if (isPaidTourney && !isEditMode) {
     paymentUtr = (document.getElementById("reg-payment-utr") || {}).value?.trim() || "";
-    vtxCode = (document.getElementById("reg-vtx-tr-code") || {}).textContent?.trim() || "";
 
     if (!paymentUtr || paymentUtr.length < 6) {
       showToast("⚠️ Please enter the valid 12-digit UPI UTR number from your payment receipt!");
@@ -1652,9 +1644,6 @@ function renderWorkspacePayments() {
         <td>
           <div style="font-size:12px;">${team.captain.split(" (")[0]}</div>
           ${cleanPhone ? `<a href="${waLink}" target="_blank" style="color:#25D366; font-size:11px; text-decoration:none; font-weight:800;">💬 ${team.whatsapp}</a>` : `<span style="color:#64748b; font-size:11px;">N/A</span>`}
-        </td>
-        <td>
-          ${team.vtxCode ? `<span style="font-family:monospace; font-weight:900; color:#00f0ff; background:#141422; padding:3px 6px; border-radius:4px; border:1px solid #28283c;">${team.vtxCode}</span>` : `<span style="color:#64748b;">—</span>`}
         </td>
         <td>
           ${team.utr ? `
