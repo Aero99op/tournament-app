@@ -10,7 +10,8 @@ let editingTeamName = "";
 
 let tempTeamScores = [ ];
 
-let currentUser = { name : "Kiryu_FF" , uid : "77489210" , role : "Organizer" , loggedIn : true };
+let currentUser = { id : null , email : "" , name : "Guest" , uid : "" , role : "Organizer" , loggedIn : false };
+let currentAuthTab = "login";
 
 let tournamentsDb = [ { id : 1 , title : "VORTEX GRANDMASTERS CHAMPIONSHIP" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Bermuda, Purgatory, Kalahari, Alpine" , slots : 12 , prize : "₹25,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL (In-Game Leader)" } , { name : "Zen_99" , uid : "77489211" , role : "Entry Fragger / Rusher" } , { name : "Taro_X" , uid : "77489212" , role : "Support / Healer" } , { name : "Ken" , uid : "77489213" , role : "Sniper / Marksman" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL (In-Game Leader)" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper / Marksman" } , { name : "Aero_Ghost" , uid : "66120103" , role : "Entry Fragger / Rusher" } , { name : "Rex" , uid : "66120104" , role : "Support / Healer" } ] } , { slot : 3 , name : "Titan Squad" , tag : "TITAN" , captain : "Titan_Max" , players : [ { name : "Titan_Max" , uid : "5510101" , role : "IGL (In-Game Leader)" } , { name : "Titan_Bolt" , uid : "5510102" , role : "Entry Fragger / Rusher" } , { name : "Titan_Frost" , uid : "5510103" , role : "Support / Healer" } , { name : "Spike" , uid : "5510104" , role : "Sniper / Marksman" } ] } , { slot : 4 , name : "Nova Gaming" , tag : "NOVA" , captain : "Nova_Flash" , players : [ { name : "Nova_Flash" , uid : "4419010" , role : "IGL (In-Game Leader)" } , { name : "Nova_Strike" , uid : "4419011" , role : "Entry Fragger / Rusher" } , { name : "Nova_Viper" , uid : "4419012" , role : "Support / Healer" } ] } , { slot : 5 , name : "Phoenix Esports" , tag : "PHX" , captain : "Phx_Flame" , players : [ { name : "Phx_Flame" , uid : "3310001" , role : "IGL (In-Game Leader)" } , { name : "Phx_Blaze" , uid : "3310002" , role : "Entry Fragger / Rusher" } , { name : "Spark" , uid : "3310003" , role : "Support / Healer" } ] } , { slot : 6 , name : "GodLike Elite" , tag : "GDL" , captain : "God_Zeus" , players : [ { name : "God_Zeus" , uid : "2218001" , role : "IGL (In-Game Leader)" } , { name : "God_Thor" , uid : "2218002" , role : "Entry Fragger / Rusher" } , { name : "Ares" , uid : "2218003" , role : "Support / Healer" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Bermuda Battle" , map : "Bermuda" , time : "8:00 PM IST" , roomId : "8849201" , roomPass : "VORTEX77" , status : "COMPLETED" , scores : [ { team : "Shadow Ninjas" , place : 1 , kills : 9 , bonus : 0 , penalty : 0 } , { team : "Aero Esports" , place : 2 , kills : 8 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 4 , kills : 5 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 5 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 6 , kills : 3 , bonus : 0 , penalty : 0 } ] } , { id : 2 , title : "Match 2 - Purgatory Clash" , map : "Purgatory" , time : "8:40 PM IST" , roomId : "8849202" , roomPass : "VORTEX88" , status : "LIVE" , scores : [ { team : "Aero Esports" , place : 1 , kills : 11 , bonus : 0 , penalty : 0 } , { team : "Shadow Ninjas" , place : 2 , kills : 7 , bonus : 0 , penalty : 0 } , { team : "Nova Gaming" , place : 3 , kills : 6 , bonus : 0 , penalty : 0 } , { team : "Titan Squad" , place : 4 , kills : 4 , bonus : 0 , penalty : 0 } , { team : "GodLike Elite" , place : 5 , kills : 3 , bonus : 0 , penalty : 0 } , { team : "Phoenix Esports" , place : 6 , kills : 2 , bonus : 0 , penalty : 0 } ] } , { id : 3 , title : "Match 3 - Kalahari Desert" , map : "Kalahari" , time : "9:20 PM IST" , roomId : "8849203" , roomPass : "VORTEX99" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ { title : "Initial Baseline (Before Match 1)" , timestamp : "8:00 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } , { team : "Aero Esports" , played : 0 , wwcd : 0 , kills : 0 , killPts : 0 , placePts : 0 , totalPts : 0 } ] } , { title : "Post Match 1 Standings" , timestamp : "8:35 PM IST" , standings : [ { team : "Shadow Ninjas" , played : 1 , wwcd : 1 , kills : 9 , killPts : 9 , placePts : 12 , totalPts : 21 } , { team : "Aero Esports" , played : 1 , wwcd : 0 , kills : 8 , killPts : 8 , placePts : 9 , totalPts : 17 } , { team : "Titan Squad" , played : 1 , wwcd : 0 , kills : 6 , killPts : 6 , placePts : 8 , totalPts : 14 } ] } ] } , { id : 2 , title : "AERO PRO LEAGUE SEASON 4" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Purgatory, Alpine, NexTerra" , slots : 12 , prize : "₹10,000" , status : "LIVE" , statusClass : "live" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ { slot : 1 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } , { slot : 2 , name : "Dark Hunters" , tag : "DHK" , captain : "Hunter_07" , players : [ { name : "Hunter_07" , uid : "119001" , role : "IGL" } , { name : "Hunter_Wolf" , uid : "119002" , role : "Rusher" } ] } ] , matches : [ { id : 1 , title : "Match 1 - Purgatory" , map : "Purgatory" , time : "7:00 PM IST" , roomId : "9910441" , roomPass : "AERO99" , status : "COMPLETED" , scores : [ ] } ] , checkpoints : [ ] } , { id : 3 , title : "MIDNIGHT CLASH SCRIMS" , game : "Free Fire MAX" , format : "SQUAD (BR)" , maps : "Kalahari, Alpine" , slots : 12 , prize : "₹5,000" , status : "UPCOMING" , statusClass : "open" , killMultiplier : 1 , placementPoints : { "1" : 12 , "2" : 9 , "3" : 8 , "4" : 7 , "5" : 6 , "6" : 5 , "7" : 4 , "8" : 3 , "9" : 2 , "10" : 1 , "11" : 0 , "12" : 0 } , teams : [ ] , matches : [ ] , checkpoints : [ ] } ];
 
@@ -28,13 +29,53 @@ function updateSyncStatus(status, text) {
   }
 }
 
+function updateHeaderAuthUI() {
+  const profileBadge = document.getElementById("user-profile-badge");
+  const loginBtn = document.getElementById("btn-open-auth");
+  const displayName = document.getElementById("display-user-name");
+
+  if (currentUser && currentUser.loggedIn) {
+    if (profileBadge) profileBadge.style.display = "flex";
+    if (loginBtn) loginBtn.style.display = "none";
+    if (displayName) displayName.textContent = currentUser.name + " (" + currentUser.role + ")";
+  } else {
+    if (profileBadge) profileBadge.style.display = "none";
+    if (loginBtn) loginBtn.style.display = "inline-block";
+  }
+}
+
+function setUserFromSession(user) {
+  if (!user) return;
+  const metadata = user.user_metadata || {};
+  currentUser = {
+    id: user.id,
+    email: user.email || "",
+    name: metadata.name || (user.email ? user.email.split('@')[0] : "Organizer"),
+    uid: metadata.uid || user.id.slice(0, 8),
+    role: metadata.role || "Organizer",
+    loggedIn: true
+  };
+  saveStateToStorage(false);
+  updateHeaderAuthUI();
+}
+
 async function initSupabase() {
   if (typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       updateSyncStatus("connecting", "⚡ CONNECTING CLOUD...");
+      
+      // Auto-restore session from token stored in browser
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        setUserFromSession(session.user);
+      } else {
+        updateHeaderAuthUI();
+      }
+
       await fetchTournamentsFromSupabase();
       setupRealtimeSubscription();
+      setupAuthListener();
     } catch (err) {
       console.warn("Supabase init error:", err);
       updateSyncStatus("offline", "💾 LOCAL STORAGE");
@@ -44,13 +85,34 @@ async function initSupabase() {
   }
 }
 
+function setupAuthListener() {
+  if (!supabaseClient) return;
+  try {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session && session.user) {
+        setUserFromSession(session.user);
+        await fetchTournamentsFromSupabase();
+      } else if (event === "SIGNED_OUT") {
+        currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organizer", loggedIn: false };
+        saveStateToStorage(false);
+        updateHeaderAuthUI();
+        renderLandingFeatured();
+        renderManageList();
+      }
+    });
+  } catch (e) {
+    console.warn("Auth listener setup notice:", e);
+  }
+}
+
 async function fetchTournamentsFromSupabase() {
   if (!supabaseClient) return;
   try {
-    const { data, error } = await supabaseClient
-      .from('tournaments')
-      .select('*')
-      .order('id', { ascending: false });
+    let query = supabaseClient.from('tournaments').select('*');
+    if (currentUser && currentUser.id) {
+      query = query.or("user_id.eq." + currentUser.id + ",user_id.is.null");
+    }
+    const { data, error } = await query.order('id', { ascending: false });
 
     if (error) {
       console.warn("Supabase fetch notice (fallback to LocalStorage until SQL table is created):", error.message);
@@ -83,9 +145,10 @@ async function fetchTournamentsFromSupabase() {
       }
       isSupabaseLive = true;
       updateSyncStatus("online", "🟢 SUPABASE LIVE");
-      showToast("☁️ Connected to Supabase Cloud Database!");
     } else {
-      await seedInitialTournamentsToSupabase();
+      if (currentUser && currentUser.loggedIn) {
+        await seedInitialTournamentsToSupabase();
+      }
     }
   } catch (err) {
     console.warn("Network error during Supabase sync:", err);
@@ -111,7 +174,8 @@ async function seedInitialTournamentsToSupabase() {
         placement_points: t.placementPoints,
         teams: t.teams,
         matches: t.matches,
-        checkpoints: t.checkpoints
+        checkpoints: t.checkpoints,
+        user_id: currentUser?.id || null
       }]);
     }
     const { data } = await supabaseClient.from('tournaments').select('*').order('id', { ascending: false });
@@ -233,7 +297,8 @@ async function syncTourneyToSupabase(tourney) {
       placement_points: tourney.placementPoints,
       teams: tourney.teams,
       matches: tourney.matches,
-      checkpoints: tourney.checkpoints
+      checkpoints: tourney.checkpoints,
+      user_id: currentUser?.id || null
     };
 
     if (tourney.id && typeof tourney.id === 'number' && tourney.id > 0) {
@@ -263,7 +328,8 @@ async function insertNewTourneyToSupabase(newTourney) {
       placement_points: newTourney.placementPoints,
       teams: newTourney.teams,
       matches: newTourney.matches,
-      checkpoints: newTourney.checkpoints
+      checkpoints: newTourney.checkpoints,
+      user_id: currentUser?.id || null
     }]).select();
 
     if (!error && data && data.length > 0) {
@@ -315,6 +381,7 @@ function loadStateFromStorage() {
   } catch (e) {
     console.warn("Storage load error:", e);
   }
+  updateHeaderAuthUI();
 }
 
 function showToast(message) {
@@ -1231,10 +1298,171 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   }
 })();
 
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  const loginForm = document.getElementById("auth-form-login");
+  const signupForm = document.getElementById("auth-form-signup");
+  const tabLogin = document.getElementById("tab-auth-login");
+  const tabSignup = document.getElementById("tab-auth-signup");
+  const submitBtn = document.getElementById("btn-submit-auth");
+  const errBox = document.getElementById("auth-error-msg");
+  const succBox = document.getElementById("auth-success-msg");
+
+  if (errBox) errBox.style.display = "none";
+  if (succBox) succBox.style.display = "none";
+
+  if (tab === "login") {
+    if (loginForm) loginForm.style.display = "block";
+    if (signupForm) signupForm.style.display = "none";
+    if (tabLogin) tabLogin.classList.add("active");
+    if (tabSignup) tabSignup.classList.remove("active");
+    if (submitBtn) submitBtn.textContent = "LOG IN ➔";
+  } else {
+    if (loginForm) loginForm.style.display = "none";
+    if (signupForm) signupForm.style.display = "block";
+    if (tabLogin) tabLogin.classList.remove("active");
+    if (tabSignup) tabSignup.classList.add("active");
+    if (submitBtn) submitBtn.textContent = "CREATE ACCOUNT ➔";
+  }
+}
+
+function showAuthError(msg) {
+  const errBox = document.getElementById("auth-error-msg");
+  if (errBox) {
+    errBox.textContent = "⚠️ " + msg;
+    errBox.style.display = "block";
+  }
+}
+
+async function handleAuthSubmit() {
+  const errBox = document.getElementById("auth-error-msg");
+  const succBox = document.getElementById("auth-success-msg");
+  const submitBtn = document.getElementById("btn-submit-auth");
+
+  if (errBox) errBox.style.display = "none";
+  if (succBox) succBox.style.display = "none";
+
+  if (currentAuthTab === "login") {
+    const email = (document.getElementById("auth-login-email") || {}).value?.trim();
+    const password = (document.getElementById("auth-login-password") || {}).value;
+
+    if (!email || !password) {
+      showAuthError("Please enter both email and password.");
+      return;
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "LOGGING IN..."; }
+
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) {
+          showAuthError(error.message);
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "LOG IN ➔"; }
+          return;
+        }
+
+        if (data && data.user) {
+          setUserFromSession(data.user);
+          (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.remove('show');
+          showToast("🛡️ Logged in as " + currentUser.name + "! Tournaments synced.");
+          await fetchTournamentsFromSupabase();
+        }
+      } catch (err) {
+        showAuthError("Connection error: " + err.message);
+      }
+    } else {
+      currentUser = { id: "local_user", email: email, name: email.split('@')[0], uid: "1001", role: "Organizer", loggedIn: true };
+      saveStateToStorage(false);
+      updateHeaderAuthUI();
+      (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.remove('show');
+      showToast("🛡️ Logged in as " + currentUser.name);
+    }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "LOG IN ➔"; }
+  } else {
+    const email = (document.getElementById("auth-signup-email") || {}).value?.trim();
+    const password = (document.getElementById("auth-signup-password") || {}).value;
+    const name = (document.getElementById("auth-signup-username") || {}).value?.trim() || (email ? email.split('@')[0] : "Organizer");
+    const uid = (document.getElementById("auth-signup-uid") || {}).value?.trim() || String(Math.floor(10000000 + Math.random() * 90000000));
+
+    if (!email || !password) {
+      showAuthError("Please enter email and password.");
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "CREATING ACCOUNT..."; }
+
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              name: name,
+              uid: uid,
+              role: "Organizer"
+            }
+          }
+        });
+
+        if (error) {
+          showAuthError(error.message);
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "CREATE ACCOUNT ➔"; }
+          return;
+        }
+
+        if (data && data.user) {
+          if (data.session) {
+            setUserFromSession(data.user);
+            (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.remove('show');
+            showToast("🎉 Account created & logged in as " + name + "!");
+            await fetchTournamentsFromSupabase();
+          } else {
+            if (succBox) {
+              succBox.textContent = "✓ Registration successful! You can now log in.";
+              succBox.style.display = "block";
+            }
+            setTimeout(() => { switchAuthTab("login"); }, 1500);
+          }
+        }
+      } catch (err) {
+        showAuthError("Signup error: " + err.message);
+      }
+    }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "CREATE ACCOUNT ➔"; }
+  }
+}
+
+async function handleLogout() {
+  if (supabaseClient) {
+    try {
+      await supabaseClient.auth.signOut();
+    } catch (e) {
+      console.warn("Sign out error:", e);
+    }
+  }
+  currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organizer", loggedIn: false };
+  saveStateToStorage(false);
+  updateHeaderAuthUI();
+  renderLandingFeatured();
+  renderManageList();
+  showToast("Logged out successfully.");
+}
+
 (function() {
   const targetEl = (document.getElementById("card-act-auth") || document.querySelector("card-act-auth"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      switchAuthTab("login");
       (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.add('show');
     });
   }
@@ -1244,6 +1472,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   const targetEl = (document.getElementById("btn-open-auth") || document.querySelector("btn-open-auth"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      switchAuthTab("login");
       (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.add('show');
     });
   }
@@ -1268,21 +1497,28 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
 })();
 
 (function() {
-  const targetEl = (document.getElementById("btn-confirm-auth") || document.querySelector("btn-confirm-auth"));
+  const targetEl = document.getElementById("tab-auth-login");
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let uname = (document.getElementById("auth-username") || document.querySelector("auth-username")).value;
-      let uidVal = (document.getElementById("auth-uid") || document.querySelector("auth-uid")).value;
-      let roleVal = (document.getElementById("auth-role") || document.querySelector("auth-role")).value;
-      currentUser.name = uname;
-      currentUser.uid = uidVal;
-      currentUser.role = roleVal;
-      currentUser.loggedIn = true;
-      (document.getElementById("display-user-name") || document.querySelector("display-user-name")).textContent = uname + " (" + roleVal + ")";
-      (document.getElementById("user-profile-badge") || document.querySelector("user-profile-badge")).style['display'] = "flex";
-      (document.getElementById("btn-open-auth") || document.querySelector("btn-open-auth")).style.display = 'none';
-      (document.getElementById("modal-auth") || document.querySelector("modal-auth")).classList.remove('show');
-      showToast("🛡️ Authenticated as " + uname + " [" + roleVal + "]!");
+      switchAuthTab("login");
+    });
+  }
+})();
+
+(function() {
+  const targetEl = document.getElementById("tab-auth-signup");
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      switchAuthTab("signup");
+    });
+  }
+})();
+
+(function() {
+  const targetEl = (document.getElementById("btn-submit-auth") || document.querySelector("btn-submit-auth"));
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      handleAuthSubmit();
     });
   }
 })();
@@ -1291,10 +1527,7 @@ window.vortexUpdateTeamScore = function ( mIdx , fld , val ) { updateTeamModalSc
   const targetEl = (document.getElementById("btn-logout-act") || document.querySelector("btn-logout-act"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      currentUser.loggedIn = false;
-      (document.getElementById("user-profile-badge") || document.querySelector("user-profile-badge")).style.display = 'none';
-      (document.getElementById("btn-open-auth") || document.querySelector("btn-open-auth")).style['display'] = "inline-block";
-      showToast("Logged out successfully.");
+      handleLogout();
     });
   }
 })();

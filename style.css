@@ -1158,6 +1158,60 @@ body {
   margin-bottom: 16px;
 }
 
+.auth-tabs-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: #141420;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #202030;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+  background: #ff2d55;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 45, 85, 0.4);
+}
+
+.auth-error-box {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 14px;
+  display: none;
+}
+
+.auth-success-box {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 14px;
+  display: none;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;

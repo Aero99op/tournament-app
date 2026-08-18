@@ -438,30 +438,50 @@
     <div class="modal-overlay" id="modal-auth">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 class="modal-title">ORGANIZER / PLAYER AUTHENTICATION</h3>
+          <h3 class="modal-title" id="auth-modal-title">ORGANIZER CLOUD ACCESS</h3>
           <button class="btn-close-modal" id="btn-close-auth-modal">✕</button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">In-Game Name / Organizer Handle</label>
-            <input type="text" class="form-input" id="auth-username" value="Kiryu_FF">
+          <div class="auth-tabs-row">
+            <button class="auth-tab-btn active" id="tab-auth-login">LOG IN (EXISTING ACCOUNT)</button>
+            <button class="auth-tab-btn" id="tab-auth-signup">CREATE NEW ACCOUNT</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">Free Fire UID</label>
-            <input type="text" class="form-input" id="auth-uid" value="77489210">
+          <div id="auth-form-login">
+            <div class="form-group">
+              <label class="form-label">Organizer Email Address *</label>
+              <input type="email" class="form-input" id="auth-login-email" placeholder="organizer@gmail.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password *</label>
+              <input type="password" class="form-input" id="auth-login-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Role</label>
-            <select class="form-select" id="auth-role">
-              <option value="Organizer">Organizer / Admin</option>
-              <option value="Captain">Team Captain</option>
-              <option value="Player">Player</option>
-            </select>
+          <div id="auth-form-signup" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Organizer Email Address *</label>
+              <input type="email" class="form-input" id="auth-signup-email" placeholder="organizer@gmail.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Create Password (Min 6 chars) *</label>
+              <input type="password" class="form-input" id="auth-signup-password" placeholder="••••••••" autocomplete="new-password">
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label">In-Game Name / Guild Handle</label>
+                <input type="text" class="form-input" id="auth-signup-username" placeholder="e.g. Kiryu_FF">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Free Fire UID</label>
+                <input type="text" class="form-input" id="auth-signup-uid" placeholder="e.g. 77489210">
+              </div>
+            </div>
           </div>
+          <div class="auth-error-box" id="auth-error-msg"></div>
+          <div class="auth-success-box" id="auth-success-msg"></div>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary-sm" id="btn-cancel-auth">CANCEL</button>
-          <button class="btn-action-primary-sm" id="btn-confirm-auth">AUTHENTICATE</button>
+          <button class="btn-action-primary-sm" id="btn-submit-auth">LOG IN ➔</button>
         </div>
       </div>
     </div>
