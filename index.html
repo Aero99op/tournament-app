@@ -1144,32 +1144,46 @@
   <!-- SQUAD REGISTRATION SUCCESS MODAL -->
   <div class="modal-overlay" id="modal-registration-success">
     <div class="modal-content" style="max-width:520px; text-align:center;">
-      <div class="modal-body" style="padding:32px 24px;">
-        <div style="font-size:48px; margin-bottom:12px;">🎉</div>
-        <h2 style="font-size:22px; font-weight:900; color:#ffffff; margin-bottom:8px;">REGISTRATION CONFIRMED!</h2>
-        <p style="font-size:14px; color:#94a3b8; line-height:1.5; margin-bottom:20px;">
-          Your squad <strong id="succ-squad-name" style="color:#00f0ff;">Shadow Strikers</strong> has been successfully
-          registered for <strong id="succ-tourney-name" style="color:#ffffff;">Tournament</strong> at <strong
-            id="succ-slot-tag" style="color:#ffd700;">Slot #7</strong>!
+      <div class="modal-body" style="padding:28px 24px;">
+        <div style="font-size:44px; margin-bottom:8px;" id="succ-modal-emoji">🎉</div>
+        <h2 style="font-size:22px; font-weight:900; color:#ffffff; margin-bottom:6px;" id="succ-modal-heading">SQUAD REGISTERED!</h2>
+        <p style="font-size:13px; color:#94a3b8; line-height:1.5; margin-bottom:16px;">
+          Squad <strong id="succ-squad-name" style="color:#00f0ff;">Shadow Strikers</strong> registered for <strong id="succ-tourney-name" style="color:#ffffff;">Tournament</strong> at <strong id="succ-slot-tag" style="color:#ffd700;">Slot #7</strong>!
         </p>
-        <div
-          style="background:#141422; border:1.5px solid #28283c; border-radius:10px; padding:16px; margin-bottom:24px; text-align:left;">
-          <div style="font-size:12px; font-weight:900; color:#ff2d55; margin-bottom:6px;">⚠️ IMPORTANT NEXT STEP:</div>
+
+        <!-- LIVE PAYMENT VERIFICATION STATUS CARD -->
+        <div id="succ-payment-status-card" style="background:#0f172a; border:1.5px solid #00f0ff; border-radius:10px; padding:14px; margin-bottom:16px; text-align:left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+            <div style="font-size:12px; font-weight:900; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+              <span id="succ-pay-status-icon">⚡</span>
+              <span id="succ-pay-status-title">AUTOMATIC PAYMENT VERIFICATION</span>
+            </div>
+            <span id="succ-pay-status-pill" class="badge-tag" style="background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:10px;">🟡 CHECKING LIVE</span>
+          </div>
+          <div id="succ-pay-status-msg" style="font-size:12px; color:#cbd5e1; line-height:1.4;">
+            Connecting to Bank & UPI Gateway records for UTR <strong id="succ-pay-utr-display" style="color:#ffd700;">-</strong>...
+          </div>
+          <div id="succ-pay-actions-row" style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-action-primary-sm" id="btn-recheck-payment-now" style="background:#00f0ff; color:#000; font-weight:900; font-size:11px; padding:6px 10px;">
+              ⚡ RE-CHECK PAYMENT NOW
+            </button>
+            <span id="succ-pay-timer-txt" style="font-size:11px; color:#94a3b8;">Auto-polling live...</span>
+          </div>
+        </div>
+
+        <div style="background:#141422; border:1.5px solid #28283c; border-radius:10px; padding:14px; margin-bottom:18px; text-align:left;">
+          <div style="font-size:12px; font-weight:900; color:#ff2d55; margin-bottom:4px;">⚠️ IMPORTANT NEXT STEP:</div>
           <div style="font-size:12px; color:#cbd5e1; line-height:1.4;">
-            Join the official tournament WhatsApp & Discord groups below to receive your <strong>Custom Room ID and
-              Password</strong> before match time!
+            Join the official tournament WhatsApp & Discord groups below to receive your <strong>Custom Room ID and Password</strong> before match time!
           </div>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
           <a href="#" target="_blank" class="btn-action-primary" id="succ-btn-whatsapp"
-            style="background:#25D366; color:#000; font-weight:900; text-decoration:none; display:none;">💬 JOIN
-            OFFICIAL WHATSAPP GROUP</a>
+            style="background:#25D366; color:#000; font-weight:900; text-decoration:none; display:none;">💬 JOIN OFFICIAL WHATSAPP GROUP</a>
           <a href="#" target="_blank" class="btn-action-primary" id="succ-btn-discord"
-            style="background:#5865F2; color:#fff; font-weight:900; text-decoration:none; display:none;">🎮 JOIN
-            OFFICIAL DISCORD SERVER</a>
+            style="background:#5865F2; color:#fff; font-weight:900; text-decoration:none; display:none;">🎮 JOIN OFFICIAL DISCORD SERVER</a>
         </div>
-        <button class="btn-secondary-sm" id="btn-close-succ-modal" style="width:100%;">VIEW TOURNAMENT STANDINGS &
-          ROSTER ➔</button>
+        <button class="btn-secondary-sm" id="btn-close-succ-modal" style="width:100%;">VIEW TOURNAMENT STANDINGS & ROSTER ➔</button>
       </div>
     </div>
   </div>

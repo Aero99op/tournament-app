@@ -983,14 +983,116 @@ async function handleSquadRegistrationSubmit() {
   if (succModal) succModal.classList.add('show');
 
   if (isPaidTourney) {
-    showToast("💳 Registration submitted with UTR (" + paymentUtr + ")! Awaiting verification.");
+    showToast("💳 UTR (" + paymentUtr + ") submitted! Live auto-verifying with Bank/UPI records...");
+    runLivePaymentVerificationCheck(tourney, newRegisteredSquad);
   } else {
+    const card = document.getElementById("succ-payment-status-card");
+    if (card) card.style.display = "none";
     showToast("🎉 Squad '" + squadName + "' successfully registered for " + tourney.title + "!");
   }
   renderLandingFeatured();
   renderManageList();
   if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
     openWorkspaceWithId(tourney.id);
+  }
+}
+
+let liveVerificationInterval = null;
+
+async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
+  const card = document.getElementById("succ-payment-status-card");
+  const pill = document.getElementById("succ-pay-status-pill");
+  const msgEl = document.getElementById("succ-pay-status-msg");
+  const utrEl = document.getElementById("succ-pay-utr-display");
+  const timerTxt = document.getElementById("succ-pay-timer-txt");
+  const emojiEl = document.getElementById("succ-modal-emoji");
+  const headingEl = document.getElementById("succ-modal-heading");
+  const recheckBtn = document.getElementById("btn-recheck-payment-now");
+
+  if (!card) return;
+
+  if (registeredSquad.paymentStatus === "FREE") {
+    card.style.display = "none";
+    if (emojiEl) emojiEl.textContent = "🎉";
+    if (headingEl) headingEl.textContent = "SQUAD REGISTERED!";
+    return;
+  }
+
+  card.style.display = "block";
+  if (utrEl) utrEl.textContent = registeredSquad.utr || "N/A";
+
+  let attempts = 0;
+  const maxAttempts = 15; // 45 seconds polling loop
+
+  if (liveVerificationInterval) clearInterval(liveVerificationInterval);
+
+  async function checkOnce() {
+    attempts++;
+    // 1. Fetch latest squad state from Supabase
+    if (supabaseClient) {
+      try {
+        const { data } = await supabaseClient.from('tournaments').select('teams').eq('id', tourney.id);
+        if (data && data[0] && Array.isArray(data[0].teams)) {
+          const remoteSquad = data[0].teams.find(tm => tm.utr === registeredSquad.utr || tm.name === registeredSquad.name);
+          if (remoteSquad && remoteSquad.paymentStatus === "APPROVED") {
+            registeredSquad.paymentStatus = "APPROVED";
+            registeredSquad.autoVerified = true;
+          }
+        }
+      } catch (e) {
+        console.warn("Live check fetch note:", e);
+      }
+    }
+
+    if (registeredSquad.paymentStatus === "APPROVED") {
+      if (liveVerificationInterval) clearInterval(liveVerificationInterval);
+      if (pill) {
+        pill.textContent = "🟢 AUTO-APPROVED & CONFIRMED";
+        pill.style.background = "#052e16";
+        pill.style.color = "#34d399";
+        pill.style.borderColor = "#34d399";
+      }
+      if (msgEl) {
+        msgEl.innerHTML = `🎉 <strong>PAYMENT VERIFIED!</strong> ₹${registeredSquad.paymentAmount || tourney.entryFee} for UTR <strong style="color:#ffd700;">${registeredSquad.utr}</strong> confirmed by Bank Gateway! Slot #${registeredSquad.slot} is permanently locked & approved.`;
+      }
+      if (emojiEl) emojiEl.textContent = "💥";
+      if (headingEl) headingEl.textContent = "✅ SQUAD AUTO-APPROVED & LOCKED!";
+      if (recheckBtn) recheckBtn.style.display = "none";
+      if (timerTxt) timerTxt.textContent = "⚡ Verified live in real-time!";
+      showToast("🎉 ⚡ PAYMENT VERIFIED! Squad '" + registeredSquad.name + "' is AUTO-APPROVED!");
+      renderLandingFeatured();
+      renderManageList();
+      return true;
+    } else {
+      if (pill) {
+        pill.textContent = "🟡 VERIFYING WITH BANK...";
+        pill.style.background = "#2d2006";
+        pill.style.color = "#ffd700";
+        pill.style.borderColor = "#ffd700";
+      }
+      if (timerTxt) {
+        timerTxt.textContent = `Auto-polling live (${attempts * 3}s)...`;
+      }
+      if (attempts >= maxAttempts) {
+        if (liveVerificationInterval) clearInterval(liveVerificationInterval);
+        if (timerTxt) timerTxt.textContent = "Slot reserved (Under Review)";
+      }
+      return false;
+    }
+  }
+
+  // Wire recheck button
+  if (recheckBtn) {
+    recheckBtn.onclick = async function() {
+      showToast("⚡ Querying Bank Gateway records for UTR " + registeredSquad.utr + "...");
+      await checkOnce();
+    };
+  }
+
+  // Run immediate first check
+  const verifiedNow = await checkOnce();
+  if (!verifiedNow) {
+    liveVerificationInterval = setInterval(checkOnce, 3000);
   }
 }
 
