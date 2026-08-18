@@ -1452,6 +1452,78 @@ body {
   border: 1px solid rgba(250, 204, 21, 0.4);
 }
 
+.ws-social-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #25D366;
+  color: #000000;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  transition: all 0.15s ease;
+}
+
+.ws-social-link-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.ws-social-link-btn.discord {
+  background: #5865F2;
+  color: #ffffff;
+}
+
+.card-action-btns-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.btn-card-register {
+  background: #00f0ff;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-card-register:hover {
+  background: #ffde59;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.btn-card-del-t {
+  background: #201014;
+  color: #ff2d55;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-card-del-t:hover {
+  background: #ff2d55;
+  color: #ffffff;
+}
+
 /* ==========================================================================
    THEME TOGGLE BUTTON
    ========================================================================== */

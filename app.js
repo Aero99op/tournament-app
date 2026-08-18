@@ -487,22 +487,225 @@ function switchWsTab(panelId) {
   }
 }
 
+function isTourneyOwner(tourney) {
+  if (!tourney) return false;
+  if (tourney.user_id) {
+    return !!(currentUser && currentUser.loggedIn && currentUser.id === tourney.user_id);
+  }
+  // Local tournaments or legacy tournaments without user_id
+  return true;
+}
+
+let pendingDeleteTourneyId = null;
+
+function openDeleteTourneyModal(tourneyId) {
+  const tourney = tournamentsDb.find(t => t.id === tourneyId);
+  if (!tourney) return;
+
+  if (!isTourneyOwner(tourney)) {
+    showToast("⛔ Permission denied: Only the tournament creator can delete this tournament.");
+    return;
+  }
+
+  pendingDeleteTourneyId = tourneyId;
+  const nameEl = document.getElementById("del-modal-tourney-name");
+  if (nameEl) nameEl.textContent = tourney.title;
+  const modal = document.getElementById("modal-delete-confirm");
+  if (modal) modal.classList.add('show');
+}
+
+async function confirmDeleteTourney() {
+  if (!pendingDeleteTourneyId) return;
+  const tIdx = tournamentsDb.findIndex(t => t.id === pendingDeleteTourneyId);
+  if (tIdx === -1) return;
+
+  const tourneyTitle = tournamentsDb[tIdx].title;
+  const deletedId = pendingDeleteTourneyId;
+
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('tournaments').delete().eq('id', deletedId);
+    } catch (e) {
+      console.warn("Supabase delete notice:", e);
+    }
+  }
+
+  tournamentsDb.splice(tIdx, 1);
+  saveStateToStorage(false);
+
+  const modal = document.getElementById("modal-delete-confirm");
+  if (modal) modal.classList.remove('show');
+  pendingDeleteTourneyId = null;
+
+  showToast("🗑️ Tournament '" + tourneyTitle + "' deleted permanently.");
+  renderLandingFeatured();
+  renderManageList();
+
+  if (currentView === "view-workspace") {
+    switchView("view-manage");
+  }
+}
+
+function openSquadRegistrationModal(tourneyId) {
+  const tourney = tournamentsDb.find(t => t.id === tourneyId) || getActiveTourney();
+  if (!tourney) return;
+
+  if (tourney.teams.length >= tourney.slots) {
+    showToast("⚠️ Registration Closed: All " + tourney.slots + " squad slots are full!");
+    return;
+  }
+
+  const idInput = document.getElementById("reg-target-tourney-id");
+  if (idInput) idInput.value = tourney.id;
+
+  const titleSub = document.getElementById("reg-modal-tourney-title");
+  if (titleSub) titleSub.textContent = tourney.title + " • Slots Available: " + (tourney.slots - tourney.teams.length);
+
+  // Clear previous values
+  const fields = ["reg-squad-name", "reg-squad-tag", "reg-leader-name", "reg-leader-ign", "reg-leader-uid", "reg-leader-whatsapp", "reg-leader-email", "reg-p2-ign", "reg-p2-uid", "reg-p3-ign", "reg-p3-uid", "reg-p4-ign", "reg-p4-uid"];
+  fields.forEach(f => {
+    const el = document.getElementById(f);
+    if (el) el.value = "";
+  });
+
+  const modal = document.getElementById("modal-squad-registration");
+  if (modal) modal.classList.add('show');
+}
+
+async function handleSquadRegistrationSubmit() {
+  const tId = Number((document.getElementById("reg-target-tourney-id") || {}).value) || activeTourneyId;
+  const tourney = tournamentsDb.find(t => t.id === tId);
+  if (!tourney) return;
+
+  if (tourney.teams.length >= tourney.slots) {
+    showToast("⚠️ Registration Closed: All slots have been filled!");
+    return;
+  }
+
+  const squadName = (document.getElementById("reg-squad-name") || {}).value?.trim();
+  const squadTag = (document.getElementById("reg-squad-tag") || {}).value?.trim();
+  const leaderName = (document.getElementById("reg-leader-name") || {}).value?.trim();
+  const leaderIGN = (document.getElementById("reg-leader-ign") || {}).value?.trim();
+  const leaderUID = (document.getElementById("reg-leader-uid") || {}).value?.trim();
+  const whatsapp = (document.getElementById("reg-leader-whatsapp") || {}).value?.trim();
+  const email = (document.getElementById("reg-leader-email") || {}).value?.trim();
+
+  const p2IGN = (document.getElementById("reg-p2-ign") || {}).value?.trim();
+  const p2UID = (document.getElementById("reg-p2-uid") || {}).value?.trim();
+  const p3IGN = (document.getElementById("reg-p3-ign") || {}).value?.trim();
+  const p3UID = (document.getElementById("reg-p3-uid") || {}).value?.trim();
+  const p4IGN = (document.getElementById("reg-p4-ign") || {}).value?.trim();
+  const p4UID = (document.getElementById("reg-p4-uid") || {}).value?.trim();
+
+  if (!squadName || !leaderName || !leaderIGN || !leaderUID || !whatsapp || !p2IGN || !p2UID) {
+    showToast("⚠️ Please fill in all required fields marked with * (Squad Name, Leader Info, WhatsApp, Player 2).");
+    return;
+  }
+
+  const assignedSlot = tourney.teams.length + 1;
+  const playersList = [
+    { name: leaderIGN, uid: leaderUID, role: "IGL (Captain)" },
+    { name: p2IGN, uid: p2UID, role: "Entry Fragger / Rusher" }
+  ];
+  if (p3IGN) playersList.push({ name: p3IGN, uid: p3UID || "N/A", role: "Support / Sniper" });
+  if (p4IGN) playersList.push({ name: p4IGN, uid: p4UID || "N/A", role: "Support / Substitute" });
+
+  const newRegisteredSquad = {
+    slot: assignedSlot,
+    name: squadName,
+    tag: squadTag || squadName.slice(0, 4).toUpperCase(),
+    captain: leaderName + " (" + leaderIGN + " / " + leaderUID + ")",
+    whatsapp: whatsapp,
+    email: email,
+    players: playersList
+  };
+
+  tourney.teams.push(newRegisteredSquad);
+  saveStateToStorage(false);
+
+  // Sync to Supabase
+  if (supabaseClient) {
+    try {
+      await supabaseClient.from('tournaments').update({ teams: tourney.teams }).eq('id', tourney.id);
+    } catch (e) {
+      console.warn("Registration Supabase sync notice:", e);
+    }
+  }
+
+  // Close registration modal
+  const regModal = document.getElementById("modal-squad-registration");
+  if (regModal) regModal.classList.remove('show');
+
+  // Populate and open success modal
+  const succSquad = document.getElementById("succ-squad-name");
+  if (succSquad) succSquad.textContent = squadName;
+  const succTourney = document.getElementById("succ-tourney-name");
+  if (succTourney) succTourney.textContent = tourney.title;
+  const succSlot = document.getElementById("succ-slot-tag");
+  if (succSlot) succSlot.textContent = "SLOT #" + assignedSlot;
+
+  const succWa = document.getElementById("succ-btn-whatsapp");
+  if (succWa) {
+    if (tourney.whatsappLink) {
+      succWa.style.display = "block";
+      succWa.href = tourney.whatsappLink;
+    } else {
+      succWa.style.display = "none";
+    }
+  }
+
+  const succDc = document.getElementById("succ-btn-discord");
+  if (succDc) {
+    if (tourney.discordLink) {
+      succDc.style.display = "block";
+      succDc.href = tourney.discordLink;
+    } else {
+      succDc.style.display = "none";
+    }
+  }
+
+  const succModal = document.getElementById("modal-registration-success");
+  if (succModal) succModal.classList.add('show');
+
+  showToast("🎉 Squad '" + squadName + "' successfully registered for " + tourney.title + "!");
+  renderLandingFeatured();
+  renderManageList();
+  if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
+    renderWorkspaceOverview();
+    renderWorkspaceTeams();
+  }
+}
+
+window.vortexOpenRegisterModal = openSquadRegistrationModal;
+window.vortexOpenDeleteModal = openDeleteTourneyModal;
+
 function renderLandingFeatured() {
   let htmlBuffer = "";
   for (const tourney of tournamentsDb) {
-    htmlBuffer = htmlBuffer + "<div class='tourney-card-item' onclick='window.vortexOpenWorkspace(" + tourney.id + ")'>";
-    htmlBuffer = htmlBuffer + "<div class='card-top-row'>";
-    htmlBuffer = htmlBuffer + "<span class='badge-tag " + tourney.statusClass + "'>" + tourney.status + "</span>";
-    htmlBuffer = htmlBuffer + "<span class='badge-tag open'>" + tourney.format + "</span>";
-    htmlBuffer = htmlBuffer + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-title'>" + tourney.title + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-meta'>Game: " + tourney.game + " • Maps: " + tourney.maps + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-metrics'>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>" + tourney.prize + "</span></div>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val'>" + tourney.teams.length + " / " + tourney.slots + "</span></div>";
-    htmlBuffer = htmlBuffer + "</div>";
-    htmlBuffer = htmlBuffer + "<button class='btn-action-primary' style='width:100%;'>OPEN WORKSPACE ➔</button>";
-    htmlBuffer = htmlBuffer + "</div>";
+    const isOwner = isTourneyOwner(tourney);
+    htmlBuffer += `
+      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
+        <div class='card-top-row'>
+          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
+          <div style='display:flex; gap:4px;'>
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            <span class='badge-tag open'>${tourney.format}</span>
+          </div>
+        </div>
+        <div class='t-card-title'>${tourney.title}</div>
+        <div class='t-card-meta'>Game: ${tourney.game} • Maps: ${tourney.maps}</div>
+        <div class='t-card-metrics'>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+        </div>
+        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
+          <button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER</button>
+          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>OPEN ➔</button>
+          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
+        </div>
+      </div>
+    `;
   }
   (document.getElementById("landing-tourney-grid") || document.querySelector("landing-tourney-grid")).innerHTML = htmlBuffer;
 }
@@ -510,145 +713,223 @@ function renderLandingFeatured() {
 function renderManageList() {
   let htmlBuffer = "";
   for (const tourney of tournamentsDb) {
-    htmlBuffer = htmlBuffer + "<div class='tourney-card-item' onclick='window.vortexOpenWorkspace(" + tourney.id + ")'>";
-    htmlBuffer = htmlBuffer + "<div class='card-top-row'>";
-    htmlBuffer = htmlBuffer + "<span class='badge-tag " + tourney.statusClass + "'>" + tourney.status + "</span>";
-    htmlBuffer = htmlBuffer + "<span class='badge-tag open'>" + tourney.game + "</span>";
-    htmlBuffer = htmlBuffer + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-title'>" + tourney.title + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-meta'>Format: " + tourney.format + " • Maps: " + tourney.maps + "</div>";
-    htmlBuffer = htmlBuffer + "<div class='t-card-metrics'>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>" + tourney.prize + "</span></div>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>SQUADS REGISTERED</span><span class='tm-val'>" + tourney.teams.length + " / " + tourney.slots + "</span></div>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>" + tourney.matches.length + " Scheduled</span></div>";
-    htmlBuffer = htmlBuffer + "<div class='t-metric'><span class='tm-label'>CHECKPOINTS</span><span class='tm-val'>" + tourney.checkpoints.length + " Saved</span></div>";
-    htmlBuffer = htmlBuffer + "</div>";
-    htmlBuffer = htmlBuffer + "<button class='btn-action-primary' style='width:100%;'>ENTER ORGANIZER WORKSPACE ➔</button>";
-    htmlBuffer = htmlBuffer + "</div>";
+    const isOwner = isTourneyOwner(tourney);
+    htmlBuffer += `
+      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
+        <div class='card-top-row'>
+          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
+          <div style='display:flex; gap:4px;'>
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            <span class='badge-tag open'>${tourney.game}</span>
+          </div>
+        </div>
+        <div class='t-card-title'>${tourney.title}</div>
+        <div class='t-card-meta'>Format: ${tourney.format} • Maps: ${tourney.maps}</div>
+        <div class='t-card-metrics'>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+          <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches.length} Scheduled</span></div>
+          <div class='t-metric'><span class='tm-label'>ROLE</span><span class='tm-val' style='color:${isOwner ? "#34d399" : "#94a3b8"};'>${isOwner ? "👑 Owner" : "👁️ Public"}</span></div>
+        </div>
+        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
+          <button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER SQUAD</button>
+          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>${isOwner ? "MANAGE ➔" : "SPECTATE ➔"}</button>
+          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
+        </div>
+      </div>
+    `;
   }
   (document.getElementById("manage-tournaments-grid") || document.querySelector("manage-tournaments-grid")).innerHTML = htmlBuffer;
 }
 
 function openWorkspaceWithId(tourneyId) {
   activeTourneyId = tourneyId;
-  let activeT = null;
-  for (const t of tournamentsDb) {
-    if (t.id == tourneyId) {
-      activeT = t;
+  let activeT = tournamentsDb.find(t => t.id == tourneyId);
+  if (!activeT) return;
+
+  const isOwner = isTourneyOwner(activeT);
+
+  (document.getElementById("ws-tourney-title") || document.querySelector("ws-tourney-title")).textContent = activeT.title;
+  (document.getElementById("ws-game-meta") || document.querySelector("ws-game-meta")).textContent = activeT.game + " • " + activeT.format + " • Prize: " + activeT.prize + " • Maps: " + activeT.maps;
+  (document.getElementById("ws-status-badge") || document.querySelector("ws-status-badge")).textContent = activeT.status;
+
+  // Social Links
+  const waBtn = document.getElementById("ws-btn-whatsapp");
+  if (waBtn) {
+    if (activeT.whatsappLink) {
+      waBtn.style.display = "inline-flex";
+      waBtn.href = activeT.whatsappLink;
+    } else {
+      waBtn.style.display = "none";
     }
   }
-  if (activeT != null) {
-    (document.getElementById("ws-tourney-title") || document.querySelector("ws-tourney-title")).textContent = activeT.title;
-    (document.getElementById("ws-game-meta") || document.querySelector("ws-game-meta")).textContent = activeT.game + " • " + activeT.format + " • Prize: " + activeT.prize + " • Maps: " + activeT.maps;
-    (document.getElementById("ws-status-badge") || document.querySelector("ws-status-badge")).textContent = activeT.status;
-    renderWorkspaceOverview();
-    renderWorkspaceTeams();
-    renderWorkspaceMatches();
-    renderWorkspaceMatchStandings();
-    renderWorkspaceOverallStandings();
-    renderWorkspacePointRules();
-    switchWsTab("panel-ws-overview");
-    switchView("view-workspace");
+
+  const dcBtn = document.getElementById("ws-btn-discord");
+  if (dcBtn) {
+    if (activeT.discordLink) {
+      dcBtn.style.display = "inline-flex";
+      dcBtn.href = activeT.discordLink;
+    } else {
+      dcBtn.style.display = "none";
+    }
   }
+
+  // Permission Banner & Controls Visibility
+  const permBanner = document.getElementById("ws-permission-banner");
+  const delBtn = document.getElementById("ws-btn-delete-tourney");
+  const quickAdd = document.getElementById("quick-act-add-team");
+  const quickMatch = document.getElementById("quick-act-new-match");
+  const quickScore = document.getElementById("quick-act-edit-points");
+  const addSquadBtn = document.getElementById("btn-open-add-team-modal");
+  const addMatchBtn = document.getElementById("btn-open-add-match-modal");
+  const saveRulesBtn = document.getElementById("btn-ws-save-point-rules");
+  const createCheckBtn = document.getElementById("btn-ws-create-checkpoint");
+  const revertBtn = document.getElementById("btn-ws-open-revert-modal");
+
+  if (isOwner) {
+    if (permBanner) permBanner.style.display = "none";
+    if (delBtn) delBtn.style.display = "inline-block";
+    if (quickAdd) quickAdd.style.display = "inline-block";
+    if (quickMatch) quickMatch.style.display = "inline-block";
+    if (quickScore) quickScore.style.display = "inline-block";
+    if (addSquadBtn) addSquadBtn.style.display = "inline-block";
+    if (addMatchBtn) addMatchBtn.style.display = "inline-block";
+    if (saveRulesBtn) saveRulesBtn.style.display = "inline-block";
+    if (createCheckBtn) createCheckBtn.style.display = "inline-block";
+    if (revertBtn) revertBtn.style.display = "inline-block";
+  } else {
+    if (permBanner) {
+      permBanner.style.display = "block";
+      const ownerSpan = document.getElementById("ws-owner-name");
+      if (ownerSpan) ownerSpan.textContent = activeT.creatorName || (activeT.user_id ? "Organizer" : "Official Host");
+    }
+    if (delBtn) delBtn.style.display = "none";
+    if (quickAdd) quickAdd.style.display = "none";
+    if (quickMatch) quickMatch.style.display = "none";
+    if (quickScore) quickScore.style.display = "none";
+    if (addSquadBtn) addSquadBtn.style.display = "none";
+    if (addMatchBtn) addMatchBtn.style.display = "none";
+    if (saveRulesBtn) saveRulesBtn.style.display = "none";
+    if (createCheckBtn) createCheckBtn.style.display = "none";
+    if (revertBtn) revertBtn.style.display = "none";
+  }
+
+  renderWorkspaceOverview();
+  renderWorkspaceTeams();
+  renderWorkspaceMatches();
+  renderWorkspaceMatchStandings();
+  renderWorkspaceOverallStandings();
+  renderWorkspacePointRules();
+  switchWsTab("panel-ws-overview");
+  switchView("view-workspace");
 }
 
 function renderWorkspaceOverview() {
-  let activeT = getActiveTourney ( );
-  if (activeT != null) {
-    (document.getElementById("stat-total-teams") || document.querySelector("stat-total-teams")).textContent = activeT.teams.length + " / " + activeT.slots;
-    let completedMatches = 0;
-    for (const m of activeT.matches) {
-      if (m.status == "COMPLETED") {
-        completedMatches = completedMatches + 1;
-      }
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+
+  (document.getElementById("stat-total-teams") || document.querySelector("stat-total-teams")).textContent = activeT.teams.length + " / " + activeT.slots;
+  let completedMatches = 0;
+  for (const m of activeT.matches) {
+    if (m.status == "COMPLETED") {
+      completedMatches = completedMatches + 1;
     }
-    (document.getElementById("stat-matches-played") || document.querySelector("stat-matches-played")).textContent = completedMatches + " / " + activeT.matches.length;
-    (document.getElementById("stat-prize-pool") || document.querySelector("stat-prize-pool")).textContent = activeT.prize;
-    let overallList = computeOverallStandings ( activeT );
-    if (overallList.length > 0) {
-      (document.getElementById("stat-table-leader") || document.querySelector("stat-table-leader")).textContent = overallList [ 0 ] .team + " (" + overallList [ 0 ] .totalPts + " PTS)";
-    }
-    let htmlBuffer = "";
-    let rank = 1;
-    for (const row of overallList) {
-      let rankClass = "rank-badge";
-      if (rank == 1) {
-        rankClass = "rank-badge rank-1";
-      }
-      if (rank == 2) {
-        rankClass = "rank-badge rank-2";
-      }
-      if (rank == 3) {
-        rankClass = "rank-badge rank-3";
-      }
-      htmlBuffer = htmlBuffer + "<tr>";
-      htmlBuffer = htmlBuffer + "<td><span class='" + rankClass + "'>#" + rank + "</span></td>";
-      htmlBuffer = htmlBuffer + "<td><strong>" + row.team + "</strong></td>";
-      htmlBuffer = htmlBuffer + "<td>" + row.played + "</td>";
-      htmlBuffer = htmlBuffer + "<td>" + row.wwcd + "</td>";
-      htmlBuffer = htmlBuffer + "<td>" + row.killPts + "</td>";
-      htmlBuffer = htmlBuffer + "<td>" + row.placePts + "</td>";
-      htmlBuffer = htmlBuffer + "<td><span class='total-pts-pill'>" + row.totalPts + " PTS</span></td>";
-      htmlBuffer = htmlBuffer + "<td style='text-align:right;'><button class='btn-secondary-sm' style='padding:3px 8px; font-size:11px;' onclick='window.vortexOpenTeamMatchesModal(\"" + row.team + "\")'>✏️ EDIT MATCHES</button></td>";
-      htmlBuffer = htmlBuffer + "</tr>";
-      rank = rank + 1;
-    }
-    (document.getElementById("ws-overview-table-body") || document.querySelector("ws-overview-table-body")).innerHTML = htmlBuffer;
   }
+  (document.getElementById("stat-matches-played") || document.querySelector("stat-matches-played")).textContent = completedMatches + " / " + activeT.matches.length;
+  (document.getElementById("stat-prize-pool") || document.querySelector("stat-prize-pool")).textContent = activeT.prize;
+  let overallList = computeOverallStandings(activeT);
+  if (overallList.length > 0) {
+    (document.getElementById("stat-table-leader") || document.querySelector("stat-table-leader")).textContent = overallList[0].team + " (" + overallList[0].totalPts + " PTS)";
+  }
+  
+  const isOwner = isTourneyOwner(activeT);
+  let htmlBuffer = "";
+  let rank = 1;
+  for (const row of overallList) {
+    let rankClass = "rank-badge";
+    if (rank == 1) rankClass = "rank-badge rank-1";
+    if (rank == 2) rankClass = "rank-badge rank-2";
+    if (rank == 3) rankClass = "rank-badge rank-3";
+
+    htmlBuffer += "<tr>";
+    htmlBuffer += "<td><span class='" + rankClass + "'>#" + rank + "</span></td>";
+    htmlBuffer += "<td><strong>" + row.team + "</strong></td>";
+    htmlBuffer += "<td>" + row.played + "</td>";
+    htmlBuffer += "<td>" + row.wwcd + "</td>";
+    htmlBuffer += "<td>" + row.killPts + "</td>";
+    htmlBuffer += "<td>" + row.placePts + "</td>";
+    htmlBuffer += "<td><span class='total-pts-pill'>" + row.totalPts + " PTS</span></td>";
+    htmlBuffer += "<td style='text-align:right;'>";
+    if (isOwner) {
+      htmlBuffer += "<button class='btn-secondary-sm' style='padding:3px 8px; font-size:11px;' onclick='window.vortexOpenTeamMatchesModal(\"" + row.team + "\")'>✏️ EDIT MATCHES</button>";
+    } else {
+      htmlBuffer += "<span style='color:#64748b; font-size:11px; font-weight:700;'>Official Standing</span>";
+    }
+    htmlBuffer += "</td>";
+    htmlBuffer += "</tr>";
+    rank = rank + 1;
+  }
+  (document.getElementById("ws-overview-table-body") || document.querySelector("ws-overview-table-body")).innerHTML = htmlBuffer;
 }
 
 function renderWorkspaceTeams() {
-  let activeT = getActiveTourney ( );
-  if (activeT != null) {
-    if (activeT.teams.length == 0) {
-      (document.getElementById("ws-teams-container") || document.querySelector("ws-teams-container")).innerHTML = "<div style='padding:32px; text-align:center; color:#64748b;'>No squads registered yet. Click '+ ADD NEW TEAM' to register squad slots.</div>";
-      return 0;
-    }
-    let htmlBuffer = "";
-    let tIdx = 0;
-    for (const team of activeT.teams) {
-      htmlBuffer = htmlBuffer + "<div class='team-roster-card'>";
-      htmlBuffer = htmlBuffer + "<div class='team-roster-header'>";
-      htmlBuffer = htmlBuffer + "<div class='team-title-group'>";
-      htmlBuffer = htmlBuffer + "<span class='team-slot-badge'>SLOT " + team.slot + "</span>";
-      htmlBuffer = htmlBuffer + "<span class='team-name-text'>" + team.name + "</span>";
-      htmlBuffer = htmlBuffer + "<span class='team-tag-pill'>" + team.tag + "</span>";
-      htmlBuffer = htmlBuffer + "<span style='font-size:12px; color:#94a3b8;'>Captain: " + team.captain + "</span>";
-      htmlBuffer = htmlBuffer + "</div>";
-      htmlBuffer = htmlBuffer + "<div class='team-actions-group'>";
-      htmlBuffer = htmlBuffer + "<button class='btn-secondary-sm' onclick='window.vortexOpenTeamMatchesModal(\"" + team.name + "\")'>EDIT ALL MATCHES</button>";
-      htmlBuffer = htmlBuffer + "<button class='btn-secondary-sm' onclick='window.vortexOpenAddPlayerModal(" + tIdx + ")'>+ ADD PLAYER</button>";
-      htmlBuffer = htmlBuffer + "<button class='btn-secondary-sm' onclick='window.vortexEditTeamModal(" + tIdx + ")'>EDIT SQUAD</button>";
-      htmlBuffer = htmlBuffer + "<button class='btn-row-del' onclick='window.vortexDeleteTeam(" + tIdx + ")'>REMOVE SQUAD</button>";
-      htmlBuffer = htmlBuffer + "</div>";
-      htmlBuffer = htmlBuffer + "</div>";
-      htmlBuffer = htmlBuffer + "<div class='players-table-wrapper'>";
-      htmlBuffer = htmlBuffer + "<table class='anime-table'>";
-      htmlBuffer = htmlBuffer + "<thead><tr><th>PLAYER IGN</th><th>FREE FIRE UID</th><th>SQUAD ROLE</th><th style='text-align:right;'>PLAYER ACTIONS</th></tr></thead>";
-      htmlBuffer = htmlBuffer + "<tbody>";
-      if (team.players == undefined || team.players.length == 0) {
-        htmlBuffer = htmlBuffer + "<tr><td colspan='4' style='color:#64748b; text-align:center;'>No players added to this squad roster yet.</td></tr>";
-      }
-      else {
-        let pIdx = 0;
-        for (const player of team.players) {
-          htmlBuffer = htmlBuffer + "<tr>";
-          htmlBuffer = htmlBuffer + "<td><strong>" + player.name + "</strong></td>";
-          htmlBuffer = htmlBuffer + "<td style='font-family:monospace; color:#00f0ff;'>" + player.uid + "</td>";
-          htmlBuffer = htmlBuffer + "<td><span class='player-role-badge'>" + player.role + "</span></td>";
-          htmlBuffer = htmlBuffer + "<td style='text-align:right;'>";
-          htmlBuffer = htmlBuffer + "<button class='btn-secondary-sm' style='padding:2px 8px; margin-right:4px;' onclick='window.vortexEditPlayerModal(" + tIdx + ", " + pIdx + ")'>EDIT</button>";
-          htmlBuffer = htmlBuffer + "<button class='btn-row-del' style='padding:2px 8px;' onclick='window.vortexDeletePlayer(" + tIdx + ", " + pIdx + ")'>REMOVE</button>";
-          htmlBuffer = htmlBuffer + "</td>";
-          htmlBuffer = htmlBuffer + "</tr>";
-          pIdx = pIdx + 1;
-        }
-      }
-      htmlBuffer = htmlBuffer + "</tbody></table></div></div>";
-      tIdx = tIdx + 1;
-    }
-    (document.getElementById("ws-teams-container") || document.querySelector("ws-teams-container")).innerHTML = htmlBuffer;
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+
+  const isOwner = isTourneyOwner(activeT);
+  if (activeT.teams.length == 0) {
+    (document.getElementById("ws-teams-container") || document.querySelector("ws-teams-container")).innerHTML = "<div style='padding:32px; text-align:center; color:#64748b;'>No squads registered yet. Click '+ ADD NEW SQUAD' or '📝 REGISTER SQUAD' to register.</div>";
+    return;
   }
+
+  let htmlBuffer = "";
+  let tIdx = 0;
+  for (const team of activeT.teams) {
+    htmlBuffer += "<div class='team-roster-card'>";
+    htmlBuffer += "<div class='team-roster-header'>";
+    htmlBuffer += "<div class='team-title-group'>";
+    htmlBuffer += "<span class='team-slot-badge'>SLOT " + team.slot + "</span>";
+    htmlBuffer += "<span class='team-name-text'>" + team.name + "</span>";
+    htmlBuffer += "<span class='team-tag-pill'>" + team.tag + "</span>";
+    htmlBuffer += "<span style='font-size:12px; color:#94a3b8;'>Captain: " + team.captain + "</span>";
+    htmlBuffer += "</div>";
+    if (isOwner) {
+      htmlBuffer += "<div class='team-actions-group'>";
+      htmlBuffer += "<button class='btn-secondary-sm' onclick='window.vortexOpenTeamMatchesModal(\"" + team.name + "\")'>EDIT ALL MATCHES</button>";
+      htmlBuffer += "<button class='btn-secondary-sm' onclick='window.vortexOpenAddPlayerModal(" + tIdx + ")'>+ ADD PLAYER</button>";
+      htmlBuffer += "<button class='btn-secondary-sm' onclick='window.vortexEditTeamModal(" + tIdx + ")'>EDIT SQUAD</button>";
+      htmlBuffer += "<button class='btn-row-del' onclick='window.vortexDeleteTeam(" + tIdx + ")'>REMOVE SQUAD</button>";
+      htmlBuffer += "</div>";
+    }
+    htmlBuffer += "</div>";
+    htmlBuffer += "<div class='players-table-wrapper'>";
+    htmlBuffer += "<table class='anime-table'>";
+    htmlBuffer += "<thead><tr><th>PLAYER IGN</th><th>FREE FIRE UID</th><th>SQUAD ROLE</th>" + (isOwner ? "<th style='text-align:right;'>PLAYER ACTIONS</th>" : "") + "</tr></thead>";
+    htmlBuffer += "<tbody>";
+    if (team.players == undefined || team.players.length == 0) {
+      htmlBuffer += "<tr><td colspan='" + (isOwner ? "4" : "3") + "' style='color:#64748b; text-align:center;'>No players added to this squad roster yet.</td></tr>";
+    } else {
+      let pIdx = 0;
+      for (const player of team.players) {
+        htmlBuffer += "<tr>";
+        htmlBuffer += "<td><strong>" + player.name + "</strong></td>";
+        htmlBuffer += "<td style='font-family:monospace; color:#00f0ff;'>" + player.uid + "</td>";
+        htmlBuffer += "<td><span class='player-role-badge'>" + player.role + "</span></td>";
+        if (isOwner) {
+          htmlBuffer += "<td style='text-align:right;'>";
+          htmlBuffer += "<button class='btn-secondary-sm' style='padding:2px 8px; margin-right:4px;' onclick='window.vortexEditPlayerModal(" + tIdx + ", " + pIdx + ")'>EDIT</button>";
+          htmlBuffer += "<button class='btn-row-del' style='padding:2px 8px;' onclick='window.vortexDeletePlayer(" + tIdx + ", " + pIdx + ")'>REMOVE</button>";
+          htmlBuffer += "</td>";
+        }
+        htmlBuffer += "</tr>";
+        pIdx = pIdx + 1;
+      }
+    }
+    htmlBuffer += "</tbody></table></div></div>";
+    tIdx = tIdx + 1;
+  }
+  (document.getElementById("ws-teams-container") || document.querySelector("ws-teams-container")).innerHTML = htmlBuffer;
 }
 
 function renderWorkspaceMatches() {
@@ -2682,24 +2963,35 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-submit-create-tourney") || document.querySelector("btn-submit-create-tourney"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let tTitle = (document.getElementById("new-tourney-title") || document.querySelector("new-tourney-title")).value;
+      let tTitle = (document.getElementById("new-tourney-title") || document.querySelector("new-tourney-title")).value?.trim();
       let tGame = (document.getElementById("new-tourney-game") || document.querySelector("new-tourney-game")).value;
       let tFormat = (document.getElementById("new-tourney-format") || document.querySelector("new-tourney-format")).value;
-      let tSlots = Number ( (document.getElementById("new-tourney-slots") || document.querySelector("new-tourney-slots")).value );
-      let tPrize = (document.getElementById("new-tourney-prize") || document.querySelector("new-tourney-prize")).value;
-      let tMaps = (document.getElementById("new-tourney-maps") || document.querySelector("new-tourney-maps")).value;
-      let tKillMultiplier = Number ( (document.getElementById("new-pts-kill") || document.querySelector("new-pts-kill")).value );
-      let customPlacementMap = { "1" : Number ( (document.getElementById("pt-rank-1") || document.querySelector("pt-rank-1")).value ) , "2" : Number ( (document.getElementById("pt-rank-2") || document.querySelector("pt-rank-2")).value ) , "3" : Number ( (document.getElementById("pt-rank-3") || document.querySelector("pt-rank-3")).value ) , "4" : Number ( (document.getElementById("pt-rank-4") || document.querySelector("pt-rank-4")).value ) , "5" : Number ( (document.getElementById("pt-rank-5") || document.querySelector("pt-rank-5")).value ) , "6" : Number ( (document.getElementById("pt-rank-6") || document.querySelector("pt-rank-6")).value ) , "7" : Number ( (document.getElementById("pt-rank-7") || document.querySelector("pt-rank-7")).value ) , "8" : Number ( (document.getElementById("pt-rank-8") || document.querySelector("pt-rank-8")).value ) , "9" : Number ( (document.getElementById("pt-rank-9") || document.querySelector("pt-rank-9")).value ) , "10" : Number ( (document.getElementById("pt-rank-10") || document.querySelector("pt-rank-10")).value ) , "11" : Number ( (document.getElementById("pt-rank-11") || document.querySelector("pt-rank-11")).value ) , "12" : Number ( (document.getElementById("pt-rank-12") || document.querySelector("pt-rank-12")).value ) };
-      if (tTitle == "") {
-        tTitle = "VORTEX CLASH TOURNAMENT S1";
-      }
-      if (tPrize == "") {
-        tPrize = "₹15,000";
-      }
-      if (tMaps == "") {
-        tMaps = "Bermuda, Purgatory, Kalahari";
-      }
-      let newId = tournamentsDb.length + 1;
+      let tSlots = Number((document.getElementById("new-tourney-slots") || document.querySelector("new-tourney-slots")).value) || 12;
+      let tPrize = (document.getElementById("new-tourney-prize") || document.querySelector("new-tourney-prize")).value?.trim();
+      let tMaps = (document.getElementById("new-tourney-maps") || document.querySelector("new-tourney-maps")).value?.trim();
+      let tWhatsapp = (document.getElementById("new-tourney-whatsapp") || document.querySelector("new-tourney-whatsapp"))?.value?.trim() || "";
+      let tDiscord = (document.getElementById("new-tourney-discord") || document.querySelector("new-tourney-discord"))?.value?.trim() || "";
+      let tKillMultiplier = Number((document.getElementById("new-pts-kill") || document.querySelector("new-pts-kill")).value) || 1;
+      let customPlacementMap = {
+        "1": Number((document.getElementById("pt-rank-1") || document.querySelector("pt-rank-1")).value) || 12,
+        "2": Number((document.getElementById("pt-rank-2") || document.querySelector("pt-rank-2")).value) || 9,
+        "3": Number((document.getElementById("pt-rank-3") || document.querySelector("pt-rank-3")).value) || 8,
+        "4": Number((document.getElementById("pt-rank-4") || document.querySelector("pt-rank-4")).value) || 7,
+        "5": Number((document.getElementById("pt-rank-5") || document.querySelector("pt-rank-5")).value) || 6,
+        "6": Number((document.getElementById("pt-rank-6") || document.querySelector("pt-rank-6")).value) || 5,
+        "7": Number((document.getElementById("pt-rank-7") || document.querySelector("pt-rank-7")).value) || 4,
+        "8": Number((document.getElementById("pt-rank-8") || document.querySelector("pt-rank-8")).value) || 3,
+        "9": Number((document.getElementById("pt-rank-9") || document.querySelector("pt-rank-9")).value) || 2,
+        "10": Number((document.getElementById("pt-rank-10") || document.querySelector("pt-rank-10")).value) || 1,
+        "11": Number((document.getElementById("pt-rank-11") || document.querySelector("pt-rank-11")).value) || 0,
+        "12": Number((document.getElementById("pt-rank-12") || document.querySelector("pt-rank-12")).value) || 0
+      };
+
+      if (!tTitle) tTitle = "VORTEX CLASH TOURNAMENT S1";
+      if (!tPrize) tPrize = "₹15,000";
+      if (!tMaps) tMaps = "Bermuda, Purgatory, Kalahari";
+
+      let newId = tournamentsDb.length > 0 ? Math.max(...tournamentsDb.map(t => Number(t.id) || 0)) + 1 : 1;
       const initialTeams = newTourneyInitialSquads.length > 0 
         ? JSON.parse(JSON.stringify(newTourneyInitialSquads))
         : [
@@ -2719,6 +3011,10 @@ window.removeInitialSquadFromDraft = function(idx) {
         statusClass: "live",
         killMultiplier: tKillMultiplier,
         placementPoints: customPlacementMap,
+        whatsappLink: tWhatsapp,
+        discordLink: tDiscord,
+        user_id: currentUser?.id || null,
+        creatorName: currentUser?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "Organizer"),
         teams: initialTeams,
         matches: [{
           id: 1,
@@ -2741,6 +3037,41 @@ window.removeInitialSquadFromDraft = function(idx) {
       showToast("🚀 Tournament '" + tTitle + "' successfully created with " + initialTeams.length + " squads!");
     });
   }
+})();
+
+// Wire Registration Modals
+(function() {
+  const regBtn = document.getElementById("btn-submit-registration");
+  if (regBtn) regBtn.addEventListener('click', handleSquadRegistrationSubmit);
+
+  const closeRegBtn = document.getElementById("btn-close-reg-modal");
+  if (closeRegBtn) closeRegBtn.addEventListener('click', () => document.getElementById("modal-squad-registration").classList.remove('show'));
+
+  const cancelRegBtn = document.getElementById("btn-cancel-reg");
+  if (cancelRegBtn) cancelRegBtn.addEventListener('click', () => document.getElementById("modal-squad-registration").classList.remove('show'));
+
+  const closeSuccBtn = document.getElementById("btn-close-succ-modal");
+  if (closeSuccBtn) closeSuccBtn.addEventListener('click', () => {
+    document.getElementById("modal-registration-success").classList.remove('show');
+    const targetId = Number((document.getElementById("reg-target-tourney-id") || {}).value) || activeTourneyId;
+    openWorkspaceWithId(targetId);
+  });
+
+  const wsRegBtn = document.getElementById("ws-btn-register-squad");
+  if (wsRegBtn) wsRegBtn.addEventListener('click', () => openSquadRegistrationModal(activeTourneyId));
+
+  // Wire Delete Modals
+  const wsDelBtn = document.getElementById("ws-btn-delete-tourney");
+  if (wsDelBtn) wsDelBtn.addEventListener('click', () => openDeleteTourneyModal(activeTourneyId));
+
+  const confirmDelBtn = document.getElementById("btn-confirm-delete-tourney");
+  if (confirmDelBtn) confirmDelBtn.addEventListener('click', confirmDeleteTourney);
+
+  const closeDelBtn = document.getElementById("btn-close-del-modal");
+  if (closeDelBtn) closeDelBtn.addEventListener('click', () => document.getElementById("modal-delete-confirm").classList.remove('show'));
+
+  const cancelDelBtn = document.getElementById("btn-cancel-del");
+  if (cancelDelBtn) cancelDelBtn.addEventListener('click', () => document.getElementById("modal-delete-confirm").classList.remove('show'));
 })();
 
 function initThemeToggle() {

@@ -117,6 +117,16 @@
                 <label class="form-label">Tournament Map Rotation (Select / Type)</label>
                 <input type="text" class="form-input" id="new-tourney-maps" value="Bermuda, Purgatory, Kalahari, Alpine" placeholder="Comma separated maps">
               </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">💬 WhatsApp Group Link (Optional)</label>
+                  <input type="url" class="form-input" id="new-tourney-whatsapp" placeholder="e.g. https://chat.whatsapp.com/...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">🎮 Discord Server Link (Optional)</label>
+                  <input type="url" class="form-input" id="new-tourney-discord" placeholder="e.g. https://discord.gg/...">
+                </div>
+              </div>
             </div>
             <div class="form-card">
               <h3 class="card-form-title">2. CUSTOM POINT SYSTEM RULES</h3>
@@ -229,9 +239,16 @@
         <div class="workspace-header-card">
           <div class="ws-top-row">
             <button class="btn-back-link" id="btn-ws-back-to-manage">← BACK TO ALL TOURNAMENTS</button>
-            <div class="ws-status-group">
+            <div class="ws-status-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
               <span class="ws-badge-status" id="ws-status-badge">LIVE TOURNAMENT</span>
+              <a href="#" target="_blank" class="ws-social-link-btn" id="ws-btn-whatsapp" style="display:none;" title="Join Official WhatsApp Group">💬 WhatsApp Group</a>
+              <a href="#" target="_blank" class="ws-social-link-btn discord" id="ws-btn-discord" style="display:none;" title="Join Official Discord Server">🎮 Discord Server</a>
+              <button class="btn-action-primary-sm" id="ws-btn-register-squad" style="background:#00f0ff; color:#000; border-color:#000;">📝 REGISTER SQUAD</button>
+              <button class="btn-row-del" id="ws-btn-delete-tourney" style="display:none;" title="Delete this tournament (Owner Only)">🗑️ DELETE</button>
             </div>
+          </div>
+          <div class="ws-permission-banner" id="ws-permission-banner" style="display:none; margin-bottom:14px; padding:8px 14px; border-radius:6px; background:#181824; border:1.5px solid #28283c; font-size:12px; font-weight:800; color:#fbbf24;">
+            🔒 SPECTATOR MODE: You are viewing an official tournament organized by <span id="ws-owner-name">Organizer</span>. Modification tools are reserved for the tournament owner.
           </div>
           <div class="ws-title-row">
             <h1 class="ws-title" id="ws-tourney-title">VORTEX GRANDMASTERS CHAMPIONSHIP</h1>
@@ -678,6 +695,142 @@
         </div>
       </div>
     </div>
+    <!-- SQUAD SELF-REGISTRATION MODAL FOR PLAYERS -->
+    <div class="modal-overlay" id="modal-squad-registration">
+      <div class="modal-content" style="max-width:620px;">
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-title">📝 TOURNAMENT SQUAD REGISTRATION</h3>
+            <p class="modal-sub-desc" style="margin-bottom:0;" id="reg-modal-tourney-title">Register your squad roster</p>
+          </div>
+          <button class="btn-close-modal" id="btn-close-reg-modal">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:75vh; overflow-y:auto;">
+          <input type="hidden" id="reg-target-tourney-id" value="1">
+          
+          <h4 style="font-size:13px; font-weight:900; color:#ff2d55; margin-bottom:10px; border-bottom:1px solid #28283c; padding-bottom:4px;">1. SQUAD DETAILS</h4>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Squad / Team Name *</label>
+              <input type="text" class="form-input" id="reg-squad-name" placeholder="e.g. Shadow Strikers" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Squad Tag (e.g. SS / NOVA)</label>
+              <input type="text" class="form-input" id="reg-squad-tag" placeholder="e.g. SS" maxlength="6">
+            </div>
+          </div>
+
+          <h4 style="font-size:13px; font-weight:900; color:#ffd700; margin-top:12px; margin-bottom:10px; border-bottom:1px solid #28283c; padding-bottom:4px;">2. TEAM LEADER / CAPTAIN (Point of Contact)</h4>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Leader Full Name *</label>
+              <input type="text" class="form-input" id="reg-leader-name" placeholder="e.g. Rahul Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Leader In-Game Name (IGN) *</label>
+              <input type="text" class="form-input" id="reg-leader-ign" placeholder="e.g. Shadow_Leader" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Leader In-Game UID *</label>
+              <input type="text" class="form-input" id="reg-leader-uid" placeholder="e.g. 77489210" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp Number * (For Room ID & Pass)</label>
+              <input type="tel" class="form-input" id="reg-leader-whatsapp" placeholder="e.g. +91 9876543210" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address (Optional)</label>
+            <input type="email" class="form-input" id="reg-leader-email" placeholder="e.g. leader@gmail.com">
+          </div>
+
+          <h4 style="font-size:13px; font-weight:900; color:#00f0ff; margin-top:12px; margin-bottom:10px; border-bottom:1px solid #28283c; padding-bottom:4px;">3. TEAMMATES ROSTER</h4>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Player 2 IGN *</label>
+              <input type="text" class="form-input" id="reg-p2-ign" placeholder="e.g. Rusher_99" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Player 2 UID *</label>
+              <input type="text" class="form-input" id="reg-p2-uid" placeholder="e.g. 77489211" required>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Player 3 IGN (Optional)</label>
+              <input type="text" class="form-input" id="reg-p3-ign" placeholder="e.g. Sniper_Zen">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Player 3 UID (Optional)</label>
+              <input type="text" class="form-input" id="reg-p3-uid" placeholder="e.g. 77489212">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Player 4 IGN (Optional)</label>
+              <input type="text" class="form-input" id="reg-p4-ign" placeholder="e.g. Support_God">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Player 4 UID (Optional)</label>
+              <input type="text" class="form-input" id="reg-p4-uid" placeholder="e.g. 77489213">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary-sm" id="btn-cancel-reg">CANCEL</button>
+          <button class="btn-action-primary" id="btn-submit-registration">✓ CONFIRM SQUAD REGISTRATION</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQUAD REGISTRATION SUCCESS MODAL -->
+    <div class="modal-overlay" id="modal-registration-success">
+      <div class="modal-content" style="max-width:520px; text-align:center;">
+        <div class="modal-body" style="padding:32px 24px;">
+          <div style="font-size:48px; margin-bottom:12px;">🎉</div>
+          <h2 style="font-size:22px; font-weight:900; color:#ffffff; margin-bottom:8px;">REGISTRATION CONFIRMED!</h2>
+          <p style="font-size:14px; color:#94a3b8; line-height:1.5; margin-bottom:20px;">
+            Your squad <strong id="succ-squad-name" style="color:#00f0ff;">Shadow Strikers</strong> has been successfully registered for <strong id="succ-tourney-name" style="color:#ffffff;">Tournament</strong> at <strong id="succ-slot-tag" style="color:#ffd700;">Slot #7</strong>!
+          </p>
+          <div style="background:#141422; border:1.5px solid #28283c; border-radius:10px; padding:16px; margin-bottom:24px; text-align:left;">
+            <div style="font-size:12px; font-weight:900; color:#ff2d55; margin-bottom:6px;">⚠️ IMPORTANT NEXT STEP:</div>
+            <div style="font-size:12px; color:#cbd5e1; line-height:1.4;">
+              Join the official tournament WhatsApp & Discord groups below to receive your <strong>Custom Room ID and Password</strong> before match time!
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+            <a href="#" target="_blank" class="btn-action-primary" id="succ-btn-whatsapp" style="background:#25D366; color:#000; font-weight:900; text-decoration:none; display:none;">💬 JOIN OFFICIAL WHATSAPP GROUP</a>
+            <a href="#" target="_blank" class="btn-action-primary" id="succ-btn-discord" style="background:#5865F2; color:#fff; font-weight:900; text-decoration:none; display:none;">🎮 JOIN OFFICIAL DISCORD SERVER</a>
+          </div>
+          <button class="btn-secondary-sm" id="btn-close-succ-modal" style="width:100%;">VIEW TOURNAMENT STANDINGS & ROSTER ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT DELETE CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="modal-delete-confirm">
+      <div class="modal-content" style="max-width:460px;">
+        <div class="modal-header">
+          <h3 class="modal-title" style="color:#ff2d55;">🗑️ DELETE TOURNAMENT</h3>
+          <button class="btn-close-modal" id="btn-close-del-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:14px; color:#cbd5e1; line-height:1.5; margin-bottom:16px;">
+            Are you sure you want to permanently delete <strong id="del-modal-tourney-name" style="color:#ffffff;">Tournament</strong>?
+          </p>
+          <div style="background:#201014; border:1px solid #4a1520; color:#ff2d55; padding:12px; border-radius:8px; font-size:12px; font-weight:800;">
+            ⚠️ This will delete all matches, custom room passwords, squad rosters, and live points standings. This action cannot be undone.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary-sm" id="btn-cancel-del">CANCEL</button>
+          <button class="btn-row-del" id="btn-confirm-delete-tourney" style="padding:10px 18px; font-size:12px;">🗑️ DELETE PERMANENTLY</button>
+        </div>
+      </div>
+    </div>
+
     <div class="toast-container" id="toast-container">
     </div>
       <script src="app.js"></script>
