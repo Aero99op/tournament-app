@@ -960,13 +960,30 @@ function renderLandingFeatured() {
     const isOwner = isTourneyOwner(tourney);
     const deadlinePassed = isDeadlinePassed(tourney);
     const regSquad = getUserRegisteredSquadForTourney(tourney);
+    const totalSlots = Number(tourney.slots) || 12;
+    const isSlotsFull = Array.isArray(tourney.teams) && tourney.teams.length >= totalSlots;
+
+    let regButtonHtml = '';
+    if (regSquad) {
+      if (deadlinePassed) {
+        regButtonHtml = `<button class='btn-card-register' disabled style='background:#475569; color:#94a3b8; cursor:not-allowed;'>🔒 ROSTER LOCKED</button>`;
+      } else {
+        regButtonHtml = `<button class='btn-card-register' style='background:#34d399; color:#000;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>`;
+      }
+    } else if (deadlinePassed) {
+      regButtonHtml = `<button class='btn-card-register' disabled style='background:#475569; color:#94a3b8; cursor:not-allowed;'>🔒 CLOSED</button>`;
+    } else if (isSlotsFull) {
+      regButtonHtml = `<button class='btn-card-register' disabled style='background:#ff2d55; color:#ffffff; cursor:not-allowed; border-color:#000;'>🔒 FULL (${tourney.teams.length}/${totalSlots})</button>`;
+    } else {
+      regButtonHtml = `<button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER</button>`;
+    }
 
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
           <div style='display:flex; gap:4px; flex-wrap:wrap;'>
-            ${tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : ''}
+            ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
             ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
             ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
             <span class='badge-tag open'>${tourney.format}</span>
@@ -976,15 +993,11 @@ function renderLandingFeatured() {
         <div class='t-card-meta'>Game: ${tourney.game} • Maps: ${tourney.maps}</div>
         <div class='t-card-metrics'>
           <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val' style='color:${isSlotsFull ? "#ff2d55" : "#00f0ff"}; font-weight:900;'>${tourney.teams.length} / ${totalSlots}</span></div>
           ${regSquad ? `<div class='t-metric' style='grid-column:1/-1;'><span class='tm-label'>YOUR STATUS</span><span class='tm-val' style='color:#34d399;'>✅ Registered (Slot #${regSquad.squad.slot})</span></div>` : ''}
         </div>
         <div class='card-action-btns-row' onclick='event.stopPropagation();'>
-          ${regSquad ? `
-            <button class='btn-card-register' style='background:#34d399;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>
-          ` : `
-            <button class='btn-card-register' ${deadlinePassed ? "disabled style='background:#475569; color:#94a3b8;'" : ""} onclick='window.vortexOpenRegisterModal(${tourney.id})'>${deadlinePassed ? "🔒 CLOSED" : "📝 REGISTER"}</button>
-          `}
+          ${regButtonHtml}
           <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
           <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>OPEN ➔</button>
           ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
@@ -1014,13 +1027,30 @@ function renderManageList() {
     const isOwner = isTourneyOwner(tourney);
     const deadlinePassed = isDeadlinePassed(tourney);
     const regSquad = getUserRegisteredSquadForTourney(tourney);
+    const totalSlots = Number(tourney.slots) || 12;
+    const isSlotsFull = Array.isArray(tourney.teams) && tourney.teams.length >= totalSlots;
+
+    let regButtonHtml = '';
+    if (regSquad) {
+      if (deadlinePassed) {
+        regButtonHtml = `<button class='btn-card-register' disabled style='background:#475569; color:#94a3b8; cursor:not-allowed;'>🔒 ROSTER LOCKED</button>`;
+      } else {
+        regButtonHtml = `<button class='btn-card-register' style='background:#34d399; color:#000;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>`;
+      }
+    } else if (deadlinePassed) {
+      regButtonHtml = `<button class='btn-card-register' disabled style='background:#475569; color:#94a3b8; cursor:not-allowed;'>🔒 CLOSED</button>`;
+    } else if (isSlotsFull) {
+      regButtonHtml = `<button class='btn-card-register' disabled style='background:#ff2d55; color:#ffffff; cursor:not-allowed; border-color:#000;'>🔒 FULL (${tourney.teams.length}/${totalSlots})</button>`;
+    } else {
+      regButtonHtml = `<button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER SQUAD</button>`;
+    }
 
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
           <div style='display:flex; gap:4px; flex-wrap:wrap;'>
-            ${tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : ''}
+            ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
             ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
             ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
             <span class='badge-tag open'>${tourney.game}</span>
@@ -1030,16 +1060,12 @@ function renderManageList() {
         <div class='t-card-meta'>Format: ${tourney.format} • Maps: ${tourney.maps}</div>
         <div class='t-card-metrics'>
           <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
+          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val' style='color:${isSlotsFull ? "#ff2d55" : "#00f0ff"}; font-weight:900;'>${tourney.teams.length} / ${totalSlots}</span></div>
           <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches.length} Scheduled</span></div>
           <div class='t-metric'><span class='tm-label'>ROLE</span><span class='tm-val' style='color:${isOwner ? "#34d399" : "#94a3b8"};'>${isOwner ? "👑 Owner" : (regSquad ? "🎮 Player" : "👁️ Public")}</span></div>
         </div>
         <div class='card-action-btns-row' onclick='event.stopPropagation();'>
-          ${regSquad ? `
-            <button class='btn-card-register' style='background:#34d399;' onclick='window.vortexOpenRegisterModal(${tourney.id}, true, ${regSquad.teamIdx})'>✏️ EDIT ROSTER</button>
-          ` : `
-            <button class='btn-card-register' ${deadlinePassed ? "disabled style='background:#475569; color:#94a3b8;'" : ""} onclick='window.vortexOpenRegisterModal(${tourney.id})'>${deadlinePassed ? "🔒 CLOSED" : "📝 REGISTER SQUAD"}</button>
-          `}
+          ${regButtonHtml}
           <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
           <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>${isOwner ? "MANAGE ➔" : "VIEW ➔"}</button>
           ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
@@ -1143,10 +1169,28 @@ function openWorkspaceWithId(tourneyId) {
   } else {
     if (regBanner) regBanner.style.display = "none";
     if (wsRegBtn) {
-      if (!isOwner && !deadlinePassed && activeT.teams.length < activeT.slots) {
-        wsRegBtn.style.display = "inline-block";
-      } else {
+      const isSlotsFull = Array.isArray(activeT.teams) && activeT.teams.length >= (activeT.slots || 12);
+      if (isOwner) {
         wsRegBtn.style.display = "none";
+      } else if (deadlinePassed) {
+        wsRegBtn.style.display = "inline-block";
+        wsRegBtn.disabled = true;
+        wsRegBtn.textContent = "🔒 REGISTRATION CLOSED";
+        wsRegBtn.style.background = "#475569";
+        wsRegBtn.style.color = "#94a3b8";
+      } else if (isSlotsFull) {
+        wsRegBtn.style.display = "inline-block";
+        wsRegBtn.disabled = true;
+        wsRegBtn.textContent = "🔒 SLOTS FULL (" + activeT.teams.length + "/" + (activeT.slots || 12) + ")";
+        wsRegBtn.style.background = "#ff2d55";
+        wsRegBtn.style.color = "#ffffff";
+      } else {
+        wsRegBtn.style.display = "inline-block";
+        wsRegBtn.disabled = false;
+        wsRegBtn.textContent = "📝 REGISTER SQUAD";
+        wsRegBtn.style.background = "#00f0ff";
+        wsRegBtn.style.color = "#000000";
+        wsRegBtn.onclick = () => openSquadRegistrationModal(activeT.id);
       }
     }
   }
@@ -1623,21 +1667,26 @@ function saveTeamAllMatches() {
 function renderWorkspacePointRules() {
   let activeT = getActiveTourney();
   if (activeT != null) {
-    (document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value = activeT.killMultiplier;
+    (document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value = activeT.killMultiplier || 1;
+    const slotsInput = document.getElementById("ws-rules-slots");
+    if (slotsInput) {
+      slotsInput.value = activeT.slots || 12;
+    }
     const dlInput = document.getElementById("ws-rules-deadline");
     if (dlInput) {
       dlInput.value = activeT.registrationDeadline || "";
     }
     let htmlBuffer = "";
-    for (const r of [ 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 ]) {
+    const slotCount = Math.max(12, Number(activeT.slots) || 12);
+    for (let r = 1; r <= slotCount; r++) {
       let val = 0;
-      if (activeT.placementPoints[String(r)] != undefined) {
+      if (activeT.placementPoints && activeT.placementPoints[String(r)] != undefined) {
         val = activeT.placementPoints[String(r)];
       }
-      htmlBuffer = htmlBuffer + "<div class='pt-box'>";
-      htmlBuffer = htmlBuffer + "<span class='pt-lbl'>#" + r + " Rank</span>";
-      htmlBuffer = htmlBuffer + "<input type='number' class='pt-input' id='ws-pt-rank-" + r + "' value='" + val + "'>";
-      htmlBuffer = htmlBuffer + "</div>";
+      htmlBuffer += "<div class='pt-box'>";
+      htmlBuffer += "<span class='pt-lbl'>#" + r + " Rank</span>";
+      htmlBuffer += "<input type='number' class='pt-input' id='ws-pt-rank-" + r + "' value='" + val + "'>";
+      htmlBuffer += "</div>";
     }
     (document.getElementById("ws-rules-pts-grid") || document.querySelector("ws-rules-pts-grid")).innerHTML = htmlBuffer;
   }
@@ -3431,19 +3480,30 @@ window.removeInitialSquadFromDraft = function(idx) {
         showToast("⛔ Permission Denied: Only the tournament organizer can change point rules.");
         return;
       }
-      activeT.killMultiplier = Number((document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value);
-      activeT.placementPoints = { "1" : Number((document.getElementById("ws-pt-rank-1") || document.querySelector("ws-pt-rank-1")).value), "2" : Number((document.getElementById("ws-pt-rank-2") || document.querySelector("ws-pt-rank-2")).value), "3" : Number((document.getElementById("ws-pt-rank-3") || document.querySelector("ws-pt-rank-3")).value), "4" : Number((document.getElementById("ws-pt-rank-4") || document.querySelector("ws-pt-rank-4")).value), "5" : Number((document.getElementById("ws-pt-rank-5") || document.querySelector("ws-pt-rank-5")).value), "6" : Number((document.getElementById("ws-pt-rank-6") || document.querySelector("ws-pt-rank-6")).value), "7" : Number((document.getElementById("ws-pt-rank-7") || document.querySelector("ws-pt-rank-7")).value), "8" : Number((document.getElementById("ws-pt-rank-8") || document.querySelector("ws-pt-rank-8")).value), "9" : Number((document.getElementById("ws-pt-rank-9") || document.querySelector("ws-pt-rank-9")).value), "10" : Number((document.getElementById("ws-pt-rank-10") || document.querySelector("ws-pt-rank-10")).value), "11" : Number((document.getElementById("ws-pt-rank-11") || document.querySelector("ws-pt-rank-11")).value), "12" : Number((document.getElementById("ws-pt-rank-12") || document.querySelector("ws-pt-rank-12")).value) };
+      activeT.killMultiplier = Number((document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value) || 1;
+      const newSlots = Number((document.getElementById("ws-rules-slots") || {}).value);
+      if (newSlots && newSlots >= 2) {
+        activeT.slots = newSlots;
+      }
       const dlVal = (document.getElementById("ws-rules-deadline") || {}).value;
       if (dlVal !== undefined) {
         activeT.registrationDeadline = dlVal || "";
       }
+      const slotCount = Math.max(12, Number(activeT.slots) || 12);
+      const newPlacement = {};
+      for (let r = 1; r <= slotCount; r++) {
+        const inp = document.getElementById("ws-pt-rank-" + r);
+        newPlacement[String(r)] = inp ? (Number(inp.value) || 0) : (activeT.placementPoints?.[String(r)] || 0);
+      }
+      activeT.placementPoints = newPlacement;
       saveStateToStorage();
       renderWorkspaceOverview();
+      renderWorkspaceTeams();
       renderWorkspaceMatchStandings();
       renderWorkspaceOverallStandings();
       renderLandingFeatured();
       renderManageList();
-      showToast("✓ Point system rules & deadline updated!");
+      showToast("✓ Point system rules & max " + activeT.slots + " slots updated!");
     });
   }
 })();
@@ -3632,6 +3692,58 @@ function handleUrlRouting() {
   if (cancelDelBtn) cancelDelBtn.addEventListener('click', () => document.getElementById("modal-delete-confirm").classList.remove('show'));
 })();
 
+function initSlotPresetButtons() {
+  const container = document.getElementById("create-slot-presets");
+  const slotsInput = document.getElementById("new-tourney-slots");
+  const gameSelect = document.getElementById("new-tourney-game");
+
+  if (container && slotsInput) {
+    const buttons = container.querySelectorAll(".btn-slot-preset");
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const val = btn.getAttribute("data-slots");
+        if (val === "custom") {
+          slotsInput.focus();
+          slotsInput.select();
+        } else {
+          slotsInput.value = val;
+        }
+      });
+    });
+
+    slotsInput.addEventListener("input", () => {
+      const currentVal = slotsInput.value;
+      let matched = false;
+      buttons.forEach(b => {
+        if (b.getAttribute("data-slots") === currentVal) {
+          b.classList.add("active");
+          matched = true;
+        } else {
+          b.classList.remove("active");
+        }
+      });
+      if (!matched) {
+        const customBtn = container.querySelector('[data-slots="custom"]');
+        if (customBtn) customBtn.classList.add("active");
+      }
+    });
+  }
+
+  if (gameSelect && slotsInput) {
+    gameSelect.addEventListener("change", () => {
+      const g = gameSelect.value;
+      if (g.includes("Free Fire")) {
+        slotsInput.value = "12";
+      } else if (g.includes("BGMI") || g.includes("PUBG")) {
+        slotsInput.value = "16";
+      }
+      slotsInput.dispatchEvent(new Event("input"));
+    });
+  }
+}
+
 function initThemeToggle() {
   const toggleBtn = document.getElementById("btn-theme-toggle");
   const savedTheme = localStorage.getItem("vortex_theme");
@@ -3660,6 +3772,7 @@ function initThemeToggle() {
   }
 }
 
+initSlotPresetButtons();
 initThemeToggle();
 loadStateFromStorage();
 initSupabase();

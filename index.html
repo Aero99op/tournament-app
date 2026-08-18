@@ -102,7 +102,7 @@
                 </select>
               </div>
             </div>
-            <div class="form-row-3">
+            <div class="form-row-2">
               <div class="form-group">
                 <label class="form-label">Format *</label>
                 <select class="form-select" id="new-tourney-format">
@@ -113,12 +113,24 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Total Squad Slots *</label>
-                <input type="number" class="form-input" id="new-tourney-slots" value="12" min="2" max="48">
-              </div>
-              <div class="form-group">
                 <label class="form-label">Prize Pool (₹)</label>
                 <input type="text" class="form-input" id="new-tourney-prize" placeholder="e.g. ₹20,000">
+              </div>
+            </div>
+            <div class="form-group" style="background:#141422; border:1.5px solid #28283c; border-radius:10px; padding:16px; margin-bottom:18px;">
+              <label class="form-label" style="color:#00f0ff; margin-bottom:8px;">👥 Tournament Squad Slots Limit *</label>
+              <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">Choose standard game presets or type a custom number. Tournament registration automatically closes when all slots are full.</p>
+              <div class="slot-presets-container" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;" id="create-slot-presets">
+                <button type="button" class="btn-slot-preset active" data-slots="12">🔥 12 Slots (Free Fire)</button>
+                <button type="button" class="btn-slot-preset" data-slots="16">🎮 16 Slots (BGMI / PUBG)</button>
+                <button type="button" class="btn-slot-preset" data-slots="18">⚔️ 18 Slots</button>
+                <button type="button" class="btn-slot-preset" data-slots="20">🏆 20 Slots</button>
+                <button type="button" class="btn-slot-preset" data-slots="24">⚡ 24 Slots</button>
+                <button type="button" class="btn-slot-preset" data-slots="custom">✏️ Custom Slots</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; max-width:320px;">
+                <input type="number" class="form-input" id="new-tourney-slots" value="12" min="2" max="64" placeholder="Enter custom slots (e.g. 12, 16, 20)">
+                <span style="font-size:12px; font-weight:800; color:#cbd5e1; white-space:nowrap;">MAX SQUADS</span>
               </div>
             </div>
             <div class="form-group">
@@ -446,10 +458,14 @@
           <h3 class="card-form-title">EDIT POINT SYSTEM RULES (LIVE RE-CALCULATION)</h3>
           <p class="card-form-sub">Modifying these rules will instantly recalculate placement and kill points for all
             matches.</p>
-          <div class="form-row-2">
+          <div class="form-row-3">
             <div class="form-group">
               <label class="form-label">Kill Point Multiplier</label>
               <input type="number" class="form-input" id="ws-rules-kill-pts" value="1" min="0" max="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Max Squad Slots Limit *</label>
+              <input type="number" class="form-input" id="ws-rules-slots" value="12" min="2" max="64">
             </div>
             <div class="form-group">
               <label class="form-label">⏳ Registration & Roster Edit Deadline</label>

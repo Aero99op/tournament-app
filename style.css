@@ -2190,3 +2190,49 @@ body.theme-anime-sketch .canvas-container-responsive {
     left: 12px;
   }
 }
+
+/* SLOT PRESET BUTTONS */
+.btn-slot-preset {
+  background: #141422;
+  color: #cbd5e1;
+  border: 1.5px solid #28283c;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 2px 0px #000000;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-slot-preset:hover {
+  border-color: #00f0ff;
+  color: #00f0ff;
+  transform: translate(-1px, -1px);
+}
+
+.btn-slot-preset.active {
+  background: #00f0ff;
+  color: #000000;
+  border-color: #000000;
+}
+
+[data-theme="sketch"] .btn-slot-preset {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+[data-theme="sketch"] .btn-slot-preset:hover {
+  background: #ffde59;
+  color: #000000;
+}
+
+[data-theme="sketch"] .btn-slot-preset.active {
+  background: #00f0ff;
+  color: #000000;
+}
