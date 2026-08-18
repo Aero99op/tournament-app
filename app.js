@@ -419,6 +419,7 @@ function switchView(targetId) {
     (document.getElementById("view-create") || document.querySelector("view-create")).style.display = 'block';
     (document.getElementById("view-create") || document.querySelector("view-create")).classList.add('active');
     (document.getElementById("nav-create") || document.querySelector("nav-create")).classList.add('active');
+    renderCreateTourneySquads();
   }
   if (targetId == "view-manage") {
     (document.getElementById("view-manage") || document.querySelector("view-manage")).style.display = 'block';
@@ -2306,12 +2307,69 @@ async function handleLogout() {
   }
 })();
 
+let newTourneyInitialSquads = [
+  { slot: 1, name: "Shadow Ninjas", tag: "SNE", captain: "Kiryu_FF (UID: 77489210)", players: [{ name: "Kiryu_FF", uid: "77489210", role: "IGL" }] },
+  { slot: 2, name: "Aero Esports", tag: "AERO", captain: "Aero_Alpha (UID: 66120101)", players: [{ name: "Aero_Alpha", uid: "66120101", role: "IGL" }] }
+];
+let currentTeamModalContext = "workspace"; // 'workspace' or 'create'
+
+function renderCreateTourneySquads() {
+  const container = document.getElementById("create-squads-preview-list");
+  if (!container) return;
+
+  if (newTourneyInitialSquads.length === 0) {
+    container.innerHTML = `<div style="padding:16px; text-align:center; color:#94a3b8; font-size:12px; font-weight:700;">No initial squads registered yet. Click '+ ADD INITIAL SQUAD' above to add teams.</div>`;
+    return;
+  }
+
+  let html = "";
+  newTourneyInitialSquads.forEach((sq, idx) => {
+    html += `
+      <div class="squad-item-row" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="squad-slot-tag">SLOT ${sq.slot || (idx + 1)}</span>
+          <span class="squad-name-tag">${sq.name} (Tag: ${sq.tag || "N/A"})</span>
+          <span class="squad-roster-summary">${sq.captain || "Captain TBD"}</span>
+        </div>
+        <button type="button" class="btn-row-del" onclick="removeInitialSquadFromDraft(${idx})" title="Remove Squad">🗑️ REMOVE</button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+window.removeInitialSquadFromDraft = function(idx) {
+  if (idx >= 0 && idx < newTourneyInitialSquads.length) {
+    const removed = newTourneyInitialSquads.splice(idx, 1);
+    renderCreateTourneySquads();
+    showToast("🗑️ Removed initial squad '" + (removed[0]?.name || "") + "'");
+  }
+};
+
+(function() {
+  const targetEl = document.getElementById("btn-add-quick-team");
+  if (targetEl != null) {
+    targetEl.addEventListener('click', function(event) {
+      currentTeamModalContext = "create";
+      (document.getElementById("edit-team-idx") || document.querySelector("edit-team-idx")).value = "-999";
+      (document.getElementById("team-input-slot") || document.querySelector("team-input-slot")).value = String(newTourneyInitialSquads.length + 1);
+      (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value = "";
+      (document.getElementById("team-input-name") || document.querySelector("team-input-name")).value = "";
+      (document.getElementById("team-input-captain") || document.querySelector("team-input-captain")).value = "";
+      (document.getElementById("modal-team-title") || document.querySelector("modal-team-title")).textContent = "ADD INITIAL SQUAD (CREATOR)";
+      (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.add('show');
+    });
+  }
+})();
+
 (function() {
   const targetEl = (document.getElementById("btn-open-add-team-modal") || document.querySelector("btn-open-add-team-modal"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
+      currentTeamModalContext = "workspace";
+      const activeT = getActiveTourney();
       (document.getElementById("edit-team-idx") || document.querySelector("edit-team-idx")).value = "-1";
-      (document.getElementById("team-input-slot") || document.querySelector("team-input-slot")).value = String ( tournamentsDb [ 0 ] .teams.length + 1 );
+      (document.getElementById("team-input-slot") || document.querySelector("team-input-slot")).value = String(activeT ? activeT.teams.length + 1 : 1);
       (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value = "";
       (document.getElementById("team-input-name") || document.querySelector("team-input-name")).value = "";
       (document.getElementById("team-input-captain") || document.querySelector("team-input-captain")).value = "";
@@ -2343,31 +2401,46 @@ async function handleLogout() {
   const targetEl = (document.getElementById("btn-save-team") || document.querySelector("btn-save-team"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let activeT = getActiveTourney ( );
-      let editIdx = Number ( (document.getElementById("edit-team-idx") || document.querySelector("edit-team-idx")).value );
-      let slotVal = Number ( (document.getElementById("team-input-slot") || document.querySelector("team-input-slot")).value );
-      let tagVal = (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value;
-      let nameVal = (document.getElementById("team-input-name") || document.querySelector("team-input-name")).value;
-      let capVal = (document.getElementById("team-input-captain") || document.querySelector("team-input-captain")).value;
-      if (nameVal == "") {
-        nameVal = "Alpha Wolves";
+      let editIdx = Number((document.getElementById("edit-team-idx") || {}).value);
+      let slotVal = Number((document.getElementById("team-input-slot") || {}).value) || 1;
+      let tagVal = (document.getElementById("team-input-tag") || {}).value?.trim() || "";
+      let nameVal = (document.getElementById("team-input-name") || {}).value?.trim() || "";
+      let capVal = (document.getElementById("team-input-captain") || {}).value?.trim() || "";
+
+      if (!nameVal) nameVal = "Squad #" + slotVal;
+      if (!tagVal) tagVal = nameVal.substring(0, 4).toUpperCase();
+      if (!capVal) capVal = "Captain " + nameVal;
+
+      if (currentTeamModalContext === "create" || editIdx === -999) {
+        newTourneyInitialSquads.push({
+          slot: slotVal,
+          tag: tagVal,
+          name: nameVal,
+          captain: capVal,
+          players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
+        });
+        renderCreateTourneySquads();
+        showToast("✓ Squad '" + nameVal + "' added to initial roster!");
+        (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.remove('show');
+        return;
       }
-      if (tagVal == "") {
-        tagVal = "AW";
-      }
-      if (capVal == "") {
-        capVal = "Wolf_Alpha (UID: 8810291)";
-      }
+
+      let activeT = getActiveTourney();
       if (activeT != null) {
-        if (editIdx >= 0) {
+        if (editIdx >= 0 && activeT.teams[editIdx]) {
           activeT.teams[editIdx].slot = slotVal;
           activeT.teams[editIdx].tag = tagVal;
           activeT.teams[editIdx].name = nameVal;
           activeT.teams[editIdx].captain = capVal;
           showToast("✓ Squad " + nameVal + " updated!");
-        }
-        else {
-          activeT.teams.push ( { slot : slotVal , tag : tagVal , name : nameVal , captain : capVal , players : [ { name : capVal.split ( " " ) [ 0 ] , uid : "8810291" , role : "IGL" } ] } );
+        } else {
+          activeT.teams.push({
+            slot: slotVal,
+            tag: tagVal,
+            name: nameVal,
+            captain: capVal,
+            players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
+          });
           showToast("✓ Squad " + nameVal + " added to Slot " + slotVal + "!");
         }
         saveStateToStorage();
@@ -2627,14 +2700,45 @@ async function handleLogout() {
         tMaps = "Bermuda, Purgatory, Kalahari";
       }
       let newId = tournamentsDb.length + 1;
-      let newTourney = { id : newId , title : tTitle , game : tGame , format : tFormat , maps : tMaps , slots : tSlots , prize : tPrize , status : "LIVE" , statusClass : "live" , killMultiplier : tKillMultiplier , placementPoints : customPlacementMap , teams : [ { slot : 1 , name : "Shadow Ninjas" , tag : "SNE" , captain : "Kiryu_FF" , players : [ { name : "Kiryu_FF" , uid : "77489210" , role : "IGL" } , { name : "Zen_99" , uid : "77489211" , role : "Rusher" } ] } , { slot : 2 , name : "Aero Esports" , tag : "AERO" , captain : "Aero_Alpha" , players : [ { name : "Aero_Alpha" , uid : "66120101" , role : "IGL" } , { name : "Aero_Sniper" , uid : "66120102" , role : "Sniper" } ] } ] , matches : [ { id : 1 , title : "Match 1 - " + tMaps.split ( "," ) [ 0 ] , map : tMaps.split ( "," ) [ 0 ] , time : "8:00 PM IST" , roomId : String ( Math.floor ( 1000000 + Math.random ( ) * 9000000 ) ) , roomPass : "VORTEX2026" , status : "SCHEDULED" , scores : [ ] } ] , checkpoints : [ ] };
-      tournamentsDb.unshift ( newTourney );
+      const initialTeams = newTourneyInitialSquads.length > 0 
+        ? JSON.parse(JSON.stringify(newTourneyInitialSquads))
+        : [
+            { slot: 1, name: "Shadow Ninjas", tag: "SNE", captain: "Kiryu_FF", players: [{ name: "Kiryu_FF", uid: "77489210", role: "IGL" }, { name: "Zen_99", uid: "77489211", role: "Rusher" }] },
+            { slot: 2, name: "Aero Esports", tag: "AERO", captain: "Aero_Alpha", players: [{ name: "Aero_Alpha", uid: "66120101", role: "IGL" }, { name: "Aero_Sniper", uid: "66120102", role: "Sniper" }] }
+          ];
+
+      let newTourney = {
+        id: newId,
+        title: tTitle,
+        game: tGame,
+        format: tFormat,
+        maps: tMaps,
+        slots: tSlots,
+        prize: tPrize,
+        status: "LIVE",
+        statusClass: "live",
+        killMultiplier: tKillMultiplier,
+        placementPoints: customPlacementMap,
+        teams: initialTeams,
+        matches: [{
+          id: 1,
+          title: "Match 1 - " + (tMaps.split(",")[0] || "Bermuda").trim(),
+          map: (tMaps.split(",")[0] || "Bermuda").trim(),
+          time: "8:00 PM IST",
+          roomId: String(Math.floor(1000000 + Math.random() * 9000000)),
+          roomPass: "VORTEX2026",
+          status: "SCHEDULED",
+          scores: []
+        }],
+        checkpoints: []
+      };
+      tournamentsDb.unshift(newTourney);
       saveStateToStorage();
       insertNewTourneyToSupabase(newTourney);
       renderLandingFeatured();
       renderManageList();
       openWorkspaceWithId(newId);
-      showToast("🚀 Tournament '" + tTitle + "' successfully created & launched!");
+      showToast("🚀 Tournament '" + tTitle + "' successfully created with " + initialTeams.length + " squads!");
     });
   }
 })();
