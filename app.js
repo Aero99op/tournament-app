@@ -1599,6 +1599,90 @@ window.vortexOpenMoveSquadPoolModal = function(teamIdx) {
   if (modal) modal.classList.add("show");
 };
 
+let verifiedBankUtrsCache = [];
+
+function loadVerifiedBankUtrs() {
+  try {
+    const raw = localStorage.getItem("vortex_verified_utrs");
+    verifiedBankUtrsCache = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    verifiedBankUtrsCache = [];
+  }
+}
+
+function saveVerifiedBankUtrs() {
+  try {
+    localStorage.setItem("vortex_verified_utrs", JSON.stringify(verifiedBankUtrsCache));
+  } catch (e) {}
+}
+
+function processIncomingBankSms(rawSms, source = "Bank_SMS_Engine") {
+  if (!rawSms || typeof rawSms !== "string") {
+    showToast("⚠️ Empty SMS text received.");
+    return { success: false, error: "Empty SMS" };
+  }
+
+  // 1. Extract 12-digit UTR
+  const utrRegex = /(?:UPI(?:\s*Ref(?:\s*No|\s*ID)?|\/)|UTR(?:\s*No|\s*ID)?|Ref(?:\s*No|\s*ID)?|Txn(?:\s*ID|\s*No)?|Reference(?:\s*No)?)[ :\/#-]*([0-9]{12})/i;
+  const generic12Digits = /\b([0-9]{12})\b/;
+
+  const utrMatch = rawSms.match(utrRegex) || rawSms.match(generic12Digits);
+  const utr = utrMatch ? utrMatch[1] : null;
+
+  // 2. Extract Amount
+  const amtRegex = /(?:Rs\.?|INR|₹|credited\s*(?:by|with)?\s*(?:Rs\.?|INR|₹)?)\s*([0-9]+(?:\.[0-9]{1,2})?)/i;
+  const amtMatch = rawSms.match(amtRegex);
+  const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
+
+  if (!utr) {
+    showToast("⚠️ Could not find a 12-digit UPI UTR in the provided SMS text.");
+    return { success: false, error: "No 12-digit UTR found" };
+  }
+
+  loadVerifiedBankUtrs();
+  if (!verifiedBankUtrsCache.includes(utr)) {
+    verifiedBankUtrsCache.push(utr);
+    saveVerifiedBankUtrs();
+  }
+
+  // Search across tournamentsDb for matching squad with this UTR or pending registration
+  let matchedSquad = null;
+  let targetTourney = null;
+
+  for (const tourney of tournamentsDb) {
+    if (Array.isArray(tourney.teams)) {
+      for (const team of tourney.teams) {
+        if (team.utr && team.utr.trim() === utr.trim()) {
+          matchedSquad = team;
+          targetTourney = tourney;
+          break;
+        }
+      }
+    }
+    if (matchedSquad) break;
+  }
+
+  if (matchedSquad) {
+    matchedSquad.paymentStatus = "APPROVED";
+    matchedSquad.autoVerified = true;
+    matchedSquad.verifiedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    matchedSquad.verifiedAmount = amount || matchedSquad.paymentAmount || 50;
+
+    saveStateToStorage();
+    renderWorkspacePayments();
+    renderWorkspaceTeams();
+    renderWorkspaceOverview();
+
+    showToast("⚡ 🤖 AUTO-APPROVED! Matched Bank SMS: ₹" + (amount || matchedSquad.paymentAmount || 50) + " for Squad '" + matchedSquad.name + "' (UTR: " + utr + ")!");
+    return { success: true, matched: true, squad: matchedSquad.name, utr: utr, amount: amount };
+  } else {
+    showToast("📥 Bank SMS Verified & Cached: UTR " + utr + " (₹" + amount + "). Will auto-approve when squad submits!");
+    return { success: true, matched: false, utr: utr, amount: amount };
+  }
+}
+
+window.vortexProcessBankSms = processIncomingBankSms;
+
 function renderWorkspacePayments() {
   const tbody = document.getElementById("ws-payments-tbody");
   if (!tbody) return;
@@ -1608,8 +1692,14 @@ function renderWorkspacePayments() {
   const isOwner = isTourneyOwner(activeT);
   const teams = activeT.teams || [];
 
+  // Update Live Webhook URL in UI
+  const webhookUrlEl = document.getElementById("sms-bot-webhook-url");
+  if (webhookUrlEl) {
+    webhookUrlEl.textContent = window.location.origin + "/api/verify-sms";
+  }
+
   if (teams.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#64748b;">No squad registrations or payments recorded yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:#64748b;">No squad registrations or payments recorded yet.</td></tr>`;
     return;
   }
 
@@ -1622,7 +1712,9 @@ function renderWorkspacePayments() {
 
     let statusBadge = "";
     if (isApproved) {
-      statusBadge = `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">✅ PAID & APPROVED</span>`;
+      statusBadge = team.autoVerified
+        ? `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">⚡ AUTO-APPROVED (SMS BOT)</span>`
+        : `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">✅ PAID & APPROVED</span>`;
     } else if (isPending) {
       statusBadge = `<span class="badge-tag" style="background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:11px;">🟡 VERIFICATION PENDING</span>`;
     } else if (isRejected) {
@@ -4361,6 +4453,38 @@ function handleUrlRouting() {
       const upiGroup = document.getElementById("group-paid-upi-details");
       if (feeGroup) feeGroup.style.display = isPaid ? "block" : "none";
       if (upiGroup) upiGroup.style.display = isPaid ? "block" : "none";
+    });
+  }
+
+  // Wire SMS Auto-Bot Engine Controls
+  const toggleBotBtn = document.getElementById("btn-toggle-sms-bot-settings");
+  if (toggleBotBtn) {
+    toggleBotBtn.addEventListener('click', () => {
+      const card = document.getElementById("sms-bot-controls-card");
+      if (card) {
+        card.style.display = card.style.display === "none" ? "block" : "none";
+      }
+    });
+  }
+
+  const copyWebhookBtn = document.getElementById("btn-copy-webhook-url");
+  if (copyWebhookBtn) {
+    copyWebhookBtn.addEventListener('click', () => {
+      const url = window.location.origin + "/api/verify-sms";
+      navigator.clipboard.writeText(url);
+      showToast("📋 Webhook URL copied: " + url);
+    });
+  }
+
+  const simulateSmsBtn = document.getElementById("btn-simulate-sms-verify");
+  if (simulateSmsBtn) {
+    simulateSmsBtn.addEventListener('click', () => {
+      const text = (document.getElementById("input-test-bank-sms") || {}).value?.trim();
+      if (!text) {
+        showToast("⚠️ Please enter a bank SMS to simulate.");
+        return;
+      }
+      processIncomingBankSms(text, "Simulated_SMS_Bot");
     });
   }
 })();

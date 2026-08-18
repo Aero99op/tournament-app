@@ -401,13 +401,61 @@
       <div class="ws-panel" id="panel-ws-payments">
         <div class="section-header-row">
           <div>
-            <h2 class="section-title">💳 PAID ENTRIES & UTR VERIFICATION</h2>
-            <p class="section-sub">Verify 12-digit UPI UTR transaction numbers with VTX-TR codes, view payment receipts, approve payments, and lock slots.</p>
+            <h2 class="section-title">💳 PAID ENTRIES & AUTO-UTR VERIFICATION</h2>
+            <p class="section-sub">Automatic Bank SMS Webhook Bot & 1-Click Verification for instant 0% fee payments.</p>
           </div>
           <div style="display:flex; gap:8px;">
+            <button class="btn-secondary-sm" id="btn-toggle-sms-bot-settings">🤖 AUTO-BOT SETTINGS</button>
             <button class="btn-secondary-sm" id="btn-refresh-payments">🔄 REFRESH PAYMENTS</button>
           </div>
         </div>
+
+        <!-- AUTO-VERIFY BOT CONTROLS & TESTER CARD -->
+        <div id="sms-bot-controls-card" style="background:#141422; border:1.5px solid #00f0ff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 4px 20px rgba(0,240,255,0.08);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">🤖</span>
+              <div>
+                <strong style="font-size:14px; color:#ffffff;">BANK SMS AUTO-APPROVAL ENGINE</strong>
+                <span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:10px; margin-left:8px;">🟢 ACTIVE & LISTENING</span>
+              </div>
+            </div>
+            <div style="font-size:12px; color:#94a3b8;">
+              Payee UPI: <strong style="color:#ffd700;">spandanprayas2079@ybl</strong>
+            </div>
+          </div>
+
+          <!-- Webhook URL & Secret Key Strip -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-bottom:14px;">
+            <div style="background:#0c0c14; border:1px solid #28283c; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:10px; color:#94a3b8; font-weight:800;">YOUR LIVE WEBHOOK URL (FOR ANDROID FORWARDER):</div>
+                <code id="sms-bot-webhook-url" style="font-size:12px; color:#00f0ff; word-break:break-all;">https://domain/api/verify-sms</code>
+              </div>
+              <button class="btn-secondary-sm" id="btn-copy-webhook-url" style="padding:4px 8px; font-size:10px;" title="Copy Webhook URL">📋 COPY</button>
+            </div>
+            <div style="background:#0c0c14; border:1px solid #28283c; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:10px; color:#94a3b8; font-weight:800;">AUTH SECRET KEY:</div>
+                <code style="font-size:12px; color:#ffd700;">VTX_AUTO_VERIFY_2026</code>
+              </div>
+              <button class="btn-secondary-sm" onclick="navigator.clipboard.writeText('VTX_AUTO_VERIFY_2026'); showToast('📋 Secret Key Copied!');" style="padding:4px 8px; font-size:10px;">📋 COPY</button>
+            </div>
+          </div>
+
+          <!-- Live Simulator Test Box -->
+          <div style="background:#1e1e30; border:1px dashed #383854; border-radius:8px; padding:12px;">
+            <div style="font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">⚡ LIVE BANK SMS TESTER & AUTO-MATCHER:</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="text" class="form-input" id="input-test-bank-sms" style="flex:1; min-width:260px; font-size:12px;" placeholder="e.g. Received Rs 50.00 from Rahul. UPI Ref: 482910482910" value="Received Rs 50.00 in bank a/c. UPI Ref: 482910482910">
+              <button class="btn-action-primary-sm" id="btn-simulate-sms-verify" style="background:#00f0ff; color:#000; font-weight:900; white-space:nowrap;">⚡ TEST AUTO-APPROVAL</button>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:6px;">
+              💡 <em>Whenever PhonePe/Bank SMS arrives on your phone, the Android forwarder posts the SMS here. The bot extracts the 12-digit UTR and approves the pending squad in 1 second!</em>
+            </div>
+          </div>
+        </div>
+
         <div class="custom-table-wrapper">
           <table class="anime-table">
             <thead>
