@@ -1389,3 +1389,642 @@ body {
   color: #facc15;
   border: 1px solid rgba(250, 204, 21, 0.4);
 }
+
+/* ==========================================================================
+   THEME TOGGLE BUTTON
+   ========================================================================== */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #181826;
+  border: 1px solid #303046;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.theme-toggle-btn:hover {
+  background: #242436;
+  border-color: #ffd700;
+  color: #ffd700;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   🖋️ ANIME / MANGA SKETCHED LIGHT THEME (Full Hand-Drawn Inked Aesthetic)
+   ========================================================================== */
+body.theme-anime-sketch {
+  background-color: #fcf9f2;
+  background-image: 
+    radial-gradient(#c8c2b5 0.8px, transparent 0.8px),
+    radial-gradient(#c8c2b5 0.8px, #fcf9f2 0.8px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  color: #121214;
+}
+
+/* Header in Manga Mode */
+body.theme-anime-sketch .anime-header {
+  background: rgba(252, 249, 242, 0.95);
+  border-bottom: 2.5px solid #141414;
+  box-shadow: 0 4px 0px #141414;
+}
+
+body.theme-anime-sketch .logo-text {
+  color: #141414;
+}
+
+body.theme-anime-sketch .logo-slash {
+  color: #ff2a5f;
+}
+
+body.theme-anime-sketch .logo-badge {
+  background: #ffde59;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .nav-link {
+  color: #4a4a55;
+  border: 2px solid transparent;
+}
+
+body.theme-anime-sketch .nav-link:hover {
+  color: #141414;
+  background: #f0eae1;
+}
+
+body.theme-anime-sketch .nav-link.active {
+  color: #141414;
+  background: #ffde59;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+}
+
+body.theme-anime-sketch .theme-toggle-btn {
+  background: #141414;
+  color: #ffde59;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-anime-sketch .btn-auth-pill {
+  background: #ffffff;
+  color: #141414;
+  border: 2.5px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+}
+
+body.theme-anime-sketch .btn-auth-pill:hover {
+  background: #ff2a5f;
+  color: #ffffff;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #141414;
+}
+
+body.theme-anime-sketch .user-profile-badge {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .db-sync-badge {
+  background: #dcfce7;
+  color: #15803d;
+  border: 2px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .db-sync-badge.connecting {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+body.theme-anime-sketch .db-sync-badge.offline {
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+/* Manga Hero Section */
+body.theme-anime-sketch .hero-banner {
+  background: #ffffff;
+  border: 3px solid #141414;
+  box-shadow: 6px 6px 0px #141414;
+}
+
+body.theme-anime-sketch .hero-tag {
+  background: #ff2a5f;
+  color: #ffffff;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+}
+
+body.theme-anime-sketch .hero-headline {
+  color: #141414;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-anime-sketch .hero-tagline {
+  color: #4b5563;
+}
+
+/* Manga Sketched Action Cards */
+body.theme-anime-sketch .hero-action-card,
+body.theme-anime-sketch .tourney-card-item,
+body.theme-anime-sketch .form-card,
+body.theme-anime-sketch .team-roster-card {
+  background: #ffffff;
+  border: 2.5px solid #141414;
+  box-shadow: 4px 4px 0px #141414;
+}
+
+body.theme-anime-sketch .hero-action-card:hover,
+body.theme-anime-sketch .tourney-card-item:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px #141414;
+  border-color: #141414;
+}
+
+body.theme-anime-sketch .card-heading,
+body.theme-anime-sketch .t-card-title,
+body.theme-anime-sketch .team-name-text,
+body.theme-anime-sketch .section-title,
+body.theme-anime-sketch .ws-title-large {
+  color: #141414;
+}
+
+body.theme-anime-sketch .card-desc,
+body.theme-anime-sketch .t-card-meta,
+body.theme-anime-sketch .section-sub,
+body.theme-anime-sketch .ws-game-meta {
+  color: #4b5563;
+}
+
+body.theme-anime-sketch .badge-tag.live {
+  background: #ff2a5f;
+  color: #ffffff;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .badge-tag.open,
+body.theme-anime-sketch .badge-tag.completed {
+  background: #ffde59;
+  color: #141414;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .t-card-metrics,
+body.theme-anime-sketch .t-metric-grid,
+body.theme-anime-sketch .t-metric {
+  background: #f7f4ed;
+  border: 1.5px solid #141414;
+}
+
+body.theme-anime-sketch .tm-val {
+  color: #141414;
+}
+
+body.theme-anime-sketch .tm-val.highlight {
+  color: #ff2a5f;
+}
+
+/* Manga Buttons */
+body.theme-anime-sketch .btn-card-launch,
+body.theme-anime-sketch .btn-action-primary,
+body.theme-anime-sketch .btn-action-primary-sm {
+  background: #ff2a5f;
+  color: #ffffff;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+  font-weight: 900;
+}
+
+body.theme-anime-sketch .btn-card-launch:hover,
+body.theme-anime-sketch .btn-action-primary:hover,
+body.theme-anime-sketch .btn-action-primary-sm:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #141414;
+  background: #e11d48;
+}
+
+body.theme-anime-sketch .btn-secondary-sm {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+  font-weight: 900;
+}
+
+body.theme-anime-sketch .btn-secondary-sm:hover {
+  background: #ffde59;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #141414;
+}
+
+body.theme-anime-sketch .btn-row-del {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+/* Manga Workspace Navigation */
+body.theme-anime-sketch .ws-subnav {
+  border-bottom: 2.5px solid #141414;
+}
+
+body.theme-anime-sketch .ws-tab-btn {
+  color: #52525b;
+  border: 2px solid transparent;
+}
+
+body.theme-anime-sketch .ws-tab-btn:hover {
+  color: #141414;
+  background: #f0eae1;
+}
+
+body.theme-anime-sketch .ws-tab-btn.active {
+  color: #141414;
+  background: #ffde59;
+  border: 2.5px solid #141414;
+  box-shadow: 4px 4px 0px #141414;
+}
+
+/* Manga Sketched Tables */
+body.theme-anime-sketch .anime-table {
+  background: #ffffff;
+  border: 2.5px solid #141414;
+  box-shadow: 4px 4px 0px #141414;
+}
+
+body.theme-anime-sketch .anime-table th {
+  background: #f4efe6;
+  color: #141414;
+  border-bottom: 2.5px solid #141414;
+  font-weight: 900;
+}
+
+body.theme-anime-sketch .anime-table td {
+  border-bottom: 1.5px solid #e4dfd5;
+  color: #141414;
+}
+
+body.theme-anime-sketch .anime-table tr:hover td {
+  background: #fefce8;
+}
+
+body.theme-anime-sketch .rank-badge {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .rank-badge.rank-1 {
+  background: #ffde59;
+  color: #141414;
+}
+
+body.theme-anime-sketch .rank-badge.rank-2 {
+  background: #e4e4e7;
+  color: #141414;
+}
+
+body.theme-anime-sketch .rank-badge.rank-3 {
+  background: #fed7aa;
+  color: #141414;
+}
+
+body.theme-anime-sketch .total-pts-pill {
+  background: #ffde59;
+  color: #141414;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .player-role-badge,
+body.theme-anime-sketch .team-slot-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .team-tag-pill {
+  background: #f4f4f5;
+  color: #141414;
+  border: 1.5px solid #141414;
+}
+
+/* Manga Form Controls & Inputs */
+body.theme-anime-sketch .form-input,
+body.theme-anime-sketch .form-select,
+body.theme-anime-sketch .table-edit-input,
+body.theme-anime-sketch .pt-input {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+}
+
+body.theme-anime-sketch .form-input:focus,
+body.theme-anime-sketch .form-select:focus,
+body.theme-anime-sketch .table-edit-input:focus {
+  border-color: #ff2a5f;
+  outline: none;
+  background: #fffdf5;
+}
+
+body.theme-anime-sketch .form-label,
+body.theme-anime-sketch .tm-label {
+  color: #4a4a55;
+  font-weight: 800;
+}
+
+/* Manga Modals */
+body.theme-anime-sketch .modal-content {
+  background: #ffffff;
+  border: 3px solid #141414;
+  box-shadow: 8px 8px 0px #141414;
+}
+
+body.theme-anime-sketch .modal-header,
+body.theme-anime-sketch .modal-footer {
+  border-color: #141414;
+  background: #fbf8f2;
+}
+
+body.theme-anime-sketch .modal-title {
+  color: #141414;
+}
+
+body.theme-anime-sketch .auth-tabs-row {
+  background: #f4efe6;
+  border: 2px solid #141414;
+}
+
+body.theme-anime-sketch .auth-tab-btn {
+  color: #52525b;
+}
+
+body.theme-anime-sketch .auth-tab-btn.active {
+  background: #ff2a5f;
+  color: #ffffff;
+  border: 1.5px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+/* Manga Studio Controls & Template Cards */
+body.theme-anime-sketch .studio-controls-bar {
+  background: #f7f4ed;
+  border: 2.5px solid #141414;
+  box-shadow: 4px 4px 0px #141414;
+}
+
+body.theme-anime-sketch .pill-btn {
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  box-shadow: 2px 2px 0px #141414;
+}
+
+body.theme-anime-sketch .pill-btn.active {
+  background: #ff2a5f;
+  color: #ffffff;
+}
+
+body.theme-anime-sketch .template-card-choice {
+  background: #ffffff;
+  border: 2.5px solid #141414;
+  box-shadow: 3px 3px 0px #141414;
+}
+
+body.theme-anime-sketch .template-card-choice.active {
+  border-color: #ff2a5f;
+  background: #fef2f4;
+  box-shadow: 5px 5px 0px #141414;
+}
+
+body.theme-anime-sketch .template-card-choice .tc-title {
+  color: #141414;
+}
+
+body.theme-anime-sketch .canvas-preview-wrapper {
+  background: #f7f4ed;
+  border: 2.5px solid #141414;
+  box-shadow: 4px 4px 0px #141414;
+}
+
+body.theme-anime-sketch .canvas-container-responsive {
+  border: 3px solid #141414;
+  box-shadow: 6px 6px 0px #141414;
+}
+
+/* ==========================================================================
+   📱 ULTRA-CLEAN MOBILE RESPONSIVENESS (All Screen Sizes)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .hero-action-cards {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .anime-header {
+    padding: 10px 14px;
+  }
+
+  .nav-container {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .main-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 4px 0;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-link {
+    font-size: 11px;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+
+  .nav-actions {
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .theme-toggle-btn {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .db-sync-badge {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .btn-auth-pill {
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .app-viewport {
+    padding: 16px 12px;
+  }
+
+  .hero-banner {
+    padding: 24px 16px;
+    margin-bottom: 20px;
+  }
+
+  .hero-headline {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .hero-tagline {
+    font-size: 13px;
+  }
+
+  .hero-action-cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .ws-header-card {
+    padding: 16px;
+  }
+
+  .ws-title-large {
+    font-size: 20px;
+  }
+
+  .ws-subnav {
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 4px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ws-tab-btn {
+    font-size: 11px;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+
+  .overview-metric-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .form-row-2,
+  .form-row-3 {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .studio-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .templates-grid-selector {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    max-height: 240px;
+  }
+
+  .template-card-choice {
+    padding: 8px;
+  }
+
+  .tc-preview-box {
+    height: 48px;
+    font-size: 9px;
+  }
+
+  .tc-title {
+    font-size: 11px;
+  }
+
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .modal-body {
+    padding: 14px;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-headline {
+    font-size: 22px;
+  }
+
+  .card-icon {
+    font-size: 24px;
+  }
+
+  .t-metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .anime-table th,
+  .anime-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .team-actions-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .toast-container {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+}

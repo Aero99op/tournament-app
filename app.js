@@ -2631,13 +2631,39 @@ async function handleLogout() {
   }
 })();
 
+function initThemeToggle() {
+  const toggleBtn = document.getElementById("btn-theme-toggle");
+  const savedTheme = localStorage.getItem("vortex_theme");
+  
+  if (savedTheme === "anime-sketch") {
+    document.body.classList.add("theme-anime-sketch");
+    if (toggleBtn) toggleBtn.innerHTML = "🌙 DARK CYBER";
+  } else {
+    document.body.classList.remove("theme-anime-sketch");
+    if (toggleBtn) toggleBtn.innerHTML = "🖋️ MANGA SKETCH";
+  }
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function() {
+      const isManga = document.body.classList.toggle("theme-anime-sketch");
+      if (isManga) {
+        localStorage.setItem("vortex_theme", "anime-sketch");
+        toggleBtn.innerHTML = "🌙 DARK CYBER";
+        showToast("🖋️ Manga Sketched Light Theme Activated!");
+      } else {
+        localStorage.setItem("vortex_theme", "dark-cyber");
+        toggleBtn.innerHTML = "🖋️ MANGA SKETCH";
+        showToast("🌙 Cyber Dark Theme Activated!");
+      }
+    });
+  }
+}
+
+initThemeToggle();
 loadStateFromStorage();
 initSupabase();
 
 renderLandingFeatured();
-
 renderManageList();
-
 openWorkspaceWithId(1);
-
 switchView("view-landing");
