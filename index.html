@@ -157,7 +157,39 @@
             </div>
           </div>
           <div class="form-card">
-            <h3 class="card-form-title">2. CUSTOM POINT SYSTEM RULES</h3>
+            <h3 class="card-form-title">2. ENTRY FEE & UPI PAYMENT SETTINGS</h3>
+            <p class="card-form-sub">Choose whether this tournament is Free or Paid Entry. For paid tournaments, players pay via UPI QR and submit a 12-digit UTR with VTX-TR code.</p>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label">Entry Fee Type *</label>
+                <select class="form-select" id="new-tourney-entry-type">
+                  <option value="FREE">🟢 FREE ENTRY (No Fee)</option>
+                  <option value="PAID">💰 PAID ENTRY (UPI Payment Required)</option>
+                </select>
+              </div>
+              <div class="form-group" id="group-entry-fee-amt" style="display:none;">
+                <label class="form-label">Entry Fee Per Squad (₹) *</label>
+                <input type="number" class="form-input" id="new-tourney-fee" value="50" min="5" max="10000" placeholder="e.g. 50">
+              </div>
+            </div>
+            <div id="group-paid-upi-details" style="display:none; background:#141422; border:1.5px solid #28283c; border-radius:10px; padding:16px; margin-top:10px;">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Organizer UPI ID (For Direct Payments) *</label>
+                  <input type="text" class="form-input" id="new-tourney-upi-id" placeholder="e.g. 9876543210@paytm or gamer@okaxis">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Organizer Display Name (UPI Payee Name)</label>
+                  <input type="text" class="form-input" id="new-tourney-upi-name" placeholder="e.g. VORTEX ESPORTS">
+                </div>
+              </div>
+              <p style="font-size:12px; color:#94a3b8; margin-top:6px;">
+                💡 <em>System will auto-generate a Dynamic UPI QR Code & 1-Click GPay/PhonePe button with your unique <strong>VTX-TR</strong> transaction code for every squad!</em>
+              </p>
+            </div>
+          </div>
+          <div class="form-card">
+            <h3 class="card-form-title">3. CUSTOM POINT SYSTEM RULES</h3>
             <p class="card-form-sub">Define placement points for each rank and the finishes point multiplier.</p>
             <div class="form-row-2">
               <div class="form-group">
@@ -308,6 +340,7 @@
         </div>
         <div class="workspace-nav-tabs">
           <button class="ws-tab active" id="ws-tab-overview">📊 OVERVIEW & STANDINGS</button>
+          <button class="ws-tab" id="ws-tab-payments">💳 PAYMENTS & UTR VERIFY</button>
           <button class="ws-tab" id="ws-tab-pools">🏊 POOLS & GROUPS</button>
           <button class="ws-tab" id="ws-tab-teams">🛡️ TEAMS & ROSTERS</button>
           <button class="ws-tab" id="ws-tab-matches">🎮 MATCHES & ROOMS</button>
@@ -361,6 +394,36 @@
               </tr>
             </thead>
             <tbody id="ws-overview-table-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ws-panel" id="panel-ws-payments">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">💳 PAID ENTRIES & UTR VERIFICATION</h2>
+            <p class="section-sub">Verify 12-digit UPI UTR transaction numbers with VTX-TR codes, view payment receipts, approve payments, and lock slots.</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-secondary-sm" id="btn-refresh-payments">🔄 REFRESH PAYMENTS</button>
+          </div>
+        </div>
+        <div class="custom-table-wrapper">
+          <table class="anime-table">
+            <thead>
+              <tr>
+                <th>SLOT</th>
+                <th>SQUAD NAME</th>
+                <th>CAPTAIN (WHATSAPP)</th>
+                <th>VTX-TR CODE</th>
+                <th>12-DIGIT UTR NUMBER</th>
+                <th>AMOUNT</th>
+                <th>PROOF</th>
+                <th>PAYMENT STATUS</th>
+                <th style="text-align:right;">ORGANIZER ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="ws-payments-tbody">
             </tbody>
           </table>
         </div>
@@ -953,10 +1016,76 @@
             <input type="text" class="form-input" id="reg-p4-uid" placeholder="e.g. 77489213">
           </div>
         </div>
+
+        <!-- 4. UPI PAYMENT SECTION (PAID ENTRY ONLY) -->
+        <div id="reg-payment-section" style="display:none; margin-top:16px; background:#141422; border:1.5px solid #ffd700; border-radius:10px; padding:16px;">
+          <h4 style="font-size:13px; font-weight:900; color:#ffd700; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span>💰 4. ENTRY FEE PAYMENT (REQUIRED)</span>
+            <span id="reg-pay-amt-badge" style="background:#ffd700; color:#000; font-size:11px; font-weight:900; padding:2px 8px; border-radius:4px;">₹50 / SQUAD</span>
+          </h4>
+          <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px; line-height:1.5;">
+            Scan QR code or click 1-Click Pay below. You <strong>MUST include the unique VTX-TR code in your payment note/remarks</strong> when sending via GPay/PhonePe/Paytm.
+          </p>
+
+          <!-- Unique VTX-TR Code Banner -->
+          <div style="background:#1e1e30; border:1.5px dashed #00f0ff; border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="font-size:10px; font-weight:800; color:#94a3b8; display:block;">YOUR UNIQUE TRANSACTION CODE (INCLUDE IN UPI NOTE):</span>
+              <strong id="reg-vtx-tr-code" style="font-size:16px; font-family:monospace; color:#00f0ff; letter-spacing:1px;">VTX-TR-1-8921</strong>
+            </div>
+            <button type="button" class="btn-secondary-sm" id="btn-copy-vtx-tr-code" style="padding:4px 8px; font-size:10px;">📋 COPY CODE</button>
+          </div>
+
+          <!-- Dynamic QR Code & 1-Click Pay Options -->
+          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:16px; background:#0f0f18; padding:12px; border-radius:8px;">
+            <div style="text-align:center; background:#ffffff; padding:6px; border-radius:8px; width:130px; height:130px; display:flex; align-items:center; justify-content:center;">
+              <img id="reg-upi-qr-img" src="" alt="UPI QR Code" style="width:118px; height:118px; display:block; border-radius:4px;">
+            </div>
+            <div style="flex:1; min-width:180px;">
+              <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">ORGANIZER UPI ID:</div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+                <span id="reg-upi-id-display" style="font-family:monospace; font-weight:900; color:#ffd700; font-size:13px; word-break:break-all;">organizer@upi</span>
+                <button type="button" class="btn-secondary-sm" id="btn-copy-upi-id" style="padding:2px 6px; font-size:10px;">📋</button>
+              </div>
+              <a id="btn-upi-intent-pay" href="#" class="btn-action-primary" style="display:block; text-align:center; text-decoration:none; padding:8px 12px; font-size:12px; background:linear-gradient(135deg, #00f0ff, #ffd700); color:#000000; font-weight:900; border-radius:6px; box-shadow:2px 2px 0px #000;">
+                ⚡ 1-CLICK PAY VIA GPAY / PHONEPE
+              </a>
+            </div>
+          </div>
+
+          <!-- 12-Digit UTR and Proof Input -->
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">12-Digit UPI UTR / Ref Number *</label>
+              <input type="text" class="form-input" id="reg-payment-utr" placeholder="e.g. 482910482910" maxlength="24">
+              <span style="font-size:10px; color:#94a3b8;">Found in Google Pay / PhonePe transaction receipt</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload Payment Screenshot (Optional)</label>
+              <input type="file" class="form-input" id="reg-payment-screenshot" accept="image/*" style="padding:5px;">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary-sm" id="btn-cancel-reg">CANCEL</button>
         <button class="btn-action-primary" id="btn-submit-registration">✓ CONFIRM SQUAD REGISTRATION</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT PROOF PREVIEW MODAL -->
+  <div class="modal-overlay" id="modal-preview-screenshot">
+    <div class="modal-content" style="max-width:520px; text-align:center;">
+      <div class="modal-header">
+        <h3 class="modal-title">📸 PAYMENT PROOF RECEIPT</h3>
+        <button class="btn-close-modal" id="btn-close-preview-screenshot">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px;">
+        <img id="preview-screenshot-img" src="" alt="Payment Proof" style="max-width:100%; max-height:70vh; border-radius:8px; border:1px solid #28283c;">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-sm" id="btn-done-preview-screenshot">CLOSE</button>
       </div>
     </div>
   </div>

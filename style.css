@@ -2420,3 +2420,25 @@ body.theme-anime-sketch .canvas-container-responsive {
   background: #ffde59;
   color: #000000;
 }
+
+.vtx-code-badge {
+  font-family: monospace;
+  font-weight: 900;
+  color: #00f0ff;
+  background: #141422;
+  border: 1px dashed #00f0ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+.payment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}

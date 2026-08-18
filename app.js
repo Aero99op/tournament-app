@@ -430,8 +430,8 @@ function switchView(targetId) {
 
 function switchWsTab(panelId) {
   currentWsTab = panelId;
-  const panels = ["panel-ws-overview", "panel-ws-pools", "panel-ws-teams", "panel-ws-matches", "panel-ws-match-standings", "panel-ws-overall-standings", "panel-ws-points-rules", "panel-ws-exports"];
-  const tabs = ["ws-tab-overview", "ws-tab-pools", "ws-tab-teams", "ws-tab-matches", "ws-tab-match-standings", "ws-tab-overall-standings", "ws-tab-points-rules", "ws-tab-exports"];
+  const panels = ["panel-ws-overview", "panel-ws-payments", "panel-ws-pools", "panel-ws-teams", "panel-ws-matches", "panel-ws-match-standings", "panel-ws-overall-standings", "panel-ws-points-rules", "panel-ws-exports"];
+  const tabs = ["ws-tab-overview", "ws-tab-payments", "ws-tab-pools", "ws-tab-teams", "ws-tab-matches", "ws-tab-match-standings", "ws-tab-overall-standings", "ws-tab-points-rules", "ws-tab-exports"];
 
   panels.forEach(p => {
     const el = document.getElementById(p);
@@ -454,6 +454,9 @@ function switchWsTab(panelId) {
   const activeTab = document.getElementById(tabId);
   if (activeTab) activeTab.classList.add('active');
 
+  if (panelId === "panel-ws-payments") {
+    renderWorkspacePayments();
+  }
   if (panelId === "panel-ws-pools") {
     renderWorkspacePools();
   }
@@ -734,11 +737,50 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
     if (titleSub) titleSub.textContent = tourney.title + " • Slots Available: " + (tourney.slots - tourney.teams.length);
     if (submitBtn) submitBtn.textContent = "✓ CONFIRM SQUAD REGISTRATION";
 
-    const fields = ["reg-squad-name", "reg-squad-tag", "reg-leader-name", "reg-leader-ign", "reg-leader-uid", "reg-leader-whatsapp", "reg-leader-email", "reg-p2-ign", "reg-p2-uid", "reg-p3-ign", "reg-p3-uid", "reg-p4-ign", "reg-p4-uid"];
+    const fields = ["reg-squad-name", "reg-squad-tag", "reg-leader-name", "reg-leader-ign", "reg-leader-uid", "reg-leader-whatsapp", "reg-leader-email", "reg-p2-ign", "reg-p2-uid", "reg-p3-ign", "reg-p3-uid", "reg-p4-ign", "reg-p4-uid", "reg-payment-utr", "reg-payment-screenshot"];
     fields.forEach(f => {
       const el = document.getElementById(f);
       if (el) el.value = "";
     });
+  }
+
+  // Payment Section Setup
+  const paySection = document.getElementById("reg-payment-section");
+  const isPaidTourney = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0;
+  
+  if (paySection) {
+    if (isPaidTourney && !isEdit) {
+      paySection.style.display = "block";
+      const amtBadge = document.getElementById("reg-pay-amt-badge");
+      if (amtBadge) amtBadge.textContent = "₹" + tourney.entryFee + " / SQUAD";
+
+      // Generate unique VTX-TR Code with random 4 hex digits
+      const randHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase();
+      const vtxCode = "VTX-TR-" + tourney.id + "-" + randHex;
+      const vtxCodeEl = document.getElementById("reg-vtx-tr-code");
+      if (vtxCodeEl) vtxCodeEl.textContent = vtxCode;
+
+      const upiId = tourney.upiId || "organizer@upi";
+      const upiName = tourney.upiName || "VORTEX_ESPORTS";
+      const upiDisplay = document.getElementById("reg-upi-id-display");
+      if (upiDisplay) upiDisplay.textContent = upiId;
+
+      // Dynamic UPI Intent Link with VTX-TR code in Transaction Note
+      const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tn=" + encodeURIComponent(vtxCode);
+      const payLinkBtn = document.getElementById("btn-upi-intent-pay");
+      if (payLinkBtn) payLinkBtn.href = upiIntentUrl;
+
+      // Dynamic QR Code image
+      const qrImg = document.getElementById("reg-upi-qr-img");
+      if (qrImg) qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(upiIntentUrl);
+
+      const utrInput = document.getElementById("reg-payment-utr");
+      if (utrInput) utrInput.value = "";
+      const proofInput = document.getElementById("reg-payment-screenshot");
+      if (proofInput) proofInput.value = "";
+    } else {
+      paySection.style.display = "none";
+    }
   }
 
   const modal = document.getElementById("modal-squad-registration");
@@ -801,6 +843,39 @@ async function handleSquadRegistrationSubmit() {
     return;
   }
 
+  const isPaidTourney = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0;
+  let paymentUtr = "";
+  let vtxCode = "";
+  let paymentStatus = isPaidTourney ? "PENDING" : "FREE";
+  let paymentProof = "";
+
+  if (isPaidTourney && !isEditMode) {
+    paymentUtr = (document.getElementById("reg-payment-utr") || {}).value?.trim() || "";
+    vtxCode = (document.getElementById("reg-vtx-tr-code") || {}).textContent?.trim() || "";
+
+    if (!paymentUtr || paymentUtr.length < 6) {
+      showToast("⚠️ Please enter the valid 12-digit UPI UTR number from your payment receipt!");
+      return;
+    }
+
+    // Check duplicate UTR across all tournaments
+    const isDuplicateUtr = tournamentsDb.some(t => t.teams?.some(tm => tm.utr && tm.utr.toLowerCase() === paymentUtr.toLowerCase()));
+    if (isDuplicateUtr) {
+      showToast("⛔ Fake / Duplicate UTR: This Transaction ID has already been submitted!");
+      return;
+    }
+
+    const proofFile = document.getElementById("reg-payment-screenshot")?.files?.[0];
+    if (proofFile) {
+      paymentProof = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(proofFile);
+      });
+    }
+  }
+
   const playersList = [
     { name: leaderIGN, uid: leaderUID, role: "IGL (Captain)" },
     { name: p2IGN, uid: p2UID, role: "Entry Fragger / Rusher" }
@@ -854,7 +929,13 @@ async function handleSquadRegistrationSubmit() {
     captain: leaderName + " (" + leaderIGN + " / " + leaderUID + ")",
     whatsapp: whatsapp,
     email: email,
-    players: playersList
+    players: playersList,
+    paymentStatus: paymentStatus,
+    paymentAmount: isPaidTourney ? tourney.entryFee : 0,
+    utr: paymentUtr,
+    vtxCode: vtxCode,
+    paymentProof: paymentProof,
+    registeredAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   };
 
   tourney.teams.push(newRegisteredSquad);
@@ -910,7 +991,11 @@ async function handleSquadRegistrationSubmit() {
   const succModal = document.getElementById("modal-registration-success");
   if (succModal) succModal.classList.add('show');
 
-  showToast("🎉 Squad '" + squadName + "' successfully registered for " + tourney.title + "!");
+  if (isPaidTourney) {
+    showToast("💳 Registration submitted with UTR (" + paymentUtr + ")! Awaiting Organizer verification.");
+  } else {
+    showToast("🎉 Squad '" + squadName + "' successfully registered for " + tourney.title + "!");
+  }
   renderLandingFeatured();
   renderManageList();
   if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
@@ -958,11 +1043,16 @@ function renderLandingFeatured() {
       regButtonHtml = `<button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER</button>`;
     }
 
+    const entryFeeBadge = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0
+      ? `<span class='badge-tag' style='background:#2d2006; color:#ffd700; border-color:#ffd700;'>💰 ₹${tourney.entryFee} ENTRY</span>`
+      : `<span class='badge-tag' style='background:#052e16; color:#34d399; border-color:#34d399;'>🟢 FREE ENTRY</span>`;
+
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
           <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+            ${entryFeeBadge}
             ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
             ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
             ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
@@ -1025,11 +1115,16 @@ function renderManageList() {
       regButtonHtml = `<button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER SQUAD</button>`;
     }
 
+    const entryFeeBadge = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0
+      ? `<span class='badge-tag' style='background:#2d2006; color:#ffd700; border-color:#ffd700;'>💰 ₹${tourney.entryFee} ENTRY</span>`
+      : `<span class='badge-tag' style='background:#052e16; color:#34d399; border-color:#34d399;'>🟢 FREE ENTRY</span>`;
+
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
           <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+            ${entryFeeBadge}
             ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
             ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
             ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
@@ -1507,6 +1602,136 @@ window.vortexOpenMoveSquadPoolModal = function(teamIdx) {
   if (modal) modal.classList.add("show");
 };
 
+function renderWorkspacePayments() {
+  const tbody = document.getElementById("ws-payments-tbody");
+  if (!tbody) return;
+  const activeT = getActiveTourney();
+  if (!activeT) return;
+
+  const isOwner = isTourneyOwner(activeT);
+  const teams = activeT.teams || [];
+
+  if (teams.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:32px; color:#64748b;">No squad registrations or payments recorded yet.</td></tr>`;
+    return;
+  }
+
+  let htmlBuffer = "";
+  teams.forEach((team, tIdx) => {
+    const isApproved = team.paymentStatus === "APPROVED";
+    const isPending = team.paymentStatus === "PENDING";
+    const isRejected = team.paymentStatus === "REJECTED";
+    const isFree = team.paymentStatus === "FREE" || !team.paymentStatus;
+
+    let statusBadge = "";
+    if (isApproved) {
+      statusBadge = `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">✅ PAID & APPROVED</span>`;
+    } else if (isPending) {
+      statusBadge = `<span class="badge-tag" style="background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:11px;">🟡 VERIFICATION PENDING</span>`;
+    } else if (isRejected) {
+      statusBadge = `<span class="badge-tag" style="background:#2d0606; color:#ff2d55; border-color:#ff2d55; font-size:11px;">❌ PAYMENT REJECTED</span>`;
+    } else {
+      statusBadge = `<span class="badge-tag" style="background:#0f172a; color:#94a3b8; font-size:11px;">🟢 FREE ENTRY</span>`;
+    }
+
+    const cleanPhone = (team.whatsapp || "").replace(/[^0-9]/g, "");
+    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hi " + team.name + " Captain, your registration for " + activeT.title + " (UTR: " + (team.utr || "N/A") + ") is " + (team.paymentStatus || "received") + "!")}` : "#";
+
+    htmlBuffer += `
+      <tr>
+        <td><strong class="rank-badge">#${team.slot}</strong></td>
+        <td>
+          <strong style="color:#ffffff;">${team.name}</strong>
+          <span class="team-tag-pill" style="margin-left:4px; font-size:10px;">${team.tag || 'SQD'}</span>
+        </td>
+        <td>
+          <div style="font-size:12px;">${team.captain.split(" (")[0]}</div>
+          ${cleanPhone ? `<a href="${waLink}" target="_blank" style="color:#25D366; font-size:11px; text-decoration:none; font-weight:800;">💬 ${team.whatsapp}</a>` : `<span style="color:#64748b; font-size:11px;">N/A</span>`}
+        </td>
+        <td>
+          ${team.vtxCode ? `<span style="font-family:monospace; font-weight:900; color:#00f0ff; background:#141422; padding:3px 6px; border-radius:4px; border:1px solid #28283c;">${team.vtxCode}</span>` : `<span style="color:#64748b;">—</span>`}
+        </td>
+        <td>
+          ${team.utr ? `
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="font-family:monospace; font-weight:900; color:#ffd700;">${team.utr}</span>
+              <button class="btn-secondary-sm" style="padding:2px 6px; font-size:10px;" onclick="navigator.clipboard.writeText('${team.utr}'); showToast('📋 UTR Copied!');" title="Copy UTR">📋</button>
+            </div>
+          ` : `<span style="color:#64748b;">—</span>`}
+        </td>
+        <td><strong style="color:#34d399;">₹${team.paymentAmount || activeT.entryFee || 0}</strong></td>
+        <td>
+          ${team.paymentProof ? `
+            <button class="btn-secondary-sm" style="padding:2px 8px; font-size:11px;" onclick="window.vortexPreviewPaymentProof(${tIdx})">📸 VIEW RECEIPT</button>
+          ` : `<span style="color:#64748b; font-size:11px;">No file</span>`}
+        </td>
+        <td>${statusBadge}</td>
+        <td style="text-align:right;">
+          ${isOwner ? `
+            <div style="display:flex; gap:4px; justify-content:flex-end;">
+              ${!isApproved ? `
+                <button class="btn-action-primary-sm" style="padding:4px 8px; font-size:11px; background:#34d399; color:#000;" onclick="window.vortexApprovePayment(${tIdx})">✓ APPROVE</button>
+              ` : ''}
+              ${!isRejected ? `
+                <button class="btn-row-del" style="padding:4px 8px; font-size:11px;" onclick="window.vortexRejectPayment(${tIdx})">✕ REJECT</button>
+              ` : ''}
+              ${cleanPhone ? `<a href="${waLink}" target="_blank" class="btn-secondary-sm" style="padding:4px 8px; font-size:11px; text-decoration:none;">💬</a>` : ''}
+            </div>
+          ` : `<span style="color:#64748b; font-size:11px;">Organizer View</span>`}
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = htmlBuffer;
+}
+
+window.vortexApprovePayment = function(teamIdx) {
+  const activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can approve payments.");
+    return;
+  }
+  if (activeT.teams && activeT.teams[teamIdx]) {
+    activeT.teams[teamIdx].paymentStatus = "APPROVED";
+    saveStateToStorage();
+    renderWorkspacePayments();
+    renderWorkspaceTeams();
+    renderWorkspaceOverview();
+    showToast("✅ Payment approved & slot confirmed for squad '" + activeT.teams[teamIdx].name + "'!");
+  }
+};
+
+window.vortexRejectPayment = function(teamIdx) {
+  const activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can reject payments.");
+    return;
+  }
+  if (activeT.teams && activeT.teams[teamIdx]) {
+    activeT.teams[teamIdx].paymentStatus = "REJECTED";
+    saveStateToStorage();
+    renderWorkspacePayments();
+    renderWorkspaceTeams();
+    renderWorkspaceOverview();
+    showToast("❌ Payment rejected for squad '" + activeT.teams[teamIdx].name + "'.");
+  }
+};
+
+window.vortexPreviewPaymentProof = function(teamIdx) {
+  const activeT = getActiveTourney();
+  if (!activeT || !activeT.teams[teamIdx]) return;
+  const proof = activeT.teams[teamIdx].paymentProof;
+  if (!proof) {
+    showToast("⚠️ No screenshot receipt uploaded for this squad.");
+    return;
+  }
+  const imgEl = document.getElementById("preview-screenshot-img");
+  if (imgEl) imgEl.src = proof;
+  const modal = document.getElementById("modal-preview-screenshot");
+  if (modal) modal.classList.add("show");
+};
+
 function renderWorkspaceTeams() {
   let activeT = getActiveTourney();
   if (!activeT) return;
@@ -1526,6 +1751,17 @@ function renderWorkspaceTeams() {
       ? `<span class='badge-tag' style='background:${assignedPool.color}22; color:${assignedPool.color}; border-color:${assignedPool.color}; font-size:10px; padding:2px 8px;'>🏊 ${assignedPool.name}</span>`
       : (pools.length > 0 ? `<span class='badge-tag' style='background:#1e1e2d; color:#94a3b8; font-size:10px; padding:2px 8px;'>⚪ Unassigned Pool</span>` : '');
 
+    let paymentBadgeHtml = "";
+    if (activeT.entryType === "PAID") {
+      if (team.paymentStatus === "APPROVED") {
+        paymentBadgeHtml = "<span class='badge-tag' style='background:#052e16; color:#34d399; border-color:#34d399; font-size:10px; padding:2px 8px;'>✅ PAID & VERIFIED</span>";
+      } else if (team.paymentStatus === "PENDING") {
+        paymentBadgeHtml = "<span class='badge-tag' style='background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:10px; padding:2px 8px;'>🟡 UTR PENDING (" + (team.utr || "N/A") + ")</span>";
+      } else if (team.paymentStatus === "REJECTED") {
+        paymentBadgeHtml = "<span class='badge-tag' style='background:#2d0606; color:#ff2d55; border-color:#ff2d55; font-size:10px; padding:2px 8px;'>❌ PAYMENT REJECTED</span>";
+      }
+    }
+
     htmlBuffer += "<div class='team-roster-card'>";
     htmlBuffer += "<div class='team-roster-header'>";
     htmlBuffer += "<div class='team-title-group'>";
@@ -1533,6 +1769,7 @@ function renderWorkspaceTeams() {
     htmlBuffer += "<span class='team-name-text'>" + team.name + "</span>";
     htmlBuffer += "<span class='team-tag-pill'>" + team.tag + "</span>";
     htmlBuffer += poolBadgeHtml;
+    htmlBuffer += paymentBadgeHtml;
     htmlBuffer += "<span style='font-size:12px; color:#94a3b8;'>Captain: " + team.captain + "</span>";
     htmlBuffer += "</div>";
     if (isOwner) {
@@ -3793,6 +4030,10 @@ window.removeInitialSquadFromDraft = function(idx) {
       let tWhatsapp = (document.getElementById("new-tourney-whatsapp") || document.querySelector("new-tourney-whatsapp"))?.value?.trim() || "";
       let tDiscord = (document.getElementById("new-tourney-discord") || document.querySelector("new-tourney-discord"))?.value?.trim() || "";
       let tDeadline = (document.getElementById("new-tourney-deadline") || document.querySelector("new-tourney-deadline"))?.value || "";
+      let tEntryType = (document.getElementById("new-tourney-entry-type") || document.querySelector("new-tourney-entry-type"))?.value || "FREE";
+      let tEntryFee = Number((document.getElementById("new-tourney-fee") || document.querySelector("new-tourney-fee"))?.value) || 0;
+      let tUpiId = (document.getElementById("new-tourney-upi-id") || document.querySelector("new-tourney-upi-id"))?.value?.trim() || "";
+      let tUpiName = (document.getElementById("new-tourney-upi-name") || document.querySelector("new-tourney-upi-name"))?.value?.trim() || "VORTEX ESPORTS";
       let tKillMultiplier = Number((document.getElementById("new-pts-kill") || document.querySelector("new-pts-kill")).value) || 1;
       let customPlacementMap = {
         "1": Number((document.getElementById("pt-rank-1") || document.querySelector("pt-rank-1")).value) || 12,
@@ -3829,6 +4070,10 @@ window.removeInitialSquadFromDraft = function(idx) {
         maps: tMaps,
         slots: tSlots,
         prize: tPrize,
+        entryType: tEntryType,
+        entryFee: tEntryType === "PAID" ? tEntryFee : 0,
+        upiId: tUpiId,
+        upiName: tUpiName,
         status: "LIVE",
         statusClass: "live",
         killMultiplier: tKillMultiplier,
@@ -4071,6 +4316,57 @@ function handleUrlRouting() {
         document.getElementById("modal-move-squad-pool").classList.remove("show");
         showToast("🎯 Squad '" + activeT.teams[teamIdx].name + "' moved to " + poolName + "!");
       }
+    });
+  }
+
+  // Wire Paid Entry & UTR Verification Listeners
+  const wsTabPaymentsBtn = document.getElementById("ws-tab-payments");
+  if (wsTabPaymentsBtn) {
+    wsTabPaymentsBtn.addEventListener('click', () => {
+      switchWsTab("panel-ws-payments");
+    });
+  }
+
+  const refreshPaymentsBtn = document.getElementById("btn-refresh-payments");
+  if (refreshPaymentsBtn) {
+    refreshPaymentsBtn.addEventListener('click', () => {
+      renderWorkspacePayments();
+      showToast("🔄 Payments list refreshed!");
+    });
+  }
+
+  const copyVtxBtn = document.getElementById("btn-copy-vtx-tr-code");
+  if (copyVtxBtn) {
+    copyVtxBtn.addEventListener('click', () => {
+      const code = document.getElementById("reg-vtx-tr-code")?.textContent || "";
+      navigator.clipboard.writeText(code);
+      showToast("📋 VTX-TR Code '" + code + "' copied to clipboard!");
+    });
+  }
+
+  const copyUpiBtn = document.getElementById("btn-copy-upi-id");
+  if (copyUpiBtn) {
+    copyUpiBtn.addEventListener('click', () => {
+      const upi = document.getElementById("reg-upi-id-display")?.textContent || "";
+      navigator.clipboard.writeText(upi);
+      showToast("📋 UPI ID '" + upi + "' copied to clipboard!");
+    });
+  }
+
+  const closeProofBtn = document.getElementById("btn-close-preview-screenshot");
+  if (closeProofBtn) closeProofBtn.addEventListener('click', () => document.getElementById("modal-preview-screenshot").classList.remove('show'));
+
+  const doneProofBtn = document.getElementById("btn-done-preview-screenshot");
+  if (doneProofBtn) doneProofBtn.addEventListener('click', () => document.getElementById("modal-preview-screenshot").classList.remove('show'));
+
+  const entryTypeSelect = document.getElementById("new-tourney-entry-type");
+  if (entryTypeSelect) {
+    entryTypeSelect.addEventListener("change", function() {
+      const isPaid = entryTypeSelect.value === "PAID";
+      const feeGroup = document.getElementById("group-entry-fee-amt");
+      const upiGroup = document.getElementById("group-paid-upi-details");
+      if (feeGroup) feeGroup.style.display = isPaid ? "block" : "none";
+      if (upiGroup) upiGroup.style.display = isPaid ? "block" : "none";
     });
   }
 })();
