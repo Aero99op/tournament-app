@@ -430,54 +430,34 @@ function switchView(targetId) {
 
 function switchWsTab(panelId) {
   currentWsTab = panelId;
-  (document.getElementById("panel-ws-overview") || document.querySelector("panel-ws-overview")).style.display = 'none';
-  (document.getElementById("panel-ws-teams") || document.querySelector("panel-ws-teams")).style.display = 'none';
-  (document.getElementById("panel-ws-matches") || document.querySelector("panel-ws-matches")).style.display = 'none';
-  (document.getElementById("panel-ws-match-standings") || document.querySelector("panel-ws-match-standings")).style.display = 'none';
-  (document.getElementById("panel-ws-overall-standings") || document.querySelector("panel-ws-overall-standings")).style.display = 'none';
-  (document.getElementById("panel-ws-points-rules") || document.querySelector("panel-ws-points-rules")).style.display = 'none';
-  (document.getElementById("panel-ws-exports") || document.querySelector("panel-ws-exports")).style.display = 'none';
-  (document.getElementById("ws-tab-overview") || document.querySelector("ws-tab-overview")).classList.remove('active');
-  (document.getElementById("ws-tab-teams") || document.querySelector("ws-tab-teams")).classList.remove('active');
-  (document.getElementById("ws-tab-matches") || document.querySelector("ws-tab-matches")).classList.remove('active');
-  (document.getElementById("ws-tab-match-standings") || document.querySelector("ws-tab-match-standings")).classList.remove('active');
-  (document.getElementById("ws-tab-overall-standings") || document.querySelector("ws-tab-overall-standings")).classList.remove('active');
-  (document.getElementById("ws-tab-points-rules") || document.querySelector("ws-tab-points-rules")).classList.remove('active');
-  (document.getElementById("ws-tab-exports") || document.querySelector("ws-tab-exports")).classList.remove('active');
-  if (panelId == "panel-ws-overview") {
-    (document.getElementById("panel-ws-overview") || document.querySelector("panel-ws-overview")).style.display = 'block';
-    (document.getElementById("panel-ws-overview") || document.querySelector("panel-ws-overview")).classList.add('active');
-    (document.getElementById("ws-tab-overview") || document.querySelector("ws-tab-overview")).classList.add('active');
+  const panels = ["panel-ws-overview", "panel-ws-pools", "panel-ws-teams", "panel-ws-matches", "panel-ws-match-standings", "panel-ws-overall-standings", "panel-ws-points-rules", "panel-ws-exports"];
+  const tabs = ["ws-tab-overview", "ws-tab-pools", "ws-tab-teams", "ws-tab-matches", "ws-tab-match-standings", "ws-tab-overall-standings", "ws-tab-points-rules", "ws-tab-exports"];
+
+  panels.forEach(p => {
+    const el = document.getElementById(p);
+    if (el) {
+      el.style.display = 'none';
+      el.classList.remove('active');
+    }
+  });
+  tabs.forEach(t => {
+    const el = document.getElementById(t);
+    if (el) el.classList.remove('active');
+  });
+
+  const activePanel = document.getElementById(panelId);
+  if (activePanel) {
+    activePanel.style.display = 'block';
+    activePanel.classList.add('active');
   }
-  if (panelId == "panel-ws-teams") {
-    (document.getElementById("panel-ws-teams") || document.querySelector("panel-ws-teams")).style.display = 'block';
-    (document.getElementById("panel-ws-teams") || document.querySelector("panel-ws-teams")).classList.add('active');
-    (document.getElementById("ws-tab-teams") || document.querySelector("ws-tab-teams")).classList.add('active');
+  const tabId = panelId.replace("panel-", "");
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) activeTab.classList.add('active');
+
+  if (panelId === "panel-ws-pools") {
+    renderWorkspacePools();
   }
-  if (panelId == "panel-ws-matches") {
-    (document.getElementById("panel-ws-matches") || document.querySelector("panel-ws-matches")).style.display = 'block';
-    (document.getElementById("panel-ws-matches") || document.querySelector("panel-ws-matches")).classList.add('active');
-    (document.getElementById("ws-tab-matches") || document.querySelector("ws-tab-matches")).classList.add('active');
-  }
-  if (panelId == "panel-ws-match-standings") {
-    (document.getElementById("panel-ws-match-standings") || document.querySelector("panel-ws-match-standings")).style.display = 'block';
-    (document.getElementById("panel-ws-match-standings") || document.querySelector("panel-ws-match-standings")).classList.add('active');
-    (document.getElementById("ws-tab-match-standings") || document.querySelector("ws-tab-match-standings")).classList.add('active');
-  }
-  if (panelId == "panel-ws-overall-standings") {
-    (document.getElementById("panel-ws-overall-standings") || document.querySelector("panel-ws-overall-standings")).style.display = 'block';
-    (document.getElementById("panel-ws-overall-standings") || document.querySelector("panel-ws-overall-standings")).classList.add('active');
-    (document.getElementById("ws-tab-overall-standings") || document.querySelector("ws-tab-overall-standings")).classList.add('active');
-  }
-  if (panelId == "panel-ws-points-rules") {
-    (document.getElementById("panel-ws-points-rules") || document.querySelector("panel-ws-points-rules")).style.display = 'block';
-    (document.getElementById("panel-ws-points-rules") || document.querySelector("panel-ws-points-rules")).classList.add('active');
-    (document.getElementById("ws-tab-points-rules") || document.querySelector("ws-tab-points-rules")).classList.add('active');
-  }
-  if (panelId == "panel-ws-exports") {
-    (document.getElementById("panel-ws-exports") || document.querySelector("panel-ws-exports")).style.display = 'block';
-    (document.getElementById("panel-ws-exports") || document.querySelector("panel-ws-exports")).classList.add('active');
-    (document.getElementById("ws-tab-exports") || document.querySelector("ws-tab-exports")).classList.add('active');
+  if (panelId === "panel-ws-exports") {
     renderExportsStudio();
   }
 }
@@ -1297,6 +1277,236 @@ function renderWorkspaceOverview() {
   (document.getElementById("ws-overview-table-body") || document.querySelector("ws-overview-table-body")).innerHTML = htmlBuffer;
 }
 
+function getTourneyPools(tourney) {
+  if (!tourney) return [];
+  if (!Array.isArray(tourney.pools)) {
+    tourney.pools = [];
+  }
+  return tourney.pools;
+}
+
+function renderWorkspacePools() {
+  const container = document.getElementById("ws-pools-container");
+  if (!container) return;
+  let activeT = getActiveTourney();
+  if (!activeT) return;
+
+  const isOwner = isTourneyOwner(activeT);
+  const pools = getTourneyPools(activeT);
+  const allTeams = activeT.teams || [];
+
+  let htmlBuffer = "";
+
+  if (pools.length === 0) {
+    htmlBuffer += `
+      <div style="grid-column:1/-1; background:#141422; border:1.5px dashed #28283c; border-radius:12px; padding:36px 20px; text-align:center;">
+        <div style="font-size:40px; margin-bottom:12px;">🏊</div>
+        <h3 style="font-size:18px; font-weight:900; color:#ffffff; margin-bottom:8px;">NO POOLS / GROUPS CREATED YET</h3>
+        <p style="font-size:13px; color:#94a3b8; max-width:560px; margin:0 auto 24px; line-height:1.6;">
+          For massive tournaments with 24, 36, 48, or more squads, organize them into Pools (e.g. Group A, Group B, Grand Finals) to run parallel or staged custom lobbies.
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          ${isOwner ? `
+            <button class="btn-action-primary" onclick="window.vortexQuickInitStandardPools(2)">⚡ AUTO-CREATE 2 GROUPS (GROUP A & B)</button>
+            <button class="btn-action-primary" onclick="window.vortexQuickInitStandardPools(4)">⚡ AUTO-CREATE 4 GROUPS (A, B, C, D)</button>
+            <button class="btn-secondary-sm" onclick="window.vortexOpenCreatePoolModal()">+ CUSTOM POOL</button>
+          ` : `<span style="color:#64748b; font-size:12px; font-weight:700;">Organizer has not created pool stages yet. All squads are in the general lobby.</span>`}
+        </div>
+      </div>
+    `;
+  } else {
+    pools.forEach((pool) => {
+      const poolTeams = allTeams.filter(t => t.poolId === pool.id);
+      const maxSlots = pool.slots || 12;
+      const isPoolFull = poolTeams.length >= maxSlots;
+
+      htmlBuffer += `
+        <div class="pool-card" style="border-top:3px solid ${pool.color || '#00f0ff'};">
+          <div class="pool-card-header">
+            <div>
+              <div class="pool-card-title">
+                <span style="color:${pool.color || '#00f0ff'};">●</span> ${pool.name}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="pool-card-slots" style="color:${isPoolFull ? '#ff2d55' : (pool.color || '#00f0ff')};">
+                ${poolTeams.length} / ${maxSlots} SQUADS
+              </span>
+              ${isOwner ? `<button class="btn-pool-del" onclick="window.vortexDeletePool('${pool.id}')" title="Delete Pool">🗑️</button>` : ''}
+            </div>
+          </div>
+          <div class="pool-squads-list">
+            ${poolTeams.length === 0 ? `
+              <div style="text-align:center; padding:24px 10px; color:#64748b; font-size:12px;">
+                No squads assigned to ${pool.name} yet.
+              </div>
+            ` : poolTeams.map((team, idx) => {
+              const teamRealIdx = allTeams.findIndex(t => t.name === team.name);
+              return `
+                <div class="pool-squad-item">
+                  <div class="pool-squad-left">
+                    <span class="pool-slot-badge">#${idx + 1}</span>
+                    <div>
+                      <strong style="color:#ffffff;">${team.name}</strong>
+                      <span class="team-tag-pill" style="margin-left:4px; font-size:10px;">${team.tag || 'SQD'}</span>
+                    </div>
+                  </div>
+                  <div class="pool-squad-actions">
+                    ${isOwner ? `
+                      <button class="btn-pool-squad-move" onclick="window.vortexOpenMoveSquadPoolModal(${teamRealIdx})" title="Move to another pool">⇄ MOVE</button>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    const unassignedTeams = allTeams.filter(t => !t.poolId);
+    htmlBuffer += `
+      <div class="pool-card" style="border-top:3px solid #64748b; background:#0f0f18;">
+        <div class="pool-card-header">
+          <div>
+            <div class="pool-card-title">
+              <span style="color:#94a3b8;">⚪</span> UNASSIGNED SQUADS
+            </div>
+          </div>
+          <span class="pool-card-slots" style="color:#94a3b8;">
+            ${unassignedTeams.length} SQUADS PENDING
+          </span>
+        </div>
+        <div class="pool-squads-list">
+          ${unassignedTeams.length === 0 ? `
+            <div style="text-align:center; padding:24px 10px; color:#34d399; font-size:12px; font-weight:800;">
+              ✓ All registered squads are placed in pools!
+            </div>
+          ` : unassignedTeams.map((team) => {
+            const teamRealIdx = allTeams.findIndex(t => t.name === team.name);
+            return `
+              <div class="pool-squad-item">
+                <div class="pool-squad-left">
+                  <span class="pool-slot-badge" style="background:#334155; color:#cbd5e1;">Slot ${team.slot}</span>
+                  <div>
+                    <strong style="color:#ffffff;">${team.name}</strong>
+                    <span class="team-tag-pill" style="margin-left:4px; font-size:10px;">${team.tag || 'SQD'}</span>
+                  </div>
+                </div>
+                <div class="pool-squad-actions">
+                  ${isOwner ? `
+                    <button class="btn-pool-squad-move" style="background:#00f0ff; color:#000; border-color:#000;" onclick="window.vortexOpenMoveSquadPoolModal(${teamRealIdx})">+ ASSIGN POOL</button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = htmlBuffer;
+}
+
+window.vortexQuickInitStandardPools = function(numGroups) {
+  let activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only the organizer can manage pools.");
+    return;
+  }
+  const defaultSlots = activeT.game.includes("BGMI") || activeT.game.includes("PUBG") ? 16 : 12;
+  const colors = ["#00f0ff", "#ffd700", "#ff2d55", "#34d399", "#a855f7", "#ff6b35"];
+  const groupNames = ["Group A (Alpha)", "Group B (Bravo)", "Group C (Charlie)", "Group D (Delta)", "Group E (Echo)", "Group F (Foxtrot)"];
+
+  activeT.pools = [];
+  for (let i = 0; i < numGroups; i++) {
+    activeT.pools.push({
+      id: "pool_" + String.fromCharCode(65 + i).toLowerCase(),
+      name: "Pool " + String.fromCharCode(65 + i) + " (" + groupNames[i].split(" ")[1].replace("(", "").replace(")", "") + ")",
+      slots: defaultSlots,
+      color: colors[i % colors.length]
+    });
+  }
+
+  if (activeT.teams && activeT.teams.length > 0) {
+    activeT.teams.forEach((team, idx) => {
+      const assignedPool = activeT.pools[idx % activeT.pools.length];
+      team.poolId = assignedPool.id;
+    });
+  }
+
+  saveStateToStorage();
+  renderWorkspacePools();
+  renderWorkspaceTeams();
+  showToast("🏊 Created " + numGroups + " tournament pools and placed registered squads!");
+};
+
+window.vortexOpenCreatePoolModal = function() {
+  let activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can create pools.");
+    return;
+  }
+  const defaultSlots = activeT.game.includes("BGMI") || activeT.game.includes("PUBG") ? 16 : 12;
+  const slotsInput = document.getElementById("new-pool-slots");
+  if (slotsInput) slotsInput.value = defaultSlots;
+  const nameInput = document.getElementById("new-pool-name");
+  const pools = getTourneyPools(activeT);
+  const nextLetter = String.fromCharCode(65 + pools.length);
+  if (nameInput) nameInput.value = "Pool " + nextLetter + " (Group " + nextLetter + ")";
+
+  const modal = document.getElementById("modal-create-pool");
+  if (modal) modal.classList.add("show");
+};
+
+window.vortexDeletePool = function(poolId) {
+  let activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can delete pools.");
+    return;
+  }
+  if (!confirm("Are you sure you want to delete this pool? Assigned squads will be moved to unassigned.")) return;
+
+  activeT.pools = (activeT.pools || []).filter(p => p.id !== poolId);
+  (activeT.teams || []).forEach(t => {
+    if (t.poolId === poolId) t.poolId = null;
+  });
+  saveStateToStorage();
+  renderWorkspacePools();
+  renderWorkspaceTeams();
+  showToast("🗑️ Pool removed. Squads returned to unassigned pool.");
+};
+
+window.vortexOpenMoveSquadPoolModal = function(teamIdx) {
+  let activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can place squads in pools.");
+    return;
+  }
+  const team = activeT.teams[teamIdx];
+  if (!team) return;
+
+  const idxInput = document.getElementById("move-pool-team-idx");
+  if (idxInput) idxInput.value = teamIdx;
+  const nameEl = document.getElementById("move-pool-squad-name");
+  if (nameEl) nameEl.textContent = team.name;
+
+  const selectEl = document.getElementById("select-target-pool");
+  if (selectEl) {
+    const pools = getTourneyPools(activeT);
+    let opts = `<option value="">⚪ Unassigned Pool</option>`;
+    pools.forEach(p => {
+      const count = (activeT.teams || []).filter(t => t.poolId === p.id).length;
+      opts += `<option value="${p.id}" ${team.poolId === p.id ? 'selected' : ''}>● ${p.name} (${count}/${p.slots || 12} Squads)</option>`;
+    });
+    selectEl.innerHTML = opts;
+  }
+
+  const modal = document.getElementById("modal-move-squad-pool");
+  if (modal) modal.classList.add("show");
+};
+
 function renderWorkspaceTeams() {
   let activeT = getActiveTourney();
   if (!activeT) return;
@@ -1307,15 +1517,22 @@ function renderWorkspaceTeams() {
     return;
   }
 
+  const pools = getTourneyPools(activeT);
   let htmlBuffer = "";
   let tIdx = 0;
   for (const team of activeT.teams) {
+    const assignedPool = pools.find(p => p.id === team.poolId);
+    const poolBadgeHtml = assignedPool
+      ? `<span class='badge-tag' style='background:${assignedPool.color}22; color:${assignedPool.color}; border-color:${assignedPool.color}; font-size:10px; padding:2px 8px;'>🏊 ${assignedPool.name}</span>`
+      : (pools.length > 0 ? `<span class='badge-tag' style='background:#1e1e2d; color:#94a3b8; font-size:10px; padding:2px 8px;'>⚪ Unassigned Pool</span>` : '');
+
     htmlBuffer += "<div class='team-roster-card'>";
     htmlBuffer += "<div class='team-roster-header'>";
     htmlBuffer += "<div class='team-title-group'>";
     htmlBuffer += "<span class='team-slot-badge'>SLOT " + team.slot + "</span>";
     htmlBuffer += "<span class='team-name-text'>" + team.name + "</span>";
     htmlBuffer += "<span class='team-tag-pill'>" + team.tag + "</span>";
+    htmlBuffer += poolBadgeHtml;
     htmlBuffer += "<span style='font-size:12px; color:#94a3b8;'>Captain: " + team.captain + "</span>";
     htmlBuffer += "</div>";
     if (isOwner) {
@@ -2374,6 +2591,17 @@ function editTeamModal(teamIdx) {
     (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value = sq.tag;
     (document.getElementById("team-input-name") || document.querySelector("team-input-name")).value = sq.name;
     (document.getElementById("team-input-captain") || document.querySelector("team-input-captain")).value = sq.captain;
+
+    const poolSelect = document.getElementById("team-input-pool");
+    if (poolSelect) {
+      const pools = getTourneyPools(activeT);
+      let opts = `<option value="">⚪ Unassigned / General Pool</option>`;
+      pools.forEach(p => {
+        opts += `<option value="${p.id}" ${sq.poolId === p.id ? 'selected' : ''}>● ${p.name}</option>`;
+      });
+      poolSelect.innerHTML = opts;
+    }
+
     (document.getElementById("modal-team-title") || document.querySelector("modal-team-title")).textContent = "EDIT SQUAD DETAILS";
     (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.add('show');
   }
@@ -3151,6 +3379,17 @@ window.removeInitialSquadFromDraft = function(idx) {
       (document.getElementById("team-input-tag") || document.querySelector("team-input-tag")).value = "";
       (document.getElementById("team-input-name") || document.querySelector("team-input-name")).value = "";
       (document.getElementById("team-input-captain") || document.querySelector("team-input-captain")).value = "";
+
+      const poolSelect = document.getElementById("team-input-pool");
+      if (poolSelect && activeT) {
+        const pools = getTourneyPools(activeT);
+        let opts = `<option value="">⚪ Unassigned / General Pool</option>`;
+        pools.forEach(p => {
+          opts += `<option value="${p.id}">● ${p.name}</option>`;
+        });
+        poolSelect.innerHTML = opts;
+      }
+
       (document.getElementById("modal-team-title") || document.querySelector("modal-team-title")).textContent = "ADD NEW SQUAD";
       (document.getElementById("modal-team-edit") || document.querySelector("modal-team-edit")).classList.add('show');
     });
@@ -3184,6 +3423,7 @@ window.removeInitialSquadFromDraft = function(idx) {
       let tagVal = (document.getElementById("team-input-tag") || {}).value?.trim() || "";
       let nameVal = (document.getElementById("team-input-name") || {}).value?.trim() || "";
       let capVal = (document.getElementById("team-input-captain") || {}).value?.trim() || "";
+      let poolVal = (document.getElementById("team-input-pool") || {}).value || null;
 
       if (!nameVal) nameVal = "Squad #" + slotVal;
       if (!tagVal) tagVal = nameVal.substring(0, 4).toUpperCase();
@@ -3195,6 +3435,7 @@ window.removeInitialSquadFromDraft = function(idx) {
           tag: tagVal,
           name: nameVal,
           captain: capVal,
+          poolId: poolVal,
           players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
         });
         renderCreateTourneySquads();
@@ -3215,6 +3456,7 @@ window.removeInitialSquadFromDraft = function(idx) {
         activeT.teams[editIdx].tag = tagVal;
         activeT.teams[editIdx].name = nameVal;
         activeT.teams[editIdx].captain = capVal;
+        activeT.teams[editIdx].poolId = poolVal;
         showToast("✓ Squad " + nameVal + " updated!");
       } else {
         activeT.teams.push({
@@ -3222,12 +3464,14 @@ window.removeInitialSquadFromDraft = function(idx) {
           tag: tagVal,
           name: nameVal,
           captain: capVal,
+          poolId: poolVal,
           players: [{ name: capVal.split(" ")[0] || nameVal, uid: String(Math.floor(10000000 + Math.random() * 90000000)), role: "IGL" }]
         });
         showToast("✓ Squad " + nameVal + " added to Slot " + slotVal + "!");
       }
       saveStateToStorage();
       renderWorkspaceOverview();
+      renderWorkspacePools();
       renderWorkspaceTeams();
       renderWorkspaceMatchStandings();
       renderWorkspaceOverallStandings();
@@ -3302,6 +3546,17 @@ window.removeInitialSquadFromDraft = function(idx) {
         showToast("⛔ Permission Denied: Only the tournament organizer can add matches.");
         return;
       }
+
+      const matchPoolSelect = document.getElementById("match-input-pool");
+      if (matchPoolSelect && activeT) {
+        const pools = getTourneyPools(activeT);
+        let opts = `<option value="all">All Squads / General Lobby</option>`;
+        pools.forEach(p => {
+          opts += `<option value="${p.id}">● ${p.name}</option>`;
+        });
+        matchPoolSelect.innerHTML = opts;
+      }
+
       (document.getElementById("modal-match-edit") || document.querySelector("modal-match-edit")).classList.add('show');
     });
   }
@@ -3340,6 +3595,8 @@ window.removeInitialSquadFromDraft = function(idx) {
       let mTime = (document.getElementById("match-input-time") || document.querySelector("match-input-time")).value;
       let mRoomId = (document.getElementById("match-input-room-id") || document.querySelector("match-input-room-id")).value;
       let mPass = (document.getElementById("match-input-room-pass") || document.querySelector("match-input-room-pass")).value;
+      let mPool = (document.getElementById("match-input-pool") || {}).value || "all";
+
       if (mTitle == "") {
         mTitle = "Match " + (activeT.matches.length + 1) + " - " + mMap;
       }
@@ -3349,7 +3606,17 @@ window.removeInitialSquadFromDraft = function(idx) {
       if (mPass == "") {
         mPass = "VORTEX2026";
       }
-      activeT.matches.push({ id: activeT.matches.length + 1, title: mTitle, map: mMap, time: mTime, roomId: mRoomId, roomPass: mPass, status: "SCHEDULED", scores: [] });
+      activeT.matches.push({
+        id: activeT.matches.length + 1,
+        title: mTitle,
+        map: mMap,
+        time: mTime,
+        roomId: mRoomId,
+        roomPass: mPass,
+        poolId: mPool,
+        status: "SCHEDULED",
+        scores: []
+      });
       saveStateToStorage();
       renderWorkspaceOverview();
       renderWorkspaceMatches();
@@ -3690,7 +3957,172 @@ function handleUrlRouting() {
 
   const cancelDelBtn = document.getElementById("btn-cancel-del");
   if (cancelDelBtn) cancelDelBtn.addEventListener('click', () => document.getElementById("modal-delete-confirm").classList.remove('show'));
+
+  // Wire Pool & Group System Listeners
+  const wsTabPoolsBtn = document.getElementById("ws-tab-pools");
+  if (wsTabPoolsBtn) {
+    wsTabPoolsBtn.addEventListener('click', () => {
+      switchWsTab("panel-ws-pools");
+    });
+  }
+
+  const openCreatePoolBtn = document.getElementById("btn-open-create-pool-modal");
+  if (openCreatePoolBtn) {
+    openCreatePoolBtn.addEventListener('click', () => {
+      window.vortexOpenCreatePoolModal();
+    });
+  }
+
+  const closePoolBtn = document.getElementById("btn-close-pool-modal");
+  if (closePoolBtn) {
+    closePoolBtn.addEventListener('click', () => {
+      document.getElementById("modal-create-pool").classList.remove("show");
+    });
+  }
+
+  const cancelPoolBtn = document.getElementById("btn-cancel-pool");
+  if (cancelPoolBtn) {
+    cancelPoolBtn.addEventListener('click', () => {
+      document.getElementById("modal-create-pool").classList.remove("show");
+    });
+  }
+
+  const submitCreatePoolBtn = document.getElementById("btn-submit-create-pool");
+  if (submitCreatePoolBtn) {
+    submitCreatePoolBtn.addEventListener('click', () => {
+      const activeT = getActiveTourney();
+      if (!activeT || !isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only organizer can create pools.");
+        return;
+      }
+      const name = (document.getElementById("new-pool-name") || {}).value?.trim();
+      const slots = Number((document.getElementById("new-pool-slots") || {}).value) || 12;
+      const color = (document.getElementById("new-pool-color") || {}).value || "#00f0ff";
+
+      if (!name) {
+        showToast("⚠️ Please enter a valid pool name (e.g. Pool A, Semi-Finals).");
+        return;
+      }
+
+      if (!Array.isArray(activeT.pools)) activeT.pools = [];
+      const newPoolId = "pool_" + Date.now();
+      activeT.pools.push({
+        id: newPoolId,
+        name: name,
+        slots: slots,
+        color: color
+      });
+
+      saveStateToStorage();
+      renderWorkspacePools();
+      renderWorkspaceTeams();
+      document.getElementById("modal-create-pool").classList.remove("show");
+      showToast("🏊 Pool '" + name + "' created successfully!");
+    });
+  }
+
+  const autoDistributeBtn = document.getElementById("btn-auto-distribute-pools");
+  if (autoDistributeBtn) {
+    autoDistributeBtn.addEventListener('click', () => {
+      autoDistributeSquadsAcrossPools();
+    });
+  }
+
+  const shufflePoolsBtn = document.getElementById("btn-shuffle-pools");
+  if (shufflePoolsBtn) {
+    shufflePoolsBtn.addEventListener('click', () => {
+      shuffleSquadsAcrossPools();
+    });
+  }
+
+  const closeMovePoolBtn = document.getElementById("btn-close-move-pool-modal");
+  if (closeMovePoolBtn) {
+    closeMovePoolBtn.addEventListener('click', () => {
+      document.getElementById("modal-move-squad-pool").classList.remove("show");
+    });
+  }
+
+  const cancelMovePoolBtn = document.getElementById("btn-cancel-move-pool");
+  if (cancelMovePoolBtn) {
+    cancelMovePoolBtn.addEventListener('click', () => {
+      document.getElementById("modal-move-squad-pool").classList.remove("show");
+    });
+  }
+
+  const confirmMovePoolBtn = document.getElementById("btn-confirm-move-pool");
+  if (confirmMovePoolBtn) {
+    confirmMovePoolBtn.addEventListener('click', () => {
+      const activeT = getActiveTourney();
+      if (!activeT || !isTourneyOwner(activeT)) {
+        showToast("⛔ Permission Denied: Only organizer can assign squads.");
+        return;
+      }
+      const teamIdx = Number((document.getElementById("move-pool-team-idx") || {}).value);
+      const targetPoolId = (document.getElementById("select-target-pool") || {}).value || null;
+
+      if (teamIdx >= 0 && activeT.teams[teamIdx]) {
+        activeT.teams[teamIdx].poolId = targetPoolId;
+        const pools = getTourneyPools(activeT);
+        const targetPool = pools.find(p => p.id === targetPoolId);
+        const poolName = targetPool ? targetPool.name : "Unassigned";
+        saveStateToStorage();
+        renderWorkspacePools();
+        renderWorkspaceTeams();
+        document.getElementById("modal-move-squad-pool").classList.remove("show");
+        showToast("🎯 Squad '" + activeT.teams[teamIdx].name + "' moved to " + poolName + "!");
+      }
+    });
+  }
 })();
+
+function autoDistributeSquadsAcrossPools() {
+  const activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can distribute squads.");
+    return;
+  }
+  const pools = getTourneyPools(activeT);
+  if (pools.length === 0) {
+    showToast("⚠️ Please create at least 1 pool first!");
+    window.vortexOpenCreatePoolModal();
+    return;
+  }
+  const teams = activeT.teams || [];
+  teams.forEach((t, idx) => {
+    const pool = pools[idx % pools.length];
+    t.poolId = pool.id;
+  });
+  saveStateToStorage();
+  renderWorkspacePools();
+  renderWorkspaceTeams();
+  showToast("⚡ Distributed " + teams.length + " squads evenly across " + pools.length + " pools!");
+}
+
+function shuffleSquadsAcrossPools() {
+  const activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can shuffle pools.");
+    return;
+  }
+  const pools = getTourneyPools(activeT);
+  if (pools.length === 0) {
+    showToast("⚠️ Please create at least 1 pool first!");
+    return;
+  }
+  const teams = activeT.teams || [];
+  for (let i = teams.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [teams[i], teams[j]] = [teams[j], teams[i]];
+  }
+  teams.forEach((t, idx) => {
+    const pool = pools[idx % pools.length];
+    t.poolId = pool.id;
+  });
+  saveStateToStorage();
+  renderWorkspacePools();
+  renderWorkspaceTeams();
+  showToast("🔀 Shuffled and re-allocated squads across pools!");
+}
 
 function initSlotPresetButtons() {
   const container = document.getElementById("create-slot-presets");

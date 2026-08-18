@@ -2227,12 +2227,196 @@ body.theme-anime-sketch .canvas-container-responsive {
   box-shadow: 2px 2px 0px #000000;
 }
 
-[data-theme="sketch"] .btn-slot-preset:hover {
-  background: #ffde59;
+[data-theme="sketch"] .btn-slot-preset.active {
+  background: #00f0ff;
   color: #000000;
 }
 
-[data-theme="sketch"] .btn-slot-preset.active {
+/* POOLS & GROUPS SYSTEM STYLING */
+.pools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pool-card {
+  background: #12121e;
+  border: 1.5px solid #28283c;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 3px 3px 0px #000000;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pool-card:hover {
+  border-color: #3e3e5e;
+}
+
+.pool-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #28283c;
+}
+
+.pool-card-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pool-card-slots {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #1c1c2e;
+  border: 1px solid #3b3b54;
+  color: #00f0ff;
+}
+
+.pool-squads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 120px;
+}
+
+.pool-squad-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #181826;
+  border: 1px solid #2c2c40;
+  border-radius: 8px;
+  font-size: 13px;
+  transition: background 0.15s ease;
+}
+
+.pool-squad-item:hover {
+  background: #202034;
+}
+
+.pool-squad-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pool-slot-badge {
+  background: #28283c;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pool-squad-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-pool-squad-move {
+  background: #242438;
+  border: 1px solid #3c3c54;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-pool-squad-move:hover {
   background: #00f0ff;
+  color: #000000;
+  border-color: #000000;
+}
+
+.btn-pool-del {
+  background: transparent;
+  border: none;
+  color: #ff2d55;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.btn-pool-del:hover {
+  background: rgba(255, 45, 85, 0.15);
+}
+
+.pool-filter-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.pool-filter-pill {
+  background: #141422;
+  border: 1.5px solid #28283c;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pool-filter-pill:hover {
+  border-color: #00f0ff;
+  color: #00f0ff;
+}
+
+.pool-filter-pill.active {
+  background: #00f0ff;
+  color: #000000;
+  border-color: #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+[data-theme="sketch"] .pool-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+[data-theme="sketch"] .pool-card-title {
+  color: #000000;
+}
+
+[data-theme="sketch"] .pool-squad-item {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #000000;
+}
+
+[data-theme="sketch"] .pool-filter-pill {
+  background: #ffffff;
+  border: 2px solid #000000;
+  color: #000000;
+}
+
+[data-theme="sketch"] .pool-filter-pill.active {
+  background: #ffde59;
   color: #000000;
 }

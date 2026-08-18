@@ -308,6 +308,7 @@
         </div>
         <div class="workspace-nav-tabs">
           <button class="ws-tab active" id="ws-tab-overview">📊 OVERVIEW & STANDINGS</button>
+          <button class="ws-tab" id="ws-tab-pools">🏊 POOLS & GROUPS</button>
           <button class="ws-tab" id="ws-tab-teams">🛡️ TEAMS & ROSTERS</button>
           <button class="ws-tab" id="ws-tab-matches">🎮 MATCHES & ROOMS</button>
           <button class="ws-tab" id="ws-tab-match-standings">🎯 MATCH-WISE RESULTS</button>
@@ -362,6 +363,21 @@
             <tbody id="ws-overview-table-body">
             </tbody>
           </table>
+        </div>
+      </div>
+      <div class="ws-panel" id="panel-ws-pools">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">🏊 POOLS & GROUP STAGE MANAGER</h2>
+            <p class="section-sub">Create multiple pools (Pool A, Pool B, Finals) and place registered squads into their groups.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-secondary-sm" id="btn-auto-distribute-pools">⚡ AUTO-DISTRIBUTE SQUADS</button>
+            <button class="btn-secondary-sm" id="btn-shuffle-pools">🔀 SHUFFLE POOLS</button>
+            <button class="btn-action-primary" id="btn-open-create-pool-modal">+ CREATE NEW POOL</button>
+          </div>
+        </div>
+        <div class="pools-grid" id="ws-pools-container">
         </div>
       </div>
       <div class="ws-panel" id="panel-ws-teams">
@@ -634,10 +650,76 @@
           <label class="form-label">Captain Name & Contact / UID</label>
           <input type="text" class="form-input" id="team-input-captain" placeholder="e.g. Kiryu_FF (UID: 77489210)">
         </div>
+        <div class="form-group">
+          <label class="form-label">🏊 Assigned Pool / Group</label>
+          <select class="form-select" id="team-input-pool">
+            <option value="">⚪ Unassigned / General Pool</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary-sm" id="btn-cancel-team">CANCEL</button>
         <button class="btn-action-primary-sm" id="btn-save-team">SAVE SQUAD</button>
+      </div>
+    </div>
+  </div>
+  <!-- CREATE POOL MODAL -->
+  <div class="modal-overlay" id="modal-create-pool">
+    <div class="modal-content" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🏊 CREATE TOURNAMENT POOL / GROUP</h3>
+        <button class="btn-close-modal" id="btn-close-pool-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Pool / Group Name *</label>
+          <input type="text" class="form-input" id="new-pool-name" placeholder="e.g. Pool A (Group Alpha), Pool B, Grand Finals">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Max Squad Slots *</label>
+            <input type="number" class="form-input" id="new-pool-slots" value="12" min="2" max="32">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pool Color Theme</label>
+            <select class="form-select" id="new-pool-color">
+              <option value="#00f0ff">Cyan (Default)</option>
+              <option value="#ffd700">Gold / Finals</option>
+              <option value="#ff2d55">Crimson Blaze</option>
+              <option value="#34d399">Emerald Green</option>
+              <option value="#a855f7">Purple Nebula</option>
+              <option value="#ff6b35">Sunset Orange</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-sm" id="btn-cancel-pool">CANCEL</button>
+        <button class="btn-action-primary-sm" id="btn-submit-create-pool">CREATE POOL ➔</button>
+      </div>
+    </div>
+  </div>
+  <!-- MOVE / ASSIGN SQUAD TO POOL MODAL -->
+  <div class="modal-overlay" id="modal-move-squad-pool">
+    <div class="modal-content" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🎯 ASSIGN SQUAD TO POOL</h3>
+        <button class="btn-close-modal" id="btn-close-move-pool-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="move-pool-team-idx" value="-1">
+        <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px;">
+          Select target pool to place squad <strong id="move-pool-squad-name" style="color:#00f0ff;">Squad</strong>:
+        </p>
+        <div class="form-group">
+          <label class="form-label">Choose Pool / Group</label>
+          <select class="form-select" id="select-target-pool">
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary-sm" id="btn-cancel-move-pool">CANCEL</button>
+        <button class="btn-action-primary-sm" id="btn-confirm-move-pool">CONFIRM PLACEMENT ➔</button>
       </div>
     </div>
   </div>
@@ -682,9 +764,17 @@
         <button class="btn-close-modal" id="btn-close-match-modal">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Match Title *</label>
-          <input type="text" class="form-input" id="match-input-title" placeholder="e.g. Match 4 - Alpine Clash">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Match Title *</label>
+            <input type="text" class="form-input" id="match-input-title" placeholder="e.g. Match 4 - Pool A Bermuda">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Pool / Stage</label>
+            <select class="form-select" id="match-input-pool">
+              <option value="all">All Squads / General Lobby</option>
+            </select>
+          </div>
         </div>
         <div class="form-row-2">
           <div class="form-group">
