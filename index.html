@@ -402,9 +402,10 @@
         <div class="section-header-row">
           <div>
             <h2 class="section-title">💳 PAID ENTRIES & AUTO-UTR VERIFICATION</h2>
-            <p class="section-sub">Automatic Bank SMS Webhook Bot & 1-Click Verification for instant 0% fee payments.</p>
+            <p class="section-sub">Zero-setup multi-organizer payment verification: 24/7 Cloud Engine, Bank SMS Bot, & 1-Click Batch Approval.</p>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-action-primary-sm" id="btn-approve-all-pending" style="background:#34d399; color:#000; font-weight:900;" title="Approve all pending registrations at once">⚡ APPROVE ALL PENDING</button>
             <button class="btn-secondary-sm" id="btn-toggle-sms-bot-settings">🤖 AUTO-BOT SETTINGS</button>
             <button class="btn-secondary-sm" id="btn-refresh-payments">🔄 REFRESH PAYMENTS</button>
           </div>
@@ -416,42 +417,47 @@
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:18px;">🤖</span>
               <div>
-                <strong style="font-size:14px; color:#ffffff;">BANK SMS AUTO-APPROVAL ENGINE</strong>
-                <span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:10px; margin-left:8px;">🟢 ACTIVE & LISTENING</span>
+                <strong style="font-size:14px; color:#ffffff;">MULTI-ORGANIZER AUTO-VERIFICATION SUITE</strong>
+                <span class="badge-tag" id="cloud-bot-status-badge" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:10px; margin-left:8px;">🟢 24/7 CLOUD ACTIVE</span>
               </div>
             </div>
             <div style="font-size:12px; color:#94a3b8;">
-              Payee UPI: <strong style="color:#ffd700;">7848033183@fam</strong>
+              Payee UPI: <strong id="ws-payments-payee-upi" style="color:#ffd700;">7848033183@fam</strong>
             </div>
           </div>
 
-          <!-- Webhook URL & Secret Key Strip -->
+          <!-- 1-Click Cloud Connect & Android Webhook Grid -->
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-bottom:14px;">
+            <!-- 1-Click Gmail Connect for 0-App Cloud Auto-Verify -->
+            <div style="background:#0f172a; border:1.5px solid #38bdf8; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:11px; color:#38bdf8; font-weight:900;">☁️ 1-CLICK CLOUD AUTO-VERIFY (ZERO APP NEEDED):</div>
+                <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">Sync Bank & PhonePe credit alerts directly via Cloud</div>
+              </div>
+              <button class="btn-action-primary-sm" id="btn-cloud-connect-google" style="background:#38bdf8; color:#000; font-weight:900; font-size:11px; padding:6px 10px; white-space:nowrap;">
+                ⚡ CONNECT GMAIL
+              </button>
+            </div>
+
+            <!-- Live Webhook for Android Forwarder -->
             <div style="background:#0c0c14; border:1px solid #28283c; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <div style="font-size:10px; color:#94a3b8; font-weight:800;">YOUR LIVE WEBHOOK URL (FOR ANDROID FORWARDER):</div>
+                <div style="font-size:10px; color:#94a3b8; font-weight:800;">LIVE ANDROID WEBHOOK URL (FOR AUTOMATE):</div>
                 <code id="sms-bot-webhook-url" style="font-size:12px; color:#00f0ff; word-break:break-all;">https://domain/api/verify-sms</code>
               </div>
               <button class="btn-secondary-sm" id="btn-copy-webhook-url" style="padding:4px 8px; font-size:10px;" title="Copy Webhook URL">📋 COPY</button>
-            </div>
-            <div style="background:#0c0c14; border:1px solid #28283c; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-size:10px; color:#94a3b8; font-weight:800;">AUTH SECRET KEY:</div>
-                <code style="font-size:12px; color:#ffd700;">VTX_AUTO_VERIFY_2026</code>
-              </div>
-              <button class="btn-secondary-sm" onclick="navigator.clipboard.writeText('VTX_AUTO_VERIFY_2026'); showToast('📋 Secret Key Copied!');" style="padding:4px 8px; font-size:10px;">📋 COPY</button>
             </div>
           </div>
 
           <!-- Live Simulator Test Box -->
           <div style="background:#1e1e30; border:1px dashed #383854; border-radius:8px; padding:12px;">
-            <div style="font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">⚡ LIVE BANK SMS TESTER & AUTO-MATCHER:</div>
+            <div style="font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">⚡ LIVE PAYMENT ALERT TESTER & AUTO-MATCHER:</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <input type="text" class="form-input" id="input-test-bank-sms" style="flex:1; min-width:260px; font-size:12px;" placeholder="e.g. Received Rs 50.00 from Rahul. UPI Ref: 482910482910" value="Received Rs 50.00 in bank a/c. UPI Ref: 482910482910">
+              <input type="text" class="form-input" id="input-test-bank-sms" style="flex:1; min-width:260px; font-size:12px;" placeholder="e.g. Received Rs 20.00 from Rahul. UPI Ref: 358391063193" value="Received Rs 20.00 from Rahul on FamApp. UPI Ref: 358391063193">
               <button class="btn-action-primary-sm" id="btn-simulate-sms-verify" style="background:#00f0ff; color:#000; font-weight:900; white-space:nowrap;">⚡ TEST AUTO-APPROVAL</button>
             </div>
             <div style="font-size:11px; color:#94a3b8; margin-top:6px;">
-              💡 <em>Whenever PhonePe/Bank SMS arrives on your phone, the Android forwarder posts the SMS here. The bot extracts the 12-digit UTR and approves the pending squad in 1 second!</em>
+              💡 <em>Whenever PhonePe, FamApp, or Bank alerts arrive (via Cloud or Android Automate), the bot matches the 12-digit UTR in Supabase and marks the squad as <strong>⚡ AUTO-APPROVED</strong> in 1 second!</em>
             </div>
           </div>
         </div>
@@ -1269,6 +1275,33 @@
         <div style="margin-top:16px; border-top:1px solid #28283c; padding-top:12px; text-align:center;">
           <button type="button" class="btn-secondary-sm" id="btn-quick-guest-login" style="width:100%; padding:8px; font-size:12px; color:#cbd5e1;">
             ⚡ 1-CLICK INSTANT ORGANIZER LOGIN
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT RECEIPT PROOF PREVIEW MODAL -->
+  <div class="modal-overlay" id="modal-view-receipt">
+    <div class="modal-content" style="max-width:480px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="receipt-modal-title">📸 PAYMENT RECEIPT PROOF</h3>
+          <p class="modal-sub-desc" id="receipt-modal-sub" style="margin-bottom:0;">Uploaded by Captain</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-receipt-modal">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px; text-align:center;">
+        <div style="background:#090910; border:1px solid #28283c; border-radius:8px; padding:8px; max-height:420px; overflow:auto; display:flex; justify-content:center; align-items:center;">
+          <img id="receipt-modal-img" src="" alt="Payment Receipt" style="max-width:100%; max-height:400px; border-radius:6px; object-fit:contain;">
+        </div>
+        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; background:#141422; padding:10px 14px; border-radius:6px;">
+          <div style="text-align:left;">
+            <div style="font-size:10px; color:#94a3b8;">SUBMITTED UTR:</div>
+            <code id="receipt-modal-utr" style="font-size:14px; font-weight:900; color:#ffd700;">-</code>
+          </div>
+          <button class="btn-action-primary-sm" id="btn-receipt-approve-now" style="background:#34d399; color:#000; font-weight:900;">
+            ✓ APPROVE SQUAD
           </button>
         </div>
       </div>

@@ -1,0 +1,13 @@
+{
+  "name": "vortex-esports-cloud-payment-worker",
+  "version": "1.0.0",
+  "description": "24/7 Multi-Organizer Automated UPI & Bank Email Auto-Verification Worker for Vortex Esports",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

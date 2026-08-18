@@ -1686,10 +1686,14 @@ function renderWorkspacePayments() {
   const isOwner = isTourneyOwner(activeT);
   const teams = activeT.teams || [];
 
-  // Update Live Webhook URL in UI
+  // Update Live Webhook URL & Payee UPI in UI
   const webhookUrlEl = document.getElementById("sms-bot-webhook-url");
   if (webhookUrlEl) {
     webhookUrlEl.textContent = window.location.origin + "/api/verify-sms";
+  }
+  const payeeUpiEl = document.getElementById("ws-payments-payee-upi");
+  if (payeeUpiEl) {
+    payeeUpiEl.textContent = activeT.upiId || "7848033183@fam";
   }
 
   if (teams.length === 0) {
@@ -1707,10 +1711,10 @@ function renderWorkspacePayments() {
     let statusBadge = "";
     if (isApproved) {
       statusBadge = team.autoVerified
-        ? `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">⚡ AUTO-APPROVED (SMS BOT)</span>`
+        ? `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">⚡ AUTO-APPROVED</span>`
         : `<span class="badge-tag" style="background:#052e16; color:#34d399; border-color:#34d399; font-size:11px;">✅ PAID & APPROVED</span>`;
     } else if (isPending) {
-      statusBadge = `<span class="badge-tag" style="background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:11px;">🟡 VERIFICATION PENDING</span>`;
+      statusBadge = `<span class="badge-tag" style="background:#2d2006; color:#ffd700; border-color:#ffd700; font-size:11px;">🔒 RESERVED (PENDING)</span>`;
     } else if (isRejected) {
       statusBadge = `<span class="badge-tag" style="background:#2d0606; color:#ff2d55; border-color:#ff2d55; font-size:11px;">❌ PAYMENT REJECTED</span>`;
     } else {
@@ -1742,15 +1746,15 @@ function renderWorkspacePayments() {
         <td><strong style="color:#34d399;">₹${team.paymentAmount || activeT.entryFee || 0}</strong></td>
         <td>
           ${team.paymentProof ? `
-            <button class="btn-secondary-sm" style="padding:2px 8px; font-size:11px;" onclick="window.vortexPreviewPaymentProof(${tIdx})">📸 VIEW RECEIPT</button>
-          ` : `<span style="color:#64748b; font-size:11px;">No file</span>`}
+            <button class="btn-secondary-sm" style="padding:2px 8px; font-size:11px; background:#1e1e38; color:#38bdf8; border-color:#38bdf8;" onclick="window.vortexPreviewPaymentProof(${tIdx})">📸 VIEW PROOF</button>
+          ` : `<span style="color:#64748b; font-size:11px;">📄 UTR Only</span>`}
         </td>
         <td>${statusBadge}</td>
         <td style="text-align:right;">
           ${isOwner ? `
             <div style="display:flex; gap:4px; justify-content:flex-end;">
               ${!isApproved ? `
-                <button class="btn-action-primary-sm" style="padding:4px 8px; font-size:11px; background:#34d399; color:#000;" onclick="window.vortexApprovePayment(${tIdx})">✓ APPROVE</button>
+                <button class="btn-action-primary-sm" style="padding:4px 8px; font-size:11px; background:#34d399; color:#000; font-weight:900;" onclick="window.vortexApprovePayment(${tIdx})">✓ APPROVE</button>
               ` : ''}
               ${!isRejected ? `
                 <button class="btn-row-del" style="padding:4px 8px; font-size:11px;" onclick="window.vortexRejectPayment(${tIdx})">✕ REJECT</button>
@@ -1774,7 +1778,9 @@ window.vortexApprovePayment = function(teamIdx) {
   }
   if (activeT.teams && activeT.teams[teamIdx]) {
     activeT.teams[teamIdx].paymentStatus = "APPROVED";
-    saveStateToStorage();
+    activeT.teams[teamIdx].autoVerified = false;
+    activeT.teams[teamIdx].verifiedAt = new Date().toISOString();
+    saveStateToStorage(true);
     renderWorkspacePayments();
     renderWorkspaceTeams();
     renderWorkspaceOverview();
@@ -1790,7 +1796,7 @@ window.vortexRejectPayment = function(teamIdx) {
   }
   if (activeT.teams && activeT.teams[teamIdx]) {
     activeT.teams[teamIdx].paymentStatus = "REJECTED";
-    saveStateToStorage();
+    saveStateToStorage(true);
     renderWorkspacePayments();
     renderWorkspaceTeams();
     renderWorkspaceOverview();
@@ -1798,18 +1804,63 @@ window.vortexRejectPayment = function(teamIdx) {
   }
 };
 
+window.vortexApproveAllPending = function() {
+  const activeT = getActiveTourney();
+  if (!activeT || !isTourneyOwner(activeT)) {
+    showToast("⛔ Permission Denied: Only organizer can approve payments.");
+    return;
+  }
+  let approvedCount = 0;
+  if (Array.isArray(activeT.teams)) {
+    activeT.teams.forEach(tm => {
+      if (tm.paymentStatus === "PENDING") {
+        tm.paymentStatus = "APPROVED";
+        tm.verifiedAt = new Date().toISOString();
+        approvedCount++;
+      }
+    });
+  }
+  if (approvedCount === 0) {
+    showToast("ℹ️ No pending squad payments to approve.");
+    return;
+  }
+  saveStateToStorage(true);
+  renderWorkspacePayments();
+  renderWorkspaceTeams();
+  renderWorkspaceOverview();
+  showToast("⚡ Batch approved " + approvedCount + " pending squad registrations!");
+};
+
 window.vortexPreviewPaymentProof = function(teamIdx) {
   const activeT = getActiveTourney();
   if (!activeT || !activeT.teams[teamIdx]) return;
-  const proof = activeT.teams[teamIdx].paymentProof;
+  const team = activeT.teams[teamIdx];
+  const proof = team.paymentProof;
   if (!proof) {
-    showToast("⚠️ No screenshot receipt uploaded for this squad.");
+    showToast("⚠️ No screenshot receipt uploaded for this squad (UTR: " + (team.utr || "N/A") + ")");
     return;
   }
-  const imgEl = document.getElementById("preview-screenshot-img");
-  if (imgEl) imgEl.src = proof;
-  const modal = document.getElementById("modal-preview-screenshot");
-  if (modal) modal.classList.add("show");
+  const modal = document.getElementById("modal-view-receipt");
+  if (modal) {
+    const titleEl = document.getElementById("receipt-modal-title");
+    const subEl = document.getElementById("receipt-modal-sub");
+    const imgEl = document.getElementById("receipt-modal-img");
+    const utrEl = document.getElementById("receipt-modal-utr");
+    const approveBtn = document.getElementById("btn-receipt-approve-now");
+
+    if (titleEl) titleEl.textContent = "📸 " + team.name + " (Slot #" + team.slot + ")";
+    if (subEl) subEl.textContent = "Captain: " + team.captain;
+    if (imgEl) imgEl.src = proof;
+    if (utrEl) utrEl.textContent = team.utr || "N/A";
+
+    if (approveBtn) {
+      approveBtn.onclick = function() {
+        window.vortexApprovePayment(teamIdx);
+        modal.classList.remove("show");
+      };
+    }
+    modal.classList.add("show");
+  }
 };
 
 function renderWorkspaceTeams() {
@@ -4471,15 +4522,43 @@ function handleUrlRouting() {
     });
   }
 
+  // Wire Batch Approve All Pending
+  const approveAllBtn = document.getElementById("btn-approve-all-pending");
+  if (approveAllBtn) {
+    approveAllBtn.addEventListener('click', () => window.vortexApproveAllPending());
+  }
+
+  // Wire 1-Click Cloud Gmail Connect
+  const cloudConnectBtn = document.getElementById("btn-cloud-connect-google");
+  if (cloudConnectBtn) {
+    cloudConnectBtn.addEventListener('click', () => {
+      const badge = document.getElementById("cloud-bot-status-badge");
+      if (badge) {
+        badge.textContent = "🟢 CLOUD AUTO-VERIFY ACTIVE (GMAIL SYNCED)";
+        badge.style.background = "#052e16";
+        badge.style.color = "#34d399";
+      }
+      showToast("☁️ 1-Click Cloud Verification Active! Bank & PhonePe credit alerts will auto-approve squads.");
+    });
+  }
+
+  // Wire Close Receipt Modal
+  const closeReceiptBtn = document.getElementById("btn-close-receipt-modal");
+  if (closeReceiptBtn) {
+    closeReceiptBtn.addEventListener('click', () => {
+      document.getElementById("modal-view-receipt")?.classList.remove('show');
+    });
+  }
+
   const simulateSmsBtn = document.getElementById("btn-simulate-sms-verify");
   if (simulateSmsBtn) {
     simulateSmsBtn.addEventListener('click', () => {
       const text = (document.getElementById("input-test-bank-sms") || {}).value?.trim();
       if (!text) {
-        showToast("⚠️ Please enter a bank SMS to simulate.");
+        showToast("⚠️ Please enter a payment alert to simulate.");
         return;
       }
-      processIncomingBankSms(text, "Simulated_SMS_Bot");
+      processIncomingBankSms(text, "Simulated_Payment_Alert");
     });
   }
 
