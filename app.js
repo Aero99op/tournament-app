@@ -1,66 +1,16 @@
-// VORTEX SECURITY & ANTI-TAMPER SHIELD
-(function initSecurityShield() {
+// VORTEX SECURITY: VIEW-ONLY DEVTOOLS & STATE INTEGRITY PROTOCOL
+(function initSecurityProtocol() {
   if (typeof window === "undefined") return;
 
-  // 1. Intercept and block DevTools / View Source / Inspection shortcuts
-  window.addEventListener('keydown', function(e) {
-    // Block F12
-    if (e.key === 'F12' || e.keyCode === 123) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    // Block Ctrl+Shift+I / J / C / K / S / U / P / E
-    if ((e.ctrlKey || e.metaKey) && (e.shiftKey || e.altKey)) {
-      const k = (e.key || '').toLowerCase();
-      if (['i', 'j', 'c', 'k', 's', 'u', 'p', 'e'].includes(k) || [73, 74, 67, 75, 83, 85, 80, 69].includes(e.keyCode)) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    }
-    // Block Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print)
-    if ((e.ctrlKey || e.metaKey) && ['u', 's', 'p'].includes((e.key || '').toLowerCase())) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  }, true);
-
-  // 2. Disable Right-Click Context Menu
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-  }, true);
-
-  // 3. Neutralize & Clean Console to Prevent Arbitrary Injections
-  const securityWarning = function() {
-    try {
-      console.clear();
-    } catch(err){}
-  };
-
-  ['log', 'info', 'warn', 'error', 'debug', 'dir', 'dirxml', 'trace', 'table', 'profile'].forEach(function(fn) {
-    try {
-      if (window.console && typeof window.console[fn] === 'function') {
-        window.console[fn] = securityWarning;
-      }
-    } catch(e){}
-  });
-
-  // 4. DevTools Timing & Anti-Debugger Protection Loop
-  setInterval(function() {
-    const startTime = performance.now();
-    (function() {
-      Function("debugger")();
-    })();
-    const endTime = performance.now();
-    if (endTime - startTime > 100) {
-      try {
-        console.clear();
-      } catch(e){}
-    }
-  }, 1000);
+  try {
+    console.info(
+      "%c🛡️ VORTEX ESPORTS OS — SECURE VIEW MODE ACTIVE\n" +
+      "%cDevTools viewing and network inspection is permitted for debugging.\n" +
+      "⚠️ Note: All destructive commands, unauthorized tournament mutations, and state overrides are strictly blocked by server-side and cryptographic owner validation.",
+      "color:#00f0ff; font-size:14px; font-weight:bold; padding:4px 0;",
+      "color:#94a3b8; font-size:12px;"
+    );
+  } catch (e) {}
 })();
 
 let currentView = "view-landing";
