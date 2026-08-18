@@ -133,6 +133,11 @@ async function fetchTournamentsFromSupabase() {
         statusClass: row.status_class || row.statusClass || "live",
         killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
         placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
+        whatsappLink: row.whatsapp_link || row.whatsappLink || "",
+        discordLink: row.discord_link || row.discordLink || "",
+        registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
+        user_id: row.user_id || null,
+        creatorName: row.creator_name || row.creatorName || "Organizer",
         teams: Array.isArray(row.teams) ? row.teams : [],
         matches: Array.isArray(row.matches) ? row.matches : [],
         checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
@@ -143,6 +148,7 @@ async function fetchTournamentsFromSupabase() {
       if (currentView === "view-workspace") {
         openWorkspaceWithId(activeTourneyId);
       }
+      handleUrlRouting();
       isSupabaseLive = true;
       updateSyncStatus("online", "🟢 SUPABASE LIVE");
     } else {
@@ -295,10 +301,13 @@ async function syncTourneyToSupabase(tourney) {
       status_class: tourney.statusClass,
       kill_multiplier: tourney.killMultiplier,
       placement_points: tourney.placementPoints,
+      whatsapp_link: tourney.whatsappLink || null,
+      discord_link: tourney.discordLink || null,
+      registration_deadline: tourney.registrationDeadline || null,
       teams: tourney.teams,
       matches: tourney.matches,
       checkpoints: tourney.checkpoints,
-      user_id: currentUser?.id || null
+      user_id: tourney.user_id || currentUser?.id || null
     };
 
     if (tourney.id && typeof tourney.id === 'number' && tourney.id > 0) {
@@ -326,10 +335,13 @@ async function insertNewTourneyToSupabase(newTourney) {
       status_class: newTourney.statusClass,
       kill_multiplier: newTourney.killMultiplier,
       placement_points: newTourney.placementPoints,
+      whatsapp_link: newTourney.whatsappLink || null,
+      discord_link: newTourney.discordLink || null,
+      registration_deadline: newTourney.registrationDeadline || null,
       teams: newTourney.teams,
       matches: newTourney.matches,
       checkpoints: newTourney.checkpoints,
-      user_id: currentUser?.id || null
+      user_id: newTourney.user_id || currentUser?.id || null
     }]).select();
 
     if (!error && data && data.length > 0) {
@@ -496,6 +508,121 @@ function isTourneyOwner(tourney) {
   return true;
 }
 
+function isDeadlinePassed(tourney) {
+  if (!tourney || !tourney.registrationDeadline) return false;
+  try {
+    const deadline = new Date(tourney.registrationDeadline);
+    return !isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
+  } catch (e) {
+    return false;
+  }
+}
+
+function formatDeadlineText(tourney) {
+  if (!tourney || !tourney.registrationDeadline) return "Open";
+  try {
+    const deadline = new Date(tourney.registrationDeadline);
+    if (isNaN(deadline.getTime())) return tourney.registrationDeadline;
+    return deadline.toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return tourney.registrationDeadline;
+  }
+}
+
+function getUserRegisteredSquads() {
+  try {
+    const raw = localStorage.getItem("vortex_registered_squads");
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveUserRegisteredSquad(regInfo) {
+  try {
+    const all = getUserRegisteredSquads().filter(r => r.tourneyId !== regInfo.tourneyId);
+    all.push(regInfo);
+    localStorage.setItem("vortex_registered_squads", JSON.stringify(all));
+  } catch (e) {}
+}
+
+function getUserRegisteredSquadForTourney(tourney) {
+  if (!tourney || !Array.isArray(tourney.teams)) return null;
+
+  // 1. Check local storage
+  const localList = getUserRegisteredSquads();
+  const foundLocal = localList.find(r => r.tourneyId === tourney.id);
+  if (foundLocal) {
+    const tIdx = tourney.teams.findIndex(t => t.name === foundLocal.squadName || (t.captain && t.captain.includes(foundLocal.leaderUID)));
+    if (tIdx !== -1) {
+      return { teamIdx: tIdx, squad: tourney.teams[tIdx] };
+    }
+  }
+
+  // 2. Check logged in user info
+  if (currentUser && currentUser.loggedIn) {
+    const userUID = currentUser.uid;
+    const userEmail = currentUser.email;
+    const userPhone = currentUser.phone;
+
+    const tIdx = tourney.teams.findIndex(t => {
+      const isCaptain = t.captain && (t.captain.includes(userUID) || (userEmail && t.captain.includes(userEmail)));
+      const hasPlayer = Array.isArray(t.players) && t.players.some(p => p.uid === userUID || (p.name && p.name === currentUser.name));
+      const isPhone = userPhone && t.whatsapp === userPhone;
+      return isCaptain || hasPlayer || isPhone;
+    });
+
+    if (tIdx !== -1) {
+      return { teamIdx: tIdx, squad: tourney.teams[tIdx] };
+    }
+  }
+
+  return null;
+}
+
+function generateShareUrl(tourneyId, action = 'register') {
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?tourney=${tourneyId}&action=${action}`;
+}
+
+function openShareTourneyModal(tourneyId) {
+  const tourney = tournamentsDb.find(t => t.id === tourneyId) || getActiveTourney();
+  if (!tourney) return;
+
+  const shareUrl = generateShareUrl(tourney.id, 'register');
+  const inputEl = document.getElementById("share-link-input");
+  if (inputEl) inputEl.value = shareUrl;
+
+  const waBtn = document.getElementById("share-btn-wa");
+  if (waBtn) {
+    const text = `🔥 Register your squad for *${tourney.title}* (${tourney.game} • Prize: ${tourney.prize})!\n\n👉 Click link to register directly: ${shareUrl}`;
+    waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  }
+
+  const nativeBtn = document.getElementById("btn-native-share");
+  if (nativeBtn) {
+    if (navigator.share) {
+      nativeBtn.style.display = "block";
+      nativeBtn.onclick = async () => {
+        try {
+          await navigator.share({
+            title: tourney.title,
+            text: `Register your squad for ${tourney.title} (Prize: ${tourney.prize})!`,
+            url: shareUrl
+          });
+        } catch (err) {}
+      };
+    } else {
+      nativeBtn.style.display = "none";
+    }
+  }
+
+  const modal = document.getElementById("modal-share-tourney");
+  if (modal) modal.classList.add('show');
+}
+
+window.vortexShareTourney = openShareTourneyModal;
+
 let pendingDeleteTourneyId = null;
 
 function openDeleteTourneyModal(tourneyId) {
@@ -546,11 +673,16 @@ async function confirmDeleteTourney() {
   }
 }
 
-function openSquadRegistrationModal(tourneyId) {
+function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
   const tourney = tournamentsDb.find(t => t.id === tourneyId) || getActiveTourney();
   if (!tourney) return;
 
-  if (tourney.teams.length >= tourney.slots) {
+  if (isDeadlinePassed(tourney)) {
+    showToast("🔒 Registration & Roster Edit window has closed for this tournament.");
+    return;
+  }
+
+  if (!isEdit && tourney.teams.length >= tourney.slots) {
     showToast("⚠️ Registration Closed: All " + tourney.slots + " squad slots are full!");
     return;
   }
@@ -558,15 +690,65 @@ function openSquadRegistrationModal(tourneyId) {
   const idInput = document.getElementById("reg-target-tourney-id");
   if (idInput) idInput.value = tourney.id;
 
-  const titleSub = document.getElementById("reg-modal-tourney-title");
-  if (titleSub) titleSub.textContent = tourney.title + " • Slots Available: " + (tourney.slots - tourney.teams.length);
+  const isEditInput = document.getElementById("reg-is-edit-mode");
+  if (isEditInput) isEditInput.value = isEdit ? "1" : "0";
 
-  // Clear previous values
-  const fields = ["reg-squad-name", "reg-squad-tag", "reg-leader-name", "reg-leader-ign", "reg-leader-uid", "reg-leader-whatsapp", "reg-leader-email", "reg-p2-ign", "reg-p2-uid", "reg-p3-ign", "reg-p3-uid", "reg-p4-ign", "reg-p4-uid"];
-  fields.forEach(f => {
-    const el = document.getElementById(f);
-    if (el) el.value = "";
-  });
+  const editIdxInput = document.getElementById("reg-edit-team-idx");
+  if (editIdxInput) editIdxInput.value = String(teamIdx);
+
+  const titleSub = document.getElementById("reg-modal-tourney-title");
+  const submitBtn = document.getElementById("btn-submit-registration");
+
+  if (isEdit && teamIdx >= 0 && tourney.teams[teamIdx]) {
+    const existingTeam = tourney.teams[teamIdx];
+    if (titleSub) titleSub.textContent = `EDIT SQUAD ROSTER • ${existingTeam.name} (Slot #${existingTeam.slot})`;
+    if (submitBtn) submitBtn.textContent = "💾 SAVE SQUAD ROSTER CHANGES";
+
+    const squadNameEl = document.getElementById("reg-squad-name");
+    if (squadNameEl) squadNameEl.value = existingTeam.name || "";
+
+    const squadTagEl = document.getElementById("reg-squad-tag");
+    if (squadTagEl) squadTagEl.value = existingTeam.tag || "";
+
+    const leaderNameEl = document.getElementById("reg-leader-name");
+    if (leaderNameEl) leaderNameEl.value = existingTeam.captain ? existingTeam.captain.split(" (")[0] : "";
+
+    const leaderIgnEl = document.getElementById("reg-leader-ign");
+    if (leaderIgnEl) leaderIgnEl.value = existingTeam.players?.[0]?.name || "";
+
+    const leaderUidEl = document.getElementById("reg-leader-uid");
+    if (leaderUidEl) leaderUidEl.value = existingTeam.players?.[0]?.uid || "";
+
+    const leaderWaEl = document.getElementById("reg-leader-whatsapp");
+    if (leaderWaEl) leaderWaEl.value = existingTeam.whatsapp || "";
+
+    const leaderEmailEl = document.getElementById("reg-leader-email");
+    if (leaderEmailEl) leaderEmailEl.value = existingTeam.email || "";
+
+    const p2Ign = document.getElementById("reg-p2-ign");
+    if (p2Ign) p2Ign.value = existingTeam.players?.[1]?.name || "";
+    const p2Uid = document.getElementById("reg-p2-uid");
+    if (p2Uid) p2Uid.value = existingTeam.players?.[1]?.uid || "";
+
+    const p3Ign = document.getElementById("reg-p3-ign");
+    if (p3Ign) p3Ign.value = existingTeam.players?.[2]?.name || "";
+    const p3Uid = document.getElementById("reg-p3-uid");
+    if (p3Uid) p3Uid.value = existingTeam.players?.[2]?.uid || "";
+
+    const p4Ign = document.getElementById("reg-p4-ign");
+    if (p4Ign) p4Ign.value = existingTeam.players?.[3]?.name || "";
+    const p4Uid = document.getElementById("reg-p4-uid");
+    if (p4Uid) p4Uid.value = existingTeam.players?.[3]?.uid || "";
+  } else {
+    if (titleSub) titleSub.textContent = tourney.title + " • Slots Available: " + (tourney.slots - tourney.teams.length);
+    if (submitBtn) submitBtn.textContent = "✓ CONFIRM SQUAD REGISTRATION";
+
+    const fields = ["reg-squad-name", "reg-squad-tag", "reg-leader-name", "reg-leader-ign", "reg-leader-uid", "reg-leader-whatsapp", "reg-leader-email", "reg-p2-ign", "reg-p2-uid", "reg-p3-ign", "reg-p3-uid", "reg-p4-ign", "reg-p4-uid"];
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      if (el) el.value = "";
+    });
+  }
 
   const modal = document.getElementById("modal-squad-registration");
   if (modal) modal.classList.add('show');
@@ -577,7 +759,15 @@ async function handleSquadRegistrationSubmit() {
   const tourney = tournamentsDb.find(t => t.id === tId);
   if (!tourney) return;
 
-  if (tourney.teams.length >= tourney.slots) {
+  const isEditMode = (document.getElementById("reg-is-edit-mode") || {}).value === "1";
+  const editIdx = Number((document.getElementById("reg-edit-team-idx") || {}).value);
+
+  if (isDeadlinePassed(tourney)) {
+    showToast("🔒 Roster modification closed: Tournament registration deadline has passed.");
+    return;
+  }
+
+  if (!isEditMode && tourney.teams.length >= tourney.slots) {
     showToast("⚠️ Registration Closed: All slots have been filled!");
     return;
   }
@@ -602,7 +792,6 @@ async function handleSquadRegistrationSubmit() {
     return;
   }
 
-  const assignedSlot = tourney.teams.length + 1;
   const playersList = [
     { name: leaderIGN, uid: leaderUID, role: "IGL (Captain)" },
     { name: p2IGN, uid: p2UID, role: "Entry Fragger / Rusher" }
@@ -610,6 +799,45 @@ async function handleSquadRegistrationSubmit() {
   if (p3IGN) playersList.push({ name: p3IGN, uid: p3UID || "N/A", role: "Support / Sniper" });
   if (p4IGN) playersList.push({ name: p4IGN, uid: p4UID || "N/A", role: "Support / Substitute" });
 
+  if (isEditMode && editIdx >= 0 && tourney.teams[editIdx]) {
+    tourney.teams[editIdx].name = squadName;
+    tourney.teams[editIdx].tag = squadTag || squadName.slice(0, 4).toUpperCase();
+    tourney.teams[editIdx].captain = leaderName + " (" + leaderIGN + " / " + leaderUID + ")";
+    tourney.teams[editIdx].whatsapp = whatsapp;
+    tourney.teams[editIdx].email = email;
+    tourney.teams[editIdx].players = playersList;
+
+    saveUserRegisteredSquad({
+      tourneyId: tourney.id,
+      slot: tourney.teams[editIdx].slot,
+      squadName: squadName,
+      leaderUID: leaderUID,
+      leaderPhone: whatsapp,
+      captain: tourney.teams[editIdx].captain
+    });
+
+    saveStateToStorage(false);
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('tournaments').update({ teams: tourney.teams }).eq('id', tourney.id);
+      } catch (e) {
+        console.warn("Supabase update notice:", e);
+      }
+    }
+
+    const regModal = document.getElementById("modal-squad-registration");
+    if (regModal) regModal.classList.remove('show');
+
+    showToast("✓ Squad '" + squadName + "' roster details successfully updated!");
+    renderLandingFeatured();
+    renderManageList();
+    if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
+      openWorkspaceWithId(tourney.id);
+    }
+    return;
+  }
+
+  const assignedSlot = tourney.teams.length + 1;
   const newRegisteredSquad = {
     slot: assignedSlot,
     name: squadName,
@@ -621,9 +849,17 @@ async function handleSquadRegistrationSubmit() {
   };
 
   tourney.teams.push(newRegisteredSquad);
+  saveUserRegisteredSquad({
+    tourneyId: tourney.id,
+    slot: assignedSlot,
+    squadName: squadName,
+    leaderUID: leaderUID,
+    leaderPhone: whatsapp,
+    captain: newRegisteredSquad.captain
+  });
+
   saveStateToStorage(false);
 
-  // Sync to Supabase
   if (supabaseClient) {
     try {
       await supabaseClient.from('tournaments').update({ teams: tourney.teams }).eq('id', tourney.id);
@@ -632,11 +868,9 @@ async function handleSquadRegistrationSubmit() {
     }
   }
 
-  // Close registration modal
   const regModal = document.getElementById("modal-squad-registration");
   if (regModal) regModal.classList.remove('show');
 
-  // Populate and open success modal
   const succSquad = document.getElementById("succ-squad-name");
   if (succSquad) succSquad.textContent = squadName;
   const succTourney = document.getElementById("succ-tourney-name");
@@ -671,158 +905,8 @@ async function handleSquadRegistrationSubmit() {
   renderLandingFeatured();
   renderManageList();
   if (currentView === "view-workspace" && activeTourneyId === tourney.id) {
-    renderWorkspaceOverview();
-    renderWorkspaceTeams();
+    openWorkspaceWithId(tourney.id);
   }
-}
-
-window.vortexOpenRegisterModal = openSquadRegistrationModal;
-window.vortexOpenDeleteModal = openDeleteTourneyModal;
-
-function renderLandingFeatured() {
-  let htmlBuffer = "";
-  for (const tourney of tournamentsDb) {
-    const isOwner = isTourneyOwner(tourney);
-    htmlBuffer += `
-      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
-        <div class='card-top-row'>
-          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
-          <div style='display:flex; gap:4px;'>
-            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
-            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
-            <span class='badge-tag open'>${tourney.format}</span>
-          </div>
-        </div>
-        <div class='t-card-title'>${tourney.title}</div>
-        <div class='t-card-meta'>Game: ${tourney.game} • Maps: ${tourney.maps}</div>
-        <div class='t-card-metrics'>
-          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
-        </div>
-        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
-          <button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER</button>
-          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>OPEN ➔</button>
-          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
-        </div>
-      </div>
-    `;
-  }
-  (document.getElementById("landing-tourney-grid") || document.querySelector("landing-tourney-grid")).innerHTML = htmlBuffer;
-}
-
-function renderManageList() {
-  let htmlBuffer = "";
-  for (const tourney of tournamentsDb) {
-    const isOwner = isTourneyOwner(tourney);
-    htmlBuffer += `
-      <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
-        <div class='card-top-row'>
-          <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
-          <div style='display:flex; gap:4px;'>
-            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
-            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
-            <span class='badge-tag open'>${tourney.game}</span>
-          </div>
-        </div>
-        <div class='t-card-title'>${tourney.title}</div>
-        <div class='t-card-meta'>Format: ${tourney.format} • Maps: ${tourney.maps}</div>
-        <div class='t-card-metrics'>
-          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val'>${tourney.teams.length} / ${tourney.slots}</span></div>
-          <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches.length} Scheduled</span></div>
-          <div class='t-metric'><span class='tm-label'>ROLE</span><span class='tm-val' style='color:${isOwner ? "#34d399" : "#94a3b8"};'>${isOwner ? "👑 Owner" : "👁️ Public"}</span></div>
-        </div>
-        <div class='card-action-btns-row' onclick='event.stopPropagation();'>
-          <button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER SQUAD</button>
-          <button class='btn-action-primary-sm' style='flex:1;' onclick='window.vortexOpenWorkspace(${tourney.id})'>${isOwner ? "MANAGE ➔" : "SPECTATE ➔"}</button>
-          ${isOwner ? `<button class='btn-card-del-t' onclick='window.vortexOpenDeleteModal(${tourney.id})' title='Delete Tournament'>🗑️</button>` : ''}
-        </div>
-      </div>
-    `;
-  }
-  (document.getElementById("manage-tournaments-grid") || document.querySelector("manage-tournaments-grid")).innerHTML = htmlBuffer;
-}
-
-function openWorkspaceWithId(tourneyId) {
-  activeTourneyId = tourneyId;
-  let activeT = tournamentsDb.find(t => t.id == tourneyId);
-  if (!activeT) return;
-
-  const isOwner = isTourneyOwner(activeT);
-
-  (document.getElementById("ws-tourney-title") || document.querySelector("ws-tourney-title")).textContent = activeT.title;
-  (document.getElementById("ws-game-meta") || document.querySelector("ws-game-meta")).textContent = activeT.game + " • " + activeT.format + " • Prize: " + activeT.prize + " • Maps: " + activeT.maps;
-  (document.getElementById("ws-status-badge") || document.querySelector("ws-status-badge")).textContent = activeT.status;
-
-  // Social Links
-  const waBtn = document.getElementById("ws-btn-whatsapp");
-  if (waBtn) {
-    if (activeT.whatsappLink) {
-      waBtn.style.display = "inline-flex";
-      waBtn.href = activeT.whatsappLink;
-    } else {
-      waBtn.style.display = "none";
-    }
-  }
-
-  const dcBtn = document.getElementById("ws-btn-discord");
-  if (dcBtn) {
-    if (activeT.discordLink) {
-      dcBtn.style.display = "inline-flex";
-      dcBtn.href = activeT.discordLink;
-    } else {
-      dcBtn.style.display = "none";
-    }
-  }
-
-  // Permission Banner & Controls Visibility
-  const permBanner = document.getElementById("ws-permission-banner");
-  const delBtn = document.getElementById("ws-btn-delete-tourney");
-  const quickAdd = document.getElementById("quick-act-add-team");
-  const quickMatch = document.getElementById("quick-act-new-match");
-  const quickScore = document.getElementById("quick-act-edit-points");
-  const addSquadBtn = document.getElementById("btn-open-add-team-modal");
-  const addMatchBtn = document.getElementById("btn-open-add-match-modal");
-  const saveRulesBtn = document.getElementById("btn-ws-save-point-rules");
-  const createCheckBtn = document.getElementById("btn-ws-create-checkpoint");
-  const revertBtn = document.getElementById("btn-ws-open-revert-modal");
-
-  if (isOwner) {
-    if (permBanner) permBanner.style.display = "none";
-    if (delBtn) delBtn.style.display = "inline-block";
-    if (quickAdd) quickAdd.style.display = "inline-block";
-    if (quickMatch) quickMatch.style.display = "inline-block";
-    if (quickScore) quickScore.style.display = "inline-block";
-    if (addSquadBtn) addSquadBtn.style.display = "inline-block";
-    if (addMatchBtn) addMatchBtn.style.display = "inline-block";
-    if (saveRulesBtn) saveRulesBtn.style.display = "inline-block";
-    if (createCheckBtn) createCheckBtn.style.display = "inline-block";
-    if (revertBtn) revertBtn.style.display = "inline-block";
-  } else {
-    if (permBanner) {
-      permBanner.style.display = "block";
-      const ownerSpan = document.getElementById("ws-owner-name");
-      if (ownerSpan) ownerSpan.textContent = activeT.creatorName || (activeT.user_id ? "Organizer" : "Official Host");
-    }
-    if (delBtn) delBtn.style.display = "none";
-    if (quickAdd) quickAdd.style.display = "none";
-    if (quickMatch) quickMatch.style.display = "none";
-    if (quickScore) quickScore.style.display = "none";
-    if (addSquadBtn) addSquadBtn.style.display = "none";
-    if (addMatchBtn) addMatchBtn.style.display = "none";
-    if (saveRulesBtn) saveRulesBtn.style.display = "none";
-    if (createCheckBtn) createCheckBtn.style.display = "none";
-    if (revertBtn) revertBtn.style.display = "none";
-  }
-
-  renderWorkspaceOverview();
-  renderWorkspaceTeams();
-  renderWorkspaceMatches();
-  renderWorkspaceMatchStandings();
-  renderWorkspaceOverallStandings();
-  renderWorkspacePointRules();
-  switchWsTab("panel-ws-overview");
-  switchView("view-workspace");
 }
 
 function renderWorkspaceOverview() {
@@ -1231,9 +1315,13 @@ function saveTeamAllMatches() {
 }
 
 function renderWorkspacePointRules() {
-  let activeT = getActiveTourney ( );
+  let activeT = getActiveTourney();
   if (activeT != null) {
     (document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value = activeT.killMultiplier;
+    const dlInput = document.getElementById("ws-rules-deadline");
+    if (dlInput) {
+      dlInput.value = activeT.registrationDeadline || "";
+    }
     let htmlBuffer = "";
     for (const r of [ 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 ]) {
       let val = 0;
@@ -2945,15 +3033,21 @@ window.removeInitialSquadFromDraft = function(idx) {
   const targetEl = (document.getElementById("btn-ws-save-point-rules") || document.querySelector("btn-ws-save-point-rules"));
   if (targetEl != null) {
     targetEl.addEventListener('click', function(event) {
-      let activeT = getActiveTourney ( );
+      let activeT = getActiveTourney();
       if (activeT != null) {
-        activeT.killMultiplier = Number ( (document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value );
+        activeT.killMultiplier = Number((document.getElementById("ws-rules-kill-pts") || document.querySelector("ws-rules-kill-pts")).value);
         activeT.placementPoints = { "1" : Number ( (document.getElementById("ws-pt-rank-1") || document.querySelector("ws-pt-rank-1")).value ) , "2" : Number ( (document.getElementById("ws-pt-rank-2") || document.querySelector("ws-pt-rank-2")).value ) , "3" : Number ( (document.getElementById("ws-pt-rank-3") || document.querySelector("ws-pt-rank-3")).value ) , "4" : Number ( (document.getElementById("ws-pt-rank-4") || document.querySelector("ws-pt-rank-4")).value ) , "5" : Number ( (document.getElementById("ws-pt-rank-5") || document.querySelector("ws-pt-rank-5")).value ) , "6" : Number ( (document.getElementById("ws-pt-rank-6") || document.querySelector("ws-pt-rank-6")).value ) , "7" : Number ( (document.getElementById("ws-pt-rank-7") || document.querySelector("ws-pt-rank-7")).value ) , "8" : Number ( (document.getElementById("ws-pt-rank-8") || document.querySelector("ws-pt-rank-8")).value ) , "9" : Number ( (document.getElementById("ws-pt-rank-9") || document.querySelector("ws-pt-rank-9")).value ) , "10" : Number ( (document.getElementById("ws-pt-rank-10") || document.querySelector("ws-pt-rank-10")).value ) , "11" : Number ( (document.getElementById("ws-pt-rank-11") || document.querySelector("ws-pt-rank-11")).value ) , "12" : Number ( (document.getElementById("ws-pt-rank-12") || document.querySelector("ws-pt-rank-12")).value ) };
+        const dlVal = (document.getElementById("ws-rules-deadline") || {}).value;
+        if (dlVal !== undefined) {
+          activeT.registrationDeadline = dlVal || "";
+        }
         saveStateToStorage();
         renderWorkspaceOverview();
         renderWorkspaceMatchStandings();
         renderWorkspaceOverallStandings();
-        showToast("✓ Point system rules updated and standings recalculated!");
+        renderLandingFeatured();
+        renderManageList();
+        showToast("✓ Point system rules & deadline updated!");
       }
     });
   }
@@ -2971,6 +3065,7 @@ window.removeInitialSquadFromDraft = function(idx) {
       let tMaps = (document.getElementById("new-tourney-maps") || document.querySelector("new-tourney-maps")).value?.trim();
       let tWhatsapp = (document.getElementById("new-tourney-whatsapp") || document.querySelector("new-tourney-whatsapp"))?.value?.trim() || "";
       let tDiscord = (document.getElementById("new-tourney-discord") || document.querySelector("new-tourney-discord"))?.value?.trim() || "";
+      let tDeadline = (document.getElementById("new-tourney-deadline") || document.querySelector("new-tourney-deadline"))?.value || "";
       let tKillMultiplier = Number((document.getElementById("new-pts-kill") || document.querySelector("new-pts-kill")).value) || 1;
       let customPlacementMap = {
         "1": Number((document.getElementById("pt-rank-1") || document.querySelector("pt-rank-1")).value) || 12,
@@ -3013,6 +3108,7 @@ window.removeInitialSquadFromDraft = function(idx) {
         placementPoints: customPlacementMap,
         whatsappLink: tWhatsapp,
         discordLink: tDiscord,
+        registrationDeadline: tDeadline,
         user_id: currentUser?.id || null,
         creatorName: currentUser?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "Organizer"),
         teams: initialTeams,
@@ -3039,7 +3135,42 @@ window.removeInitialSquadFromDraft = function(idx) {
   }
 })();
 
-// Wire Registration Modals
+function handleUrlRouting() {
+  try {
+    if (typeof window === "undefined" || !window.location.search) return;
+    const params = new URLSearchParams(window.location.search);
+    const tourneyParam = params.get("tourney");
+    const actionParam = params.get("action");
+
+    if (tourneyParam) {
+      const tId = Number(tourneyParam);
+      const tourney = tournamentsDb.find(t => t.id === tId);
+      if (tourney) {
+        openWorkspaceWithId(tourney.id);
+
+        const regSquad = getUserRegisteredSquadForTourney(tourney);
+        const deadlinePassed = isDeadlinePassed(tourney);
+
+        if (actionParam === "register") {
+          if (regSquad) {
+            showToast("👋 Welcome back! You are registered in " + tourney.title + " (Slot #" + regSquad.squad.slot + ")");
+          } else if (deadlinePassed) {
+            showToast("🔒 Registration Closed: The deadline for this tournament has passed.");
+          } else if (tourney.teams.length >= tourney.slots) {
+            showToast("⚠️ Registration Closed: All " + tourney.slots + " squad slots are filled!");
+          } else {
+            openSquadRegistrationModal(tourney.id);
+            showToast("📝 Enter your squad details to register for " + tourney.title);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("URL routing notice:", err);
+  }
+}
+
+// Wire Registration Modals & Share Modal
 (function() {
   const regBtn = document.getElementById("btn-submit-registration");
   if (regBtn) regBtn.addEventListener('click', handleSquadRegistrationSubmit);
@@ -3059,6 +3190,33 @@ window.removeInitialSquadFromDraft = function(idx) {
 
   const wsRegBtn = document.getElementById("ws-btn-register-squad");
   if (wsRegBtn) wsRegBtn.addEventListener('click', () => openSquadRegistrationModal(activeTourneyId));
+
+  // Wire Share Modals
+  const wsShareBtn = document.getElementById("ws-btn-share-tourney");
+  if (wsShareBtn) wsShareBtn.addEventListener('click', () => openShareTourneyModal(activeTourneyId));
+
+  const copyShareBtn = document.getElementById("btn-copy-share-link");
+  if (copyShareBtn) {
+    copyShareBtn.addEventListener('click', function() {
+      const inputEl = document.getElementById("share-link-input");
+      if (inputEl) {
+        inputEl.select();
+        inputEl.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(inputEl.value).then(() => {
+          showToast("📋 Tournament registration link copied to clipboard!");
+        }).catch(() => {
+          document.execCommand('copy');
+          showToast("📋 Tournament link copied!");
+        });
+      }
+    });
+  }
+
+  const closeShareBtn = document.getElementById("btn-close-share-modal");
+  if (closeShareBtn) closeShareBtn.addEventListener('click', () => document.getElementById("modal-share-tourney").classList.remove('show'));
+
+  const doneShareBtn = document.getElementById("btn-done-share");
+  if (doneShareBtn) doneShareBtn.addEventListener('click', () => document.getElementById("modal-share-tourney").classList.remove('show'));
 
   // Wire Delete Modals
   const wsDelBtn = document.getElementById("ws-btn-delete-tourney");
@@ -3110,3 +3268,4 @@ renderLandingFeatured();
 renderManageList();
 openWorkspaceWithId(1);
 switchView("view-landing");
+handleUrlRouting();

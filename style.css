@@ -1524,6 +1524,34 @@ body {
   color: #ffffff;
 }
 
+.btn-card-share {
+  background: #181826;
+  color: #ffffff;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-card-share:hover {
+  background: #00f0ff;
+  color: #000000;
+  transform: translate(-1px, -1px);
+}
+
+.ws-registered-banner {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0px rgba(52, 211, 153, 0); }
+  50% { box-shadow: 0 0 14px rgba(52, 211, 153, 0.35); }
+}
+
 /* ==========================================================================
    THEME TOGGLE BUTTON
    ========================================================================== */

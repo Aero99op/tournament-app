@@ -127,6 +127,11 @@
                   <input type="url" class="form-input" id="new-tourney-discord" placeholder="e.g. https://discord.gg/...">
                 </div>
               </div>
+              <div class="form-group">
+                <label class="form-label">⏳ Registration & Roster Edit Deadline (Optional)</label>
+                <input type="datetime-local" class="form-input" id="new-tourney-deadline">
+                <span style="font-size:11px; color:#94a3b8; display:block; margin-top:4px;">Rosters and squad details can be registered/edited by leaders until this time limit.</span>
+              </div>
             </div>
             <div class="form-card">
               <h3 class="card-form-title">2. CUSTOM POINT SYSTEM RULES</h3>
@@ -241,11 +246,19 @@
             <button class="btn-back-link" id="btn-ws-back-to-manage">← BACK TO ALL TOURNAMENTS</button>
             <div class="ws-status-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
               <span class="ws-badge-status" id="ws-status-badge">LIVE TOURNAMENT</span>
+              <span class="ws-badge-status" id="ws-deadline-badge" style="display:none; background:#241428; color:#ffde59; border-color:#ffd700;">⏳ Deadline: N/A</span>
+              <button class="btn-secondary-sm" id="ws-btn-share-tourney" style="background:#181828; color:#fff;" title="Share Tournament Link">🔗 SHARE</button>
               <a href="#" target="_blank" class="ws-social-link-btn" id="ws-btn-whatsapp" style="display:none;" title="Join Official WhatsApp Group">💬 WhatsApp Group</a>
               <a href="#" target="_blank" class="ws-social-link-btn discord" id="ws-btn-discord" style="display:none;" title="Join Official Discord Server">🎮 Discord Server</a>
               <button class="btn-action-primary-sm" id="ws-btn-register-squad" style="background:#00f0ff; color:#000; border-color:#000;">📝 REGISTER SQUAD</button>
               <button class="btn-row-del" id="ws-btn-delete-tourney" style="display:none;" title="Delete this tournament (Owner Only)">🗑️ DELETE</button>
             </div>
+          </div>
+          <div class="ws-registered-banner" id="ws-user-registered-banner" style="display:none; margin-bottom:14px; padding:10px 14px; border-radius:6px; background:#12241e; border:1.5px solid #34d399; font-size:12px; font-weight:800; color:#34d399; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              ✅ YOU ARE REGISTERED: <span id="ws-reg-squad-name" style="color:#ffffff;">Squad Name</span> (<span id="ws-reg-slot-num" style="color:#ffd700;">Slot #1</span>) • Leader: <span id="ws-reg-captain-name">Captain</span>
+            </div>
+            <button class="btn-action-primary-sm" id="ws-btn-edit-registered-squad" style="padding:4px 10px; font-size:11px; background:#34d399; color:#000;">✏️ EDIT MY SQUAD ROSTER</button>
           </div>
           <div class="ws-permission-banner" id="ws-permission-banner" style="display:none; margin-bottom:14px; padding:8px 14px; border-radius:6px; background:#181824; border:1.5px solid #28283c; font-size:12px; font-weight:800; color:#fbbf24;">
             🔒 SPECTATOR MODE: You are viewing an official tournament organized by <span id="ws-owner-name">Organizer</span>. Modification tools are reserved for the tournament owner.
@@ -409,6 +422,10 @@
               <div class="form-group">
                 <label class="form-label">Kill Point Multiplier</label>
                 <input type="number" class="form-input" id="ws-rules-kill-pts" value="1" min="0" max="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">⏳ Registration & Roster Edit Deadline</label>
+                <input type="datetime-local" class="form-input" id="ws-rules-deadline">
               </div>
             </div>
             <div class="placement-points-grid" id="ws-rules-pts-grid">
@@ -707,6 +724,8 @@
         </div>
         <div class="modal-body" style="max-height:75vh; overflow-y:auto;">
           <input type="hidden" id="reg-target-tourney-id" value="1">
+          <input type="hidden" id="reg-is-edit-mode" value="0">
+          <input type="hidden" id="reg-edit-team-idx" value="-1">
           
           <h4 style="font-size:13px; font-weight:900; color:#ff2d55; margin-bottom:10px; border-bottom:1px solid #28283c; padding-bottom:4px;">1. SQUAD DETAILS</h4>
           <div class="form-row-2">
@@ -805,6 +824,27 @@
             <a href="#" target="_blank" class="btn-action-primary" id="succ-btn-discord" style="background:#5865F2; color:#fff; font-weight:900; text-decoration:none; display:none;">🎮 JOIN OFFICIAL DISCORD SERVER</a>
           </div>
           <button class="btn-secondary-sm" id="btn-close-succ-modal" style="width:100%;">VIEW TOURNAMENT STANDINGS & ROSTER ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT SHARE MODAL -->
+    <div class="modal-overlay" id="modal-share-tourney">
+      <div class="modal-content" style="max-width:500px;">
+        <div class="modal-header">
+          <h3 class="modal-title">🔗 SHARE TOURNAMENT REGISTRATION LINK</h3>
+          <button class="btn-close-modal" id="btn-close-share-modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px; color:#94a3b8; margin-bottom:12px;">Share this direct link with squad leaders & players. Anyone clicking this link will open this tournament's registration page directly:</p>
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <input type="text" class="form-input" id="share-link-input" readonly style="font-family:monospace; font-size:12px; color:#00f0ff;">
+            <button class="btn-action-primary-sm" id="btn-copy-share-link" style="white-space:nowrap;">📋 COPY</button>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <a href="#" target="_blank" class="btn-action-primary" id="share-btn-wa" style="background:#25D366; color:#000; text-decoration:none; text-align:center; font-weight:900;">💬 SHARE DIRECTLY ON WHATSAPP</a>
+            <button class="btn-secondary-sm" id="btn-native-share" style="display:none; width:100%; font-weight:900;">📱 NATIVE DEVICE SHARE SHEET</button>
+          </div>
         </div>
       </div>
     </div>
