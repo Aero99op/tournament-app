@@ -1215,6 +1215,66 @@
     </div>
   </div>
 
+  <!-- USER AUTHENTICATION MODAL (LOGIN / SIGNUP) -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal-content" style="max-width:440px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">🔐 VORTEX ESPORTS ACCOUNT</h3>
+          <p class="modal-sub-desc" style="margin-bottom:0;">Sign in to create & host official tournaments</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-auth-modal">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px 20px;">
+        <div style="display:flex; border-bottom:1.5px solid #28283c; margin-bottom:16px; gap:8px;">
+          <button type="button" class="btn-secondary-sm active" id="auth-tab-btn-login" style="flex:1; padding:8px; border-radius:6px 6px 0 0; font-weight:900;">LOGIN</button>
+          <button type="button" class="btn-secondary-sm" id="auth-tab-btn-signup" style="flex:1; padding:8px; border-radius:6px 6px 0 0; font-weight:900;">CREATE ACCOUNT</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="auth-panel-login">
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Email Address *</label>
+            <input type="email" class="form-input" id="auth-login-email" placeholder="e.g. organizer@vortex.gg">
+          </div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Password *</label>
+            <input type="password" class="form-input" id="auth-login-pass" placeholder="••••••••">
+          </div>
+          <button class="btn-action-primary" id="btn-submit-auth-login" style="width:100%; padding:10px; font-weight:900; background:#00f0ff; color:#000;">
+            🚀 SIGN IN TO CLOUD
+          </button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="auth-panel-signup" style="display:none;">
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Organizer Display Name *</label>
+            <input type="text" class="form-input" id="auth-signup-name" placeholder="e.g. Aero_Boss / Spandan">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Email Address *</label>
+            <input type="email" class="form-input" id="auth-signup-email" placeholder="e.g. gamer@gmail.com">
+          </div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Create Password *</label>
+            <input type="password" class="form-input" id="auth-signup-pass" placeholder="Min 6 characters">
+          </div>
+          <button class="btn-action-primary" id="btn-submit-auth-signup" style="width:100%; padding:10px; font-weight:900; background:#34d399; color:#000;">
+            ✨ CREATE FREE ACCOUNT
+          </button>
+        </div>
+
+        <!-- Quick 1-Click Access Option -->
+        <div style="margin-top:16px; border-top:1px solid #28283c; padding-top:12px; text-align:center;">
+          <button type="button" class="btn-secondary-sm" id="btn-quick-guest-login" style="width:100%; padding:8px; font-size:12px; color:#cbd5e1;">
+            ⚡ 1-CLICK INSTANT ORGANIZER LOGIN
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toast-container">
   </div>
   <script src="app.js"></script>

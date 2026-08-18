@@ -195,7 +195,7 @@ function setupRealtimeSubscription() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, payload => {
         if (payload.eventType === 'INSERT') {
           const row = payload.new;
-          if (!tournamentsDb.some(t => t.id === row.id)) {
+          if (!tournamentsDb.some(t => String(t.id) === String(row.id))) {
             tournamentsDb.unshift({
               id: row.id,
               title: row.title,
@@ -205,12 +205,22 @@ function setupRealtimeSubscription() {
               slots: row.slots,
               prize: row.prize,
               status: row.status,
-              statusClass: row.status_class || "live",
-              killMultiplier: row.kill_multiplier,
-              placementPoints: row.placement_points,
-              teams: row.teams || [],
-              matches: row.matches || [],
-              checkpoints: row.checkpoints || []
+              statusClass: row.status_class || row.statusClass || "live",
+              killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
+              placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
+              whatsappLink: row.whatsapp_link || row.whatsappLink || "",
+              discordLink: row.discord_link || row.discordLink || "",
+              registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
+              entryType: row.entry_type || row.entryType || "FREE",
+              entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
+              upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
+              upiName: row.upi_name || row.upiName || "Spandan Prayas",
+              pools: Array.isArray(row.pools) ? row.pools : [],
+              user_id: row.user_id || null,
+              creatorName: row.creator_name || row.creatorName || "Organizer",
+              teams: Array.isArray(row.teams) ? row.teams : [],
+              matches: Array.isArray(row.matches) ? row.matches : [],
+              checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
             });
             saveStateToStorage(false);
             renderLandingFeatured();
@@ -219,7 +229,7 @@ function setupRealtimeSubscription() {
           }
         } else if (payload.eventType === 'UPDATE') {
           const row = payload.new;
-          const idx = tournamentsDb.findIndex(t => t.id === row.id);
+          const idx = tournamentsDb.findIndex(t => String(t.id) === String(row.id));
           if (idx !== -1) {
             tournamentsDb[idx] = {
               id: row.id,
@@ -230,22 +240,34 @@ function setupRealtimeSubscription() {
               slots: row.slots,
               prize: row.prize,
               status: row.status,
-              statusClass: row.status_class || "live",
-              killMultiplier: row.kill_multiplier,
-              placementPoints: row.placement_points,
-              teams: row.teams || [],
-              matches: row.matches || [],
-              checkpoints: row.checkpoints || []
+              statusClass: row.status_class || row.statusClass || "live",
+              killMultiplier: row.kill_multiplier !== undefined ? row.kill_multiplier : (row.killMultiplier || 1),
+              placementPoints: row.placement_points || row.placementPoints || { "1":12,"2":9,"3":8,"4":7,"5":6,"6":5,"7":4,"8":3,"9":2,"10":1,"11":0,"12":0 },
+              whatsappLink: row.whatsapp_link || row.whatsappLink || "",
+              discordLink: row.discord_link || row.discordLink || "",
+              registrationDeadline: row.registration_deadline || row.registrationDeadline || "",
+              entryType: row.entry_type || row.entryType || "FREE",
+              entryFee: row.entry_fee !== undefined ? row.entry_fee : (row.entryFee || 0),
+              upiId: row.upi_id || row.upiId || "spandanprayas2079@ybl",
+              upiName: row.upi_name || row.upiName || "Spandan Prayas",
+              pools: Array.isArray(row.pools) ? row.pools : [],
+              user_id: row.user_id || null,
+              creatorName: row.creator_name || row.creatorName || "Organizer",
+              teams: Array.isArray(row.teams) ? row.teams : [],
+              matches: Array.isArray(row.matches) ? row.matches : [],
+              checkpoints: Array.isArray(row.checkpoints) ? row.checkpoints : []
             };
             saveStateToStorage(false);
             renderLandingFeatured();
             renderManageList();
-            if (activeTourneyId === row.id && currentView === "view-workspace") {
+            if (String(activeTourneyId) === String(row.id) && currentView === "view-workspace") {
               renderWorkspaceOverview();
               renderWorkspaceTeams();
               renderWorkspaceMatches();
               renderWorkspaceMatchStandings();
               renderWorkspaceOverallStandings();
+              renderWorkspacePayments();
+              renderWorkspacePools();
             }
           }
         } else if (payload.eventType === 'DELETE') {
@@ -265,14 +287,13 @@ function setupRealtimeSubscription() {
         }
       })
       .subscribe();
-  } catch (err) {
-    console.warn("Realtime sub error:", err);
+  } catch (e) {
+    console.warn("Realtime subscription setup notice:", e);
   }
 }
 
 async function syncTourneyToSupabase(tourney) {
   if (!supabaseClient || !tourney) return;
-  // Security guard: If tournament has an owner and current user is NOT that owner, block syncing full tournament updates
   if (tourney.user_id && !isTourneyOwner(tourney)) {
     return;
   }
@@ -285,23 +306,32 @@ async function syncTourneyToSupabase(tourney) {
       slots: tourney.slots,
       prize: tourney.prize,
       status: tourney.status,
-      status_class: tourney.statusClass,
+      status_class: tourney.statusClass || "live",
       kill_multiplier: tourney.killMultiplier,
       placement_points: tourney.placementPoints,
       whatsapp_link: tourney.whatsappLink || null,
       discord_link: tourney.discordLink || null,
       registration_deadline: tourney.registrationDeadline || null,
-      teams: tourney.teams,
-      matches: tourney.matches,
-      checkpoints: tourney.checkpoints,
-      user_id: tourney.user_id || currentUser?.id || null
+      entry_type: tourney.entryType || "FREE",
+      entry_fee: tourney.entryFee || 0,
+      upi_id: tourney.upiId || "spandanprayas2079@ybl",
+      upi_name: tourney.upiName || "Spandan Prayas",
+      pools: tourney.pools || [],
+      teams: tourney.teams || [],
+      matches: tourney.matches || [],
+      checkpoints: tourney.checkpoints || [],
+      creator_name: tourney.creatorName || currentUser?.name || "Organizer"
     };
 
-    if (tourney.id && typeof tourney.id === 'number' && tourney.id > 0) {
-      await supabaseClient
+    if (tourney.id && (typeof tourney.id === 'number' || typeof tourney.id === 'string')) {
+      const { error } = await supabaseClient
         .from('tournaments')
         .update(payload)
         .eq('id', tourney.id);
+
+      if (error) {
+        console.warn("Supabase update notice:", error.message);
+      }
     }
   } catch (e) {
     console.warn("Cloud background sync notice:", e);
@@ -311,7 +341,7 @@ async function syncTourneyToSupabase(tourney) {
 async function insertNewTourneyToSupabase(newTourney) {
   if (!supabaseClient) return null;
   try {
-    const { data, error } = await supabaseClient.from('tournaments').insert([{
+    const payload = {
       title: newTourney.title,
       game: newTourney.game,
       format: newTourney.format,
@@ -319,25 +349,45 @@ async function insertNewTourneyToSupabase(newTourney) {
       slots: newTourney.slots,
       prize: newTourney.prize,
       status: newTourney.status,
-      status_class: newTourney.statusClass,
+      status_class: newTourney.statusClass || "live",
       kill_multiplier: newTourney.killMultiplier,
       placement_points: newTourney.placementPoints,
       whatsapp_link: newTourney.whatsappLink || null,
       discord_link: newTourney.discordLink || null,
       registration_deadline: newTourney.registrationDeadline || null,
-      teams: newTourney.teams,
-      matches: newTourney.matches,
-      checkpoints: newTourney.checkpoints,
-      user_id: newTourney.user_id || currentUser?.id || null
-    }]).select();
+      entry_type: newTourney.entryType || "FREE",
+      entry_fee: newTourney.entryFee || 0,
+      upi_id: newTourney.upiId || "spandanprayas2079@ybl",
+      upi_name: newTourney.upiName || "Spandan Prayas",
+      pools: newTourney.pools || [],
+      teams: newTourney.teams || [],
+      matches: newTourney.matches || [],
+      checkpoints: newTourney.checkpoints || [],
+      creator_name: newTourney.creatorName || currentUser?.name || "Organizer"
+    };
+
+    // Include user_id only if valid uuid or session user
+    if (currentUser && currentUser.id && currentUser.id.length > 20) {
+      payload.user_id = currentUser.id;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('tournaments')
+      .insert([payload])
+      .select();
 
     if (!error && data && data.length > 0) {
-      newTourney.id = data[0].id;
+      const insertedId = data[0].id;
+      newTourney.id = insertedId;
       saveStateToStorage(false);
-      return data[0].id;
+      renderLandingFeatured();
+      renderManageList();
+      return insertedId;
+    } else if (error) {
+      console.warn("Supabase insert error:", error.message);
     }
   } catch (e) {
-    console.warn("Supabase insert notice:", e);
+    console.warn("Supabase insert exception:", e);
   }
   return null;
 }
@@ -4485,6 +4535,158 @@ function handleUrlRouting() {
         return;
       }
       processIncomingBankSms(text, "Simulated_SMS_Bot");
+    });
+  }
+
+  // Wire Auth Modals and Actions
+  const openAuthBtn = document.getElementById("btn-open-auth");
+  if (openAuthBtn) openAuthBtn.addEventListener('click', openAuthModal);
+
+  const cardAuthBtn = document.getElementById("card-act-auth");
+  if (cardAuthBtn) cardAuthBtn.addEventListener('click', openAuthModal);
+
+  const closeAuthBtn = document.getElementById("btn-close-auth-modal");
+  if (closeAuthBtn) closeAuthBtn.addEventListener('click', () => {
+    document.getElementById("modal-auth")?.classList.remove('show');
+  });
+
+  const tabLoginBtn = document.getElementById("auth-tab-btn-login");
+  const tabSignupBtn = document.getElementById("auth-tab-btn-signup");
+  const panelLogin = document.getElementById("auth-panel-login");
+  const panelSignup = document.getElementById("auth-panel-signup");
+
+  if (tabLoginBtn && tabSignupBtn) {
+    tabLoginBtn.addEventListener('click', () => {
+      tabLoginBtn.classList.add('active');
+      tabSignupBtn.classList.remove('active');
+      if (panelLogin) panelLogin.style.display = "block";
+      if (panelSignup) panelSignup.style.display = "none";
+    });
+
+    tabSignupBtn.addEventListener('click', () => {
+      tabSignupBtn.classList.add('active');
+      tabLoginBtn.classList.remove('active');
+      if (panelLogin) panelLogin.style.display = "none";
+      if (panelSignup) panelSignup.style.display = "block";
+    });
+  }
+
+  // Quick 1-Click Instant Organizer Login
+  const quickLoginBtn = document.getElementById("btn-quick-guest-login");
+  if (quickLoginBtn) {
+    quickLoginBtn.addEventListener('click', () => {
+      currentUser = {
+        id: "vortex_org_" + Math.floor(1000 + Math.random() * 9000),
+        email: "organizer@vortex.gg",
+        name: "Vortex Organizer",
+        uid: "ORG_" + Math.floor(10000 + Math.random() * 90000),
+        role: "Organizer",
+        loggedIn: true
+      };
+      saveStateToStorage(false);
+      updateHeaderAuthUI();
+      document.getElementById("modal-auth")?.classList.remove('show');
+      showToast("⚡ Logged in as Organizer! You can now create & manage tournaments.");
+    });
+  }
+
+  // Supabase Login
+  const submitLoginBtn = document.getElementById("btn-submit-auth-login");
+  if (submitLoginBtn) {
+    submitLoginBtn.addEventListener('click', async () => {
+      const email = document.getElementById("auth-login-email")?.value?.trim();
+      const password = document.getElementById("auth-login-pass")?.value;
+
+      if (!email || !password) {
+        showToast("⚠️ Please enter both email and password.");
+        return;
+      }
+
+      if (supabaseClient) {
+        showToast("⏳ Signing in to cloud...");
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          showToast("❌ " + error.message);
+        } else if (data && data.user) {
+          setUserFromSession(data.user);
+          await fetchTournamentsFromSupabase();
+          document.getElementById("modal-auth")?.classList.remove('show');
+          showToast("👋 Welcome back, " + currentUser.name + "!");
+        }
+      } else {
+        currentUser = {
+          id: "usr_" + Math.floor(1000 + Math.random() * 9000),
+          email: email,
+          name: email.split('@')[0],
+          uid: String(Math.floor(10000000 + Math.random() * 90000000)),
+          role: "Organizer",
+          loggedIn: true
+        };
+        saveStateToStorage(false);
+        updateHeaderAuthUI();
+        document.getElementById("modal-auth")?.classList.remove('show');
+        showToast("👋 Welcome back, " + currentUser.name + "!");
+      }
+    });
+  }
+
+  // Supabase Signup
+  const submitSignupBtn = document.getElementById("btn-submit-auth-signup");
+  if (submitSignupBtn) {
+    submitSignupBtn.addEventListener('click', async () => {
+      const name = document.getElementById("auth-signup-name")?.value?.trim();
+      const email = document.getElementById("auth-signup-email")?.value?.trim();
+      const password = document.getElementById("auth-signup-pass")?.value;
+
+      if (!name || !email || !password) {
+        showToast("⚠️ Please fill in name, email and password.");
+        return;
+      }
+
+      if (supabaseClient) {
+        showToast("⏳ Creating your cloud account...");
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: { data: { name, role: "Organizer" } }
+        });
+        if (error) {
+          showToast("❌ " + error.message);
+        } else if (data && data.user) {
+          setUserFromSession(data.user);
+          document.getElementById("modal-auth")?.classList.remove('show');
+          showToast("🎉 Account created successfully! Welcome " + name + "!");
+        }
+      } else {
+        currentUser = {
+          id: "usr_" + Math.floor(1000 + Math.random() * 9000),
+          email: email,
+          name: name,
+          uid: String(Math.floor(10000000 + Math.random() * 90000000)),
+          role: "Organizer",
+          loggedIn: true
+        };
+        saveStateToStorage(false);
+        updateHeaderAuthUI();
+        document.getElementById("modal-auth")?.classList.remove('show');
+        showToast("🎉 Account created! Welcome " + name + "!");
+      }
+    });
+  }
+
+  // Logout
+  const logoutBtn = document.getElementById("btn-logout-act");
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      if (supabaseClient) {
+        try { await supabaseClient.auth.signOut(); } catch (e) {}
+      }
+      currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organizer", loggedIn: false };
+      saveStateToStorage(false);
+      updateHeaderAuthUI();
+      renderLandingFeatured();
+      renderManageList();
+      showToast("🔒 Logged out successfully.");
     });
   }
 })();
