@@ -1360,10 +1360,10 @@ function renderEsportsStandingsCanvas() {
         return {
           team: s.team,
           place: Number(s.place),
-          kills: Number(s.kills || 0),
-          placePts: pPts,
-          totalPts: tot,
-          subLabel: "Rank " + s.place
+          wins: Number(s.place) === 1 ? 1 : 0,
+          elims: Number(s.kills || 0),
+          positionPts: pPts,
+          totalPts: tot
         };
       });
       rawStandings.sort((a, b) => b.totalPts - a.totalPts || a.place - b.place);
@@ -1371,11 +1371,10 @@ function renderEsportsStandingsCanvas() {
   } else {
     rawStandings = computeOverallStandings(activeT).map(s => ({
       team: s.team,
-      kills: s.kills,
-      placePts: s.placePts,
-      wwcd: s.wwcd,
-      totalPts: s.totalPts,
-      subLabel: "WWCD: " + s.wwcd + " | PL: " + s.played
+      wins: s.wwcd,
+      elims: s.kills,
+      positionPts: s.placePts,
+      totalPts: s.totalPts
     }));
   }
 
@@ -1388,10 +1387,10 @@ function renderEsportsStandingsCanvas() {
       full16.push({
         rank: i + 1,
         team: "Slot #" + (i + 1),
-        kills: 0,
-        placePts: 0,
-        totalPts: 0,
-        subLabel: "Standby Squad"
+        wins: 0,
+        elims: 0,
+        positionPts: 0,
+        totalPts: 0
       });
     }
   }
@@ -1414,11 +1413,12 @@ function renderEsportsStandingsCanvas() {
     ctx.fillStyle = "#94a3b8";
     ctx.font = "800 11px 'Space Grotesk', sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("RANK", startX + 16, startY + 20);
-    ctx.fillText("SQUAD NAME", startX + 75, startY + 20);
+    ctx.fillText("RANK", startX + 14, startY + 20);
+    ctx.fillText("TEAM NAME", startX + 75, startY + 20);
     ctx.textAlign = "center";
-    ctx.fillText("STATS / WWCD", startX + 460, startY + 20);
-    ctx.fillText("KILLS", startX + 640, startY + 20);
+    ctx.fillText("WINS", startX + 410, startY + 20);
+    ctx.fillText("ELIMS", startX + 510, startY + 20);
+    ctx.fillText("POSITION PTS", startX + 630, startY + 20);
     ctx.textAlign = "right";
     ctx.fillText("TOTAL PTS", startX + colWidth - 20, startY + 20);
 
@@ -1453,32 +1453,37 @@ function renderEsportsStandingsCanvas() {
       ctx.textAlign = "center";
       ctx.fillText((isTop1 ? "👑" : "") + item.rank, badgeX + badgeW / 2, badgeY + 29);
 
-      // Squad Name
+      // Team Name
       ctx.textAlign = "left";
       ctx.fillStyle = "#ffffff";
-      ctx.font = "900 22px 'Space Grotesk', sans-serif";
+      ctx.font = "900 21px 'Space Grotesk', sans-serif";
       let displayTeam = item.team;
-      if (displayTeam.length > 20) displayTeam = displayTeam.slice(0, 19) + "…";
+      if (displayTeam.length > 18) displayTeam = displayTeam.slice(0, 17) + "…";
       ctx.fillText(displayTeam, startX + 75, currentY + 36);
 
       // Sub-label
       ctx.fillStyle = "#94a3b8";
       ctx.font = "700 12px 'Space Grotesk', sans-serif";
-      ctx.fillText(item.subLabel || "Official Squad", startX + 75, currentY + 60);
+      ctx.fillText("Slot #" + item.rank + " Squad", startX + 75, currentY + 60);
 
-      // WWCD / Stats (Center)
+      // Wins (Center)
       ctx.textAlign = "center";
       ctx.fillStyle = isTop1 ? "#ffd700" : theme.accent;
-      ctx.font = "800 16px 'Space Grotesk', sans-serif";
-      ctx.fillText(item.wwcd !== undefined ? "🏆 " + item.wwcd + " WWCD" : "Place #" + (item.place || item.rank), startX + 460, currentY + 48);
+      ctx.font = "900 20px 'Space Grotesk', sans-serif";
+      ctx.fillText(String(item.wins || 0), startX + 410, currentY + 48);
 
-      // Kills
+      // Elims (Center)
       ctx.fillStyle = "#ffffff";
       ctx.font = "900 20px 'Space Grotesk', sans-serif";
-      ctx.fillText(item.kills + " 🎯", startX + 640, currentY + 48);
+      ctx.fillText(String(item.elims || 0), startX + 510, currentY + 48);
+
+      // Position Pts (Center)
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "900 20px 'Space Grotesk', sans-serif";
+      ctx.fillText(String(item.positionPts || 0), startX + 630, currentY + 48);
 
       // Total PTS Pill (Right)
-      const pillW = 120;
+      const pillW = 108;
       const pillH = 46;
       const pillX = startX + colWidth - pillW - 14;
       const pillY = currentY + (rowHeight - pillH) / 2;
@@ -1568,7 +1573,7 @@ function downloadTournamentCSV(targetType = 'overall') {
       fileName = activeT.title.replaceAll(" ", "_") + "_Match_" + (activeMatchIdx + 1) + "_Scores.csv";
       csvContent += "Match_Title,Map,Status,Room_ID,Room_Password\n";
       csvContent += '"' + activeMatch.title + '","' + activeMatch.map + '","' + activeMatch.status + '","' + activeMatch.roomId + '","' + activeMatch.roomPass + '"\n\n';
-      csvContent += "Rank,Squad,Placement,Kills,Kill_Points,Placement_Points,Bonus_Points,Penalty_Points,Total_Points\n";
+      csvContent += "Rank,Team_Name,Wins,Elims,Position_Points,Bonus_Points,Penalty_Points,Total_Points\n";
 
       let rank = 1;
       for (const s of (activeMatch.scores || [])) {
@@ -1576,7 +1581,8 @@ function downloadTournamentCSV(targetType = 'overall') {
         const pPts = activeT.placementPoints[pKey] || 0;
         const kPts = Number(s.kills || 0) * Number(activeT.killMultiplier || 1);
         const tot = pPts + kPts + Number(s.bonus || 0) - Number(s.penalty || 0);
-        csvContent += rank + ',"' + s.team.replaceAll('"', '""') + '",' + s.place + ',' + s.kills + ',' + kPts + ',' + pPts + ',' + (s.bonus || 0) + ',' + (s.penalty || 0) + ',' + tot + "\n";
+        const wins = Number(s.place) === 1 ? 1 : 0;
+        csvContent += rank + ',"' + s.team.replaceAll('"', '""') + '",' + wins + ',' + (s.kills || 0) + ',' + pPts + ',' + (s.bonus || 0) + ',' + (s.penalty || 0) + ',' + tot + "\n";
         rank++;
       }
     } else {
@@ -1584,12 +1590,12 @@ function downloadTournamentCSV(targetType = 'overall') {
       fileName = activeT.title.replaceAll(" ", "_") + "_Overall_16Teams_Standings.csv";
       csvContent += "Tournament_Title,Game,Format,Prize_Pool,Total_Matches\n";
       csvContent += '"' + activeT.title + '","' + activeT.game + '","' + activeT.format + '","' + (activeT.prize || "") + '",' + activeT.matches.length + "\n\n";
-      csvContent += "Overall_Rank,Squad,Matches_Played,Booyah_WWCD,Total_Kills,Kill_Points,Placement_Points,Total_Points\n";
+      csvContent += "Rank,Team_Name,Wins,Elims,Position_Points,Total_Points\n";
 
       let overallList = computeOverallStandings(activeT);
       let rank = 1;
       for (const row of overallList) {
-        csvContent += rank + ',"' + row.team.replaceAll('"', '""') + '",' + row.played + ',' + row.wwcd + ',' + row.kills + ',' + row.killPts + ',' + row.placePts + ',' + row.totalPts + "\n";
+        csvContent += rank + ',"' + row.team.replaceAll('"', '""') + '",' + row.wwcd + ',' + row.kills + ',' + row.placePts + ',' + row.totalPts + "\n";
         rank++;
       }
     }
@@ -1612,13 +1618,15 @@ function copyTextLeaderboardReport() {
     let overallList = computeOverallStandings(activeT);
     let report = "🏆 " + activeT.title + " 🏆\n";
     report += "🎮 " + activeT.game + " • Format: " + activeT.format + " • Prize: " + activeT.prize + "\n";
-    report += "═══════════════════════════════════════\n\n";
+    report += "═══════════════════════════════════════════════════\n";
+    report += "RANK | TEAM NAME | WINS | ELIMS | POSITION PTS | TOTAL\n";
+    report += "═══════════════════════════════════════════════════\n";
     let rank = 1;
     for (const row of overallList) {
-      report += "#" + rank + " " + row.team + " | WWCD: " + row.wwcd + " | Kills: " + row.kills + " | Total: " + row.totalPts + " PTS\n";
+      report += "#" + rank + " " + row.team + " | Wins: " + row.wwcd + " | Elims: " + row.kills + " | Pos Pts: " + row.placePts + " | Total: " + row.totalPts + " PTS\n";
       rank++;
     }
-    report += "\n═══════════════════════════════════════\nGenerated via Vortex Esports OS";
+    report += "═══════════════════════════════════════════════════\nGenerated via Vortex Esports OS";
     navigator.clipboard.writeText(report);
     showToast("📋 Formatted Text Report copied to clipboard!");
   }
