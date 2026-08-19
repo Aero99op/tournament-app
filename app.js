@@ -747,17 +747,15 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
 
       const upiId = tourney.upiId || "7848033183@fam";
       const upiName = tourney.upiName || "Spandan Prayas";
-      const upiDisplay = document.getElementById("reg-upi-id-display");
-      if (upiDisplay) upiDisplay.textContent = upiId;
-
-      // Clean Standard UPI Intent URL
-      const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tn=" + encodeURIComponent("Tourney Registration Fee");
+      // Unique NPCI Transaction Reference Code (tr)
+      const uniqueTrCode = "VTX" + Math.floor(100000 + Math.random() * 900000);
+      const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tr=" + encodeURIComponent(uniqueTrCode) + "&tn=" + encodeURIComponent("Vortex " + uniqueTrCode);
       const payLinkBtn = document.getElementById("btn-upi-intent-pay");
       if (payLinkBtn) payLinkBtn.href = upiIntentUrl;
 
-      // Dynamic QR Code image
+      // Dynamic High-Resolution QR Code image
       const qrImg = document.getElementById("reg-upi-qr-img");
-      if (qrImg) qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(upiIntentUrl);
+      if (qrImg) qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + encodeURIComponent(upiIntentUrl);
 
       const utrInput = document.getElementById("reg-payment-utr");
       if (utrInput) utrInput.value = "";

@@ -1087,20 +1087,21 @@
             Scan QR code or click <strong>1-Click Pay</strong> to pay via GPay/PhonePe/Paytm. Payment successful hone ke baad receipt ka <strong>12-digit UPI UTR / Ref Number</strong> niche enter karein.
           </p>
 
-          <!-- Dynamic QR Code & 1-Click Pay Options -->
-          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:16px; background:#0f0f18; padding:12px; border-radius:8px;">
-            <div style="text-align:center; background:#ffffff; padding:6px; border-radius:8px; width:130px; height:130px; display:flex; align-items:center; justify-content:center;">
+          <!-- Dynamic QR Code & 1-Click Pay Options (Pure 1-Click & Scan Only) -->
+          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:16px; background:#0f0f18; padding:12px; border-radius:8px; border:1px solid #28283c;">
+            <div style="text-align:center; background:#ffffff; padding:6px; border-radius:8px; width:130px; height:130px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(0,240,255,0.15);">
               <img id="reg-upi-qr-img" src="" alt="UPI QR Code" style="width:118px; height:118px; display:block; border-radius:4px;">
             </div>
             <div style="flex:1; min-width:180px;">
-              <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">ORGANIZER UPI ID:</div>
-              <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
-                <span id="reg-upi-id-display" style="font-family:monospace; font-weight:900; color:#ffd700; font-size:13px; word-break:break-all;">7848033183@fam</span>
-                <button type="button" class="btn-secondary-sm" id="btn-copy-upi-id" style="padding:2px 6px; font-size:10px;" title="Copy UPI ID">📋</button>
-              </div>
-              <a id="btn-upi-intent-pay" href="#" class="btn-action-primary" style="display:block; text-align:center; text-decoration:none; padding:8px 12px; font-size:12px; background:linear-gradient(135deg, #00f0ff, #ffd700); color:#000000; font-weight:900; border-radius:6px; box-shadow:2px 2px 0px #000;">
-                ⚡ 1-CLICK PAY VIA GPAY / PHONEPE
+              <div style="font-size:11px; color:#38bdf8; font-weight:800; margin-bottom:4px;">🔒 INSTANT 1-CLICK PAYMENT:</div>
+              <p style="font-size:11px; color:#94a3b8; margin-bottom:8px; line-height:1.4;">
+                Amount, Organizer, and Unique Reference are pre-locked. No manual typing needed!
+              </p>
+              <a id="btn-upi-intent-pay" href="#" class="btn-action-primary" style="display:block; text-align:center; text-decoration:none; padding:10px 14px; font-size:12px; background:linear-gradient(135deg, #00f0ff, #ffd700); color:#000000; font-weight:900; border-radius:6px; box-shadow:0 4px 15px rgba(0,240,255,0.3);">
+                ⚡ 1-CLICK PAY VIA GPAY / PHONEPE / PAYTM
               </a>
+              <!-- Hidden fallback span for internal ref if needed by scripts -->
+              <span id="reg-upi-id-display" style="display:none;">7848033183@fam</span>
             </div>
           </div>
 
