@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VORTEX ESPORTS | Tournament Operating Platform</title>
+  <title>Vortex Esports - Tournament Management & Automated Payment Verification Platform</title>
+  <meta name="description" content="Vortex Esports is a competitive tournament management platform providing custom room scheduling, live point tables, player roster auditing, and automated UPI payment verification.">
+  <meta name="application-name" content="Vortex Esports">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -14,8 +16,8 @@
     <div class="nav-container">
       <div class="brand-logo" id="btn-nav-brand">
         <span class="logo-slash">//</span>
-        <span class="logo-text">VORTEX</span>
-        <span class="logo-badge">ESPORTS OS</span>
+        <span class="logo-text">VORTEX ESPORTS</span>
+        <span class="logo-badge">OFFICIAL OS</span>
       </div>
       <nav class="main-nav">
         <button class="nav-link active" id="nav-landing">HOME</button>
@@ -39,10 +41,9 @@
   <main class="app-viewport">
     <section class="view-section active" id="view-landing">
       <div class="hero-banner">
-        <div class="hero-tag">NEXT-GEN FREE FIRE ESPORTS OPERATING SYSTEM</div>
-        <h1 class="hero-headline">COMPETE. OPERATE. DOMINATE.</h1>
-        <p class="hero-tagline">The ultimate minimalist tournament management platform. Create custom brackets, manage
-          squad rosters, operate live points tables with auto-calc, and export official standings.</p>
+        <div class="hero-tag">VORTEX ESPORTS • OFFICIAL TOURNAMENT OPERATING SYSTEM</div>
+        <h1 class="hero-headline">VORTEX ESPORTS — COMPETE. OPERATE. DOMINATE.</h1>
+        <p class="hero-tagline"><strong>Vortex Esports</strong> is a complete tournament management and competitive gaming platform. Organizers can create custom brackets, schedule matches, auto-calculate placement and kill points, verify player rosters, and automate entry fee payment confirmations.</p>
         <div class="hero-action-cards">
           <div class="hero-action-card" id="card-act-create">
             <div class="card-icon">➕</div>
@@ -62,6 +63,25 @@
             <h3 class="card-heading">ORGANIZER ACCESS</h3>
             <p class="card-desc">Log in to authenticate your guild, verify player UIDs, and resolve dispute tickets.</p>
             <button class="btn-card-launch">SIGN IN / REGISTER ➔</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABOUT VORTEX ESPORTS & PLATFORM PURPOSE (REQUIRED FOR GOOGLE VERIFICATION) -->
+      <div class="section-block" style="background:#10101c; border:1px solid #28283c; border-radius:12px; padding:24px; margin-bottom:30px;">
+        <h2 style="font-size:18px; color:#00f0ff; margin-bottom:8px; font-family:'Rajdhani', sans-serif; font-weight:700; letter-spacing:0.5px;">ABOUT VORTEX ESPORTS PLATFORM</h2>
+        <p style="font-size:13px; color:#cbd5e1; line-height:1.6; margin-bottom:14px;">
+          <strong>Vortex Esports</strong> is an all-in-one tournament organization platform designed for Free Fire, BGMI, and competitive esports organizers. Our platform streamlines squad roster registrations, slot allocation, live match point calculations, automated payment confirmation via 12-digit UPI UTR auditing, and high-resolution standings graphic exports.
+        </p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:12px; color:#94a3b8;">
+          <div style="background:#090910; padding:10px 14px; border-radius:6px; border:1px solid #1e1e30;">
+            <strong style="color:#ffd700;">⚡ Automated Verification:</strong> Real-time entry fee auditing & squad lock.
+          </div>
+          <div style="background:#090910; padding:10px 14px; border-radius:6px; border:1px solid #1e1e30;">
+            <strong style="color:#00f0ff;">📊 Live Points Calculator:</strong> Instant kill & placement point recalculation.
+          </div>
+          <div style="background:#090910; padding:10px 14px; border-radius:6px; border:1px solid #1e1e30;">
+            <strong style="color:#34d399;">🛡️ Cloud Data Protection:</strong> Secure PostgreSQL database with encrypted sync.
           </div>
         </div>
       </div>
