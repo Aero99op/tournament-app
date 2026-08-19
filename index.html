@@ -8,6 +8,9 @@
   <meta name="application-name" content="Vortex Esports">
   <meta name="description" content="Vortex Esports is a competitive tournament management platform providing custom room scheduling, live point tables, player roster auditing, and automated UPI payment verification.">
   <meta name="google-site-verification" content="-AaPT_Rpme_oeiIK_Z0NVczTp_uzYjPL7WzuTZZ1sJg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Rajdhani:wght@600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -41,29 +44,104 @@
   </header>
   <main class="app-viewport">
     <section class="view-section active" id="view-landing">
-      <div class="hero-banner">
-        <div class="hero-tag">VORTEX ESPORTS • OFFICIAL TOURNAMENT OPERATING SYSTEM</div>
-        <h1 class="hero-headline">VORTEX ESPORTS — COMPETE. OPERATE. DOMINATE.</h1>
-        <p class="hero-tagline"><strong>Vortex Esports</strong> is a complete tournament management and competitive gaming platform. Organizers can create custom brackets, schedule matches, auto-calculate placement and kill points, verify player rosters, and automate entry fee payment confirmations.</p>
-        <div class="hero-action-cards">
-          <div class="hero-action-card" id="card-act-create">
-            <div class="card-icon">➕</div>
-            <h3 class="card-heading">CREATE TOURNAMENT</h3>
-            <p class="card-desc">Set game, maps, custom point system rules, and register initial squads.</p>
-            <button class="btn-card-launch">START CREATOR ➔</button>
+      <!-- LIVE RUNNING MARQUEE TICKER -->
+      <div class="official-ticker-strip">
+        <div class="ticker-content">
+          <span class="ticker-item"><span class="ticker-dot">●</span> 2026 OFFICIAL TOURNAMENT CIRCUIT</span>
+          <span class="ticker-item">⚡ 0-SECOND NPCI 1-CLICK PAY & AUTO-LOCK</span>
+          <span class="ticker-item">🏆 REALTIME KILL & PLACEMENT POINT RE-CALCULATOR</span>
+          <span class="ticker-item">🎮 FREE FIRE MAX & BGMI CUSTOM ARENAS</span>
+          <span class="ticker-item">🛡️ ENCRYPTED SUPABASE REALTIME CLOUD SYNC</span>
+          <span class="ticker-item"><span class="ticker-dot">●</span> 2026 OFFICIAL TOURNAMENT CIRCUIT</span>
+          <span class="ticker-item">⚡ 0-SECOND NPCI 1-CLICK PAY & AUTO-LOCK</span>
+          <span class="ticker-item">🏆 REALTIME KILL & PLACEMENT POINT RE-CALCULATOR</span>
+          <span class="ticker-item">🎮 FREE FIRE MAX & BGMI CUSTOM ARENAS</span>
+        </div>
+      </div>
+
+      <div class="hero-official-container">
+        <!-- LEFT COLUMN: HIGH IMPACT TYPOGRAPHY & ACTIONS -->
+        <div class="hero-left-col">
+          <div class="hero-pill-badge">
+            <span class="badge-live-radar"></span>
+            <span class="badge-text">OFFICIAL ESPORTS OPERATING PLATFORM</span>
           </div>
-          <div class="hero-action-card" id="card-act-manage">
-            <div class="card-icon">⚙️</div>
-            <h3 class="card-heading">MANAGE TOURNAMENTS</h3>
-            <p class="card-desc">Access organizer workspace, edit live points, manage rosters, and publish standings.
-            </p>
-            <button class="btn-card-launch">OPEN DASHBOARD ➔</button>
+          <h1 class="hero-headline-modern">
+            COMPETE.<br>
+            <span class="headline-gradient">OPERATE.</span><br>
+            DOMINATE.
+          </h1>
+          <p class="hero-desc-modern">
+            The next-generation competitive operating system for Free Fire & BGMI. Create custom tournaments, automate 1-click entry fee audits, manage squads, and publish official 1080p standings in seconds.
+          </p>
+
+          <!-- HERO ACTION CARDS -->
+          <div class="hero-action-buttons-group">
+            <button class="btn-hero-primary" id="card-act-create">
+              <span class="btn-hero-icon">➕</span>
+              <div class="btn-hero-text">
+                <strong>CREATE TOURNAMENT</strong>
+                <small>Format, rules, maps & slots</small>
+              </div>
+              <span class="btn-hero-arrow">➔</span>
+            </button>
+            <button class="btn-hero-secondary" id="card-act-manage">
+              <span class="btn-hero-icon">⚙️</span>
+              <div class="btn-hero-text">
+                <strong>MANAGE ARENAS</strong>
+                <small>Organizer workspace & scores</small>
+              </div>
+              <span class="btn-hero-arrow">➔</span>
+            </button>
           </div>
-          <div class="hero-action-card" id="card-act-auth">
-            <div class="card-icon">🛡️</div>
-            <h3 class="card-heading">ORGANIZER ACCESS</h3>
-            <p class="card-desc">Log in to authenticate your guild, verify player UIDs, and resolve dispute tickets.</p>
-            <button class="btn-card-launch">SIGN IN / REGISTER ➔</button>
+
+          <!-- QUICK STATS BAR -->
+          <div class="hero-stats-strip">
+            <div class="stat-pill">
+              <span class="stat-val">₹50K+</span>
+              <span class="stat-lbl">Prize Pools</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-val">100%</span>
+              <span class="stat-lbl">Automated UPI</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-val">0s</span>
+              <span class="stat-lbl">Slot Locking</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: 3D FLOATING HERO CHARACTER & FLOATING CHIPS -->
+        <div class="hero-right-col">
+          <div class="hero-3d-wrapper">
+            <div class="hero-glow-backdrop"></div>
+            <img src="assets/hero-character.jpg" alt="Vortex 3D Esports Warrior" class="hero-3d-character">
+            
+            <!-- FLOATING GLASS STATS CHIPS -->
+            <div class="floating-chip chip-top-right">
+              <span class="chip-icon">⚡</span>
+              <div>
+                <strong>1-Click Auto-Verify</strong>
+                <small>NPCI Dynamic Ref Match</small>
+              </div>
+            </div>
+
+            <div class="floating-chip chip-bottom-left">
+              <span class="chip-icon">🏆</span>
+              <div>
+                <strong>Live Point Tables</strong>
+                <small>Auto Placement & Kills</small>
+              </div>
+            </div>
+
+            <div class="floating-chip chip-bottom-right">
+              <span class="chip-icon">🛡️</span>
+              <div>
+                <strong>Anti-Cheat Roster</strong>
+                <small>IGN & UID Auditing</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>

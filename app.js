@@ -1138,28 +1138,42 @@ function renderLandingFeatured() {
     }
 
     const entryFeeBadge = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0
-      ? `<span class='badge-tag' style='background:#2d2006; color:#ffd700; border-color:#ffd700;'>💰 ₹${tourney.entryFee} ENTRY</span>`
-      : `<span class='badge-tag' style='background:#052e16; color:#34d399; border-color:#34d399;'>🟢 FREE ENTRY</span>`;
+      ? `<span class='badge-tag' style='background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);'>💰 ₹${tourney.entryFee} ENTRY</span>`
+      : `<span class='badge-tag' style='background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.4);'>🟢 FREE ENTRY</span>`;
+
+    const fillPct = Math.min(100, Math.round(((tourney.teams ? tourney.teams.length : 0) / totalSlots) * 100));
 
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
-          <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+          <div style='display:flex; gap:6px; flex-wrap:wrap;'>
             ${entryFeeBadge}
-            ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
-            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
-            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            ${isSlotsFull ? `<span class='badge-tag' style='background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)"}; color:${deadlinePassed ? "#f87171" : "#fbbf24"}; border:1px solid ${deadlinePassed ? "rgba(239,68,68,0.35)" : "rgba(245,158,11,0.35)"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:rgba(37,211,102,0.15); color:#4ade80; border:1px solid rgba(37,211,102,0.4);'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:rgba(88,101,242,0.15); color:#818cf8; border:1px solid rgba(88,101,242,0.4);'>🎮 DC</span>` : ''}
             <span class='badge-tag open'>${tourney.format}</span>
           </div>
         </div>
         <div class='t-card-title'>${tourney.title}</div>
         <div class='t-card-meta'>Game: ${tourney.game} • Maps: ${tourney.maps}</div>
+        
         <div class='t-card-metrics'>
-          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SLOTS</span><span class='tm-val' style='color:${isSlotsFull ? "#ff2d55" : "#00f0ff"}; font-weight:900;'>${tourney.teams.length} / ${totalSlots}</span></div>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight' style='color:#ffd700;'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>FORMAT</span><span class='tm-val'>${tourney.game}</span></div>
           ${regSquad ? `<div class='t-metric' style='grid-column:1/-1;'><span class='tm-label'>YOUR STATUS</span><span class='tm-val' style='color:#34d399;'>✅ Registered (Slot #${regSquad.squad.slot})</span></div>` : ''}
         </div>
+
+        <div style='margin-bottom:14px;'>
+          <div style='display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;'>
+            <span style='color:#94a3b8; font-weight:700;'>SLOT CAPACITY</span>
+            <span style='color:${isSlotsFull ? "#f87171" : "#00f0ff"}; font-weight:800;'>${tourney.teams ? tourney.teams.length : 0} / ${totalSlots} (${fillPct}%)</span>
+          </div>
+          <div style='width:100%; height:6px; background:#181b29; border-radius:4px; overflow:hidden;'>
+            <div style='height:100%; width:${fillPct}%; background:${isSlotsFull ? "#ef4444" : "linear-gradient(90deg, #00f0ff, #38bdf8, #fbbf24)"}; border-radius:4px; transition:width 0.4s ease;'></div>
+          </div>
+        </div>
+
         <div class='card-action-btns-row' onclick='event.stopPropagation();'>
           ${regButtonHtml}
           <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
@@ -1204,35 +1218,47 @@ function renderManageList() {
     } else if (deadlinePassed) {
       regButtonHtml = `<button class='btn-card-register' disabled style='background:#475569; color:#94a3b8; cursor:not-allowed;'>🔒 CLOSED</button>`;
     } else if (isSlotsFull) {
-      regButtonHtml = `<button class='btn-card-register' disabled style='background:#ff2d55; color:#ffffff; cursor:not-allowed; border-color:#000;'>🔒 FULL (${tourney.teams.length}/${totalSlots})</button>`;
+      regButtonHtml = `<button class='btn-card-register' disabled style='background:#ef4444; color:#ffffff; cursor:not-allowed; border-color:#000;'>🔒 FULL (${tourney.teams.length}/${totalSlots})</button>`;
     } else {
       regButtonHtml = `<button class='btn-card-register' onclick='window.vortexOpenRegisterModal(${tourney.id})'>📝 REGISTER SQUAD</button>`;
     }
 
     const entryFeeBadge = tourney.entryType === "PAID" && Number(tourney.entryFee) > 0
-      ? `<span class='badge-tag' style='background:#2d2006; color:#ffd700; border-color:#ffd700;'>💰 ₹${tourney.entryFee} ENTRY</span>`
-      : `<span class='badge-tag' style='background:#052e16; color:#34d399; border-color:#34d399;'>🟢 FREE ENTRY</span>`;
+      ? `<span class='badge-tag' style='background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);'>💰 ₹${tourney.entryFee} ENTRY</span>`
+      : `<span class='badge-tag' style='background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.4);'>🟢 FREE ENTRY</span>`;
+
+    const fillPct = Math.min(100, Math.round(((tourney.teams ? tourney.teams.length : 0) / totalSlots) * 100));
 
     htmlBuffer += `
       <div class='tourney-card-item' onclick='window.vortexOpenWorkspace(${tourney.id})'>
         <div class='card-top-row'>
           <span class='badge-tag ${tourney.statusClass}'>${tourney.status}</span>
-          <div style='display:flex; gap:4px; flex-wrap:wrap;'>
+          <div style='display:flex; gap:6px; flex-wrap:wrap;'>
             ${entryFeeBadge}
-            ${isSlotsFull ? `<span class='badge-tag' style='background:#ff2d55; color:#fff; border-color:#000;'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "#281216" : "#241428"}; color:${deadlinePassed ? "#ff2d55" : "#ffde59"}; border-color:${deadlinePassed ? "#ff2d55" : "#ffd700"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
-            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:#25D366; color:#000;'>💬 WA</span>` : ''}
-            ${tourney.discordLink ? `<span class='badge-tag' style='background:#5865F2; color:#fff;'>🎮 DC</span>` : ''}
+            ${isSlotsFull ? `<span class='badge-tag' style='background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);'>🔒 SLOTS FULL</span>` : (tourney.registrationDeadline ? `<span class='badge-tag' style='background:${deadlinePassed ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)"}; color:${deadlinePassed ? "#f87171" : "#fbbf24"}; border:1px solid ${deadlinePassed ? "rgba(239,68,68,0.35)" : "rgba(245,158,11,0.35)"}; font-size:10px;'>${deadlinePassed ? "🔒 Closed" : "⏳ " + formatDeadlineText(tourney)}</span>` : '')}
+            ${tourney.whatsappLink ? `<span class='badge-tag' style='background:rgba(37,211,102,0.15); color:#4ade80; border:1px solid rgba(37,211,102,0.4);'>💬 WA</span>` : ''}
+            ${tourney.discordLink ? `<span class='badge-tag' style='background:rgba(88,101,242,0.15); color:#818cf8; border:1px solid rgba(88,101,242,0.4);'>🎮 DC</span>` : ''}
             <span class='badge-tag open'>${tourney.game}</span>
           </div>
         </div>
         <div class='t-card-title'>${tourney.title}</div>
         <div class='t-card-meta'>Format: ${tourney.format} • Maps: ${tourney.maps}</div>
         <div class='t-card-metrics'>
-          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight'>${tourney.prize}</span></div>
-          <div class='t-metric'><span class='tm-label'>SQUADS</span><span class='tm-val' style='color:${isSlotsFull ? "#ff2d55" : "#00f0ff"}; font-weight:900;'>${tourney.teams.length} / ${totalSlots}</span></div>
-          <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches.length} Scheduled</span></div>
+          <div class='t-metric'><span class='tm-label'>PRIZE POOL</span><span class='tm-val highlight' style='color:#ffd700;'>${tourney.prize}</span></div>
+          <div class='t-metric'><span class='tm-label'>MATCHES</span><span class='tm-val'>${tourney.matches ? tourney.matches.length : 0} Scheduled</span></div>
           <div class='t-metric'><span class='tm-label'>ROLE</span><span class='tm-val' style='color:${isOwner ? "#34d399" : "#94a3b8"};'>${isOwner ? "👑 Owner" : (regSquad ? "🎮 Player" : "👁️ Public")}</span></div>
         </div>
+
+        <div style='margin-bottom:14px;'>
+          <div style='display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;'>
+            <span style='color:#94a3b8; font-weight:700;'>SLOT CAPACITY</span>
+            <span style='color:${isSlotsFull ? "#f87171" : "#00f0ff"}; font-weight:800;'>${tourney.teams ? tourney.teams.length : 0} / ${totalSlots} (${fillPct}%)</span>
+          </div>
+          <div style='width:100%; height:6px; background:#181b29; border-radius:4px; overflow:hidden;'>
+            <div style='height:100%; width:${fillPct}%; background:${isSlotsFull ? "#ef4444" : "linear-gradient(90deg, #00f0ff, #38bdf8, #fbbf24)"}; border-radius:4px; transition:width 0.4s ease;'></div>
+          </div>
+        </div>
+
         <div class='card-action-btns-row' onclick='event.stopPropagation();'>
           ${regButtonHtml}
           <button class='btn-card-share' onclick='window.vortexShareTourney(${tourney.id})' title='Share Link'>🔗</button>
