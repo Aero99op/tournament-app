@@ -23,21 +23,67 @@
         <span class="logo-text">VORTEX ESPORTS</span>
         <span class="logo-badge">OFFICIAL OS</span>
       </div>
-      <nav class="main-nav">
-        <button class="nav-link active" id="nav-landing">HOME</button>
-        <button class="nav-link" id="nav-create">CREATE TOURNAMENT</button>
-        <button class="nav-link" id="nav-manage">MANAGE TOURNAMENTS</button>
+      
+      <!-- DESKTOP NAVIGATION TABS -->
+      <nav class="main-nav desktop-only-nav">
+        <button class="nav-link active" id="nav-landing"><span class="nav-icon">🏠</span> HOME</button>
+        <button class="nav-link" id="nav-create"><span class="nav-icon">➕</span> CREATE</button>
+        <button class="nav-link" id="nav-manage"><span class="nav-icon">🏆</span> MANAGE</button>
       </nav>
+
+      <!-- NAVBAR ACTIONS -->
       <div class="nav-actions">
-        <button class="theme-toggle-btn" id="btn-theme-toggle"
-          title="Toggle between Dark Cyber & Manga Sketched Light Theme">🖋️ MANGA SKETCH</button>
-        <span class="db-sync-badge connecting" id="db-sync-status" title="Supabase Realtime Cloud Sync">⚡
-          CONNECTING...</span>
-        <button class="btn-auth-pill" id="btn-open-auth">🔑 LOGIN / SIGNUP</button>
+        <span class="db-sync-badge connecting" id="db-sync-status" title="Supabase Realtime Cloud Sync">⚡ CONNECTING...</span>
+        <button class="theme-toggle-btn desktop-only" id="btn-theme-toggle" title="Toggle Light/Dark Theme">🖋️</button>
+        <button class="btn-auth-pill" id="btn-open-auth">🔑 SIGN IN</button>
         <div class="user-profile-badge" id="user-profile-badge" style="display:none;">
           <span class="avatar-dot">●</span>
           <span class="user-name" id="display-user-name">Kiryu_FF</span>
-          <button class="btn-logout" id="btn-logout-act">LOGOUT</button>
+          <button class="btn-logout" id="btn-logout-act">✕</button>
+        </div>
+        
+        <!-- MOBILE HAMBURGER TOGGLE -->
+        <button class="btn-mobile-toggle mobile-only" id="btn-mobile-menu-toggle" aria-label="Toggle Mobile Menu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MOBILE DROPDOWN DRAWER -->
+    <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+      <div class="mobile-drawer-inner">
+        <div class="mobile-drawer-links">
+          <button class="mobile-drawer-link active" id="mob-nav-landing">
+            <span class="mob-icon">🏠</span>
+            <div class="mob-text">
+              <strong>HOME ARENA</strong>
+              <small>Featured tournaments & news</small>
+            </div>
+            <span class="mob-arrow">➔</span>
+          </button>
+          <button class="mobile-drawer-link" id="mob-nav-create">
+            <span class="mob-icon">➕</span>
+            <div class="mob-text">
+              <strong>CREATE TOURNAMENT</strong>
+              <small>Custom brackets, maps & slots</small>
+            </div>
+            <span class="mob-arrow">➔</span>
+          </button>
+          <button class="mobile-drawer-link" id="mob-nav-manage">
+            <span class="mob-icon">🏆</span>
+            <div class="mob-text">
+              <strong>MANAGE TOURNAMENTS</strong>
+              <small>Organizer dashboard & live points</small>
+            </div>
+            <span class="mob-arrow">➔</span>
+          </button>
+        </div>
+        <div class="mobile-drawer-footer">
+          <button class="btn-secondary-sm" id="mob-btn-theme-toggle" style="width:100%; justify-content:center; padding:10px;">
+            🖋️ TOGGLE THEME
+          </button>
         </div>
       </div>
     </div>
@@ -1443,6 +1489,26 @@
       </div>
     </div>
   </div>
+
+  <!-- MOBILE BOTTOM APP NAVIGATION BAR (1-THUMB TOUCH ACCESS) -->
+  <nav class="mobile-bottom-nav mobile-only" id="mobile-bottom-nav">
+    <button class="bottom-nav-item active" id="bnav-home">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">Home</span>
+    </button>
+    <button class="bottom-nav-item" id="bnav-create">
+      <span class="bnav-icon">➕</span>
+      <span class="bnav-label">Create</span>
+    </button>
+    <button class="bottom-nav-item" id="bnav-manage">
+      <span class="bnav-icon">🏆</span>
+      <span class="bnav-label">Manage</span>
+    </button>
+    <button class="bottom-nav-item" id="bnav-account">
+      <span class="bnav-icon">👤</span>
+      <span class="bnav-label">Account</span>
+    </button>
+  </nav>
 
   <div class="toast-container" id="toast-container">
   </div>

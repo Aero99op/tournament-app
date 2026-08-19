@@ -390,34 +390,98 @@ function getActiveTourney() {
 
 function switchView(targetId) {
   currentView = targetId;
-  (document.getElementById("view-landing") || document.querySelector("view-landing")).style.display = 'none';
-  (document.getElementById("view-create") || document.querySelector("view-create")).style.display = 'none';
-  (document.getElementById("view-manage") || document.querySelector("view-manage")).style.display = 'none';
-  (document.getElementById("view-workspace") || document.querySelector("view-workspace")).style.display = 'none';
-  (document.getElementById("nav-landing") || document.querySelector("nav-landing")).classList.remove('active');
-  (document.getElementById("nav-create") || document.querySelector("nav-create")).classList.remove('active');
-  (document.getElementById("nav-manage") || document.querySelector("nav-manage")).classList.remove('active');
-  if (targetId == "view-landing") {
-    (document.getElementById("view-landing") || document.querySelector("view-landing")).style.display = 'block';
-    (document.getElementById("view-landing") || document.querySelector("view-landing")).classList.add('active');
-    (document.getElementById("nav-landing") || document.querySelector("nav-landing")).classList.add('active');
+  const views = ["view-landing", "view-create", "view-manage", "view-workspace"];
+  views.forEach(v => {
+    const el = document.getElementById(v);
+    if (el) {
+      el.style.display = 'none';
+      el.classList.remove('active');
+    }
+  });
+
+  // Desktop Nav tabs
+  ["nav-landing", "nav-create", "nav-manage"].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+
+  // Mobile Drawer links
+  ["mob-nav-landing", "mob-nav-create", "mob-nav-manage"].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+
+  // Mobile Bottom Nav items
+  ["bnav-home", "bnav-create", "bnav-manage", "bnav-account"].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+
+  const activeView = document.getElementById(targetId);
+  if (activeView) {
+    activeView.style.display = 'block';
+    activeView.classList.add('active');
   }
-  if (targetId == "view-create") {
-    (document.getElementById("view-create") || document.querySelector("view-create")).style.display = 'block';
-    (document.getElementById("view-create") || document.querySelector("view-create")).classList.add('active');
-    (document.getElementById("nav-create") || document.querySelector("nav-create")).classList.add('active');
+
+  if (targetId === "view-landing") {
+    document.getElementById("nav-landing")?.classList.add('active');
+    document.getElementById("mob-nav-landing")?.classList.add('active');
+    document.getElementById("bnav-home")?.classList.add('active');
+  } else if (targetId === "view-create") {
+    document.getElementById("nav-create")?.classList.add('active');
+    document.getElementById("mob-nav-create")?.classList.add('active');
+    document.getElementById("bnav-create")?.classList.add('active');
     renderCreateTourneySquads();
+  } else if (targetId === "view-manage") {
+    document.getElementById("nav-manage")?.classList.add('active');
+    document.getElementById("mob-nav-manage")?.classList.add('active');
+    document.getElementById("bnav-manage")?.classList.add('active');
+  } else if (targetId === "view-workspace") {
+    document.getElementById("bnav-manage")?.classList.add('active');
   }
-  if (targetId == "view-manage") {
-    (document.getElementById("view-manage") || document.querySelector("view-manage")).style.display = 'block';
-    (document.getElementById("view-manage") || document.querySelector("view-manage")).classList.add('active');
-    (document.getElementById("nav-manage") || document.querySelector("nav-manage")).classList.add('active');
+
+  // Close mobile drawer on view switch
+  const drawer = document.getElementById("mobile-nav-drawer");
+  const toggleBtn = document.getElementById("btn-mobile-menu-toggle");
+  if (drawer) drawer.classList.remove('show');
+  if (toggleBtn) toggleBtn.classList.remove('open');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initMobileNavigation() {
+  const toggleBtn = document.getElementById("btn-mobile-menu-toggle");
+  const drawer = document.getElementById("mobile-nav-drawer");
+
+  if (toggleBtn && drawer) {
+    toggleBtn.addEventListener('click', () => {
+      const isOpen = drawer.classList.toggle('show');
+      toggleBtn.classList.toggle('open', isOpen);
+    });
   }
-  if (targetId == "view-workspace") {
-    (document.getElementById("view-workspace") || document.querySelector("view-workspace")).style.display = 'block';
-    (document.getElementById("view-workspace") || document.querySelector("view-workspace")).classList.add('active');
+
+  // Mobile Drawer Links
+  document.getElementById("mob-nav-landing")?.addEventListener('click', () => switchView("view-landing"));
+  document.getElementById("mob-nav-create")?.addEventListener('click', () => switchView("view-create"));
+  document.getElementById("mob-nav-manage")?.addEventListener('click', () => switchView("view-manage"));
+
+  // Mobile Drawer Theme Button
+  const mobThemeBtn = document.getElementById("mob-btn-theme-toggle");
+  if (mobThemeBtn) {
+    mobThemeBtn.addEventListener('click', () => {
+      const deskThemeBtn = document.getElementById("btn-theme-toggle");
+      if (deskThemeBtn) deskThemeBtn.click();
+    });
   }
-  (document.getElementById("main-navbar") || document.querySelector("main-navbar")).scrollIntoView({ behavior: 'smooth' });
+
+  // Mobile Bottom Nav items
+  document.getElementById("bnav-home")?.addEventListener('click', () => switchView("view-landing"));
+  document.getElementById("bnav-create")?.addEventListener('click', () => switchView("view-create"));
+  document.getElementById("bnav-manage")?.addEventListener('click', () => switchView("view-manage"));
+  document.getElementById("bnav-account")?.addEventListener('click', () => {
+    if (currentUser && currentUser.loggedIn) {
+      showToast("👤 Logged in as " + currentUser.name + " (" + currentUser.role + ")");
+    } else {
+      openAuthModal();
+    }
+  });
 }
 
 function switchWsTab(panelId) {
@@ -5055,6 +5119,7 @@ function initThemeToggle() {
 
 initSlotPresetButtons();
 initThemeToggle();
+initMobileNavigation();
 loadStateFromStorage();
 initSupabase();
 
