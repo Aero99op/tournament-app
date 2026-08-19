@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Vortex Esports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090910;
+      --card-bg: #141422;
+      --border: #28283c;
+      --primary: #00f0ff;
+      --accent: #ffd700;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.7;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+    .back-btn {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      border: 1px solid var(--primary);
+      padding: 6px 16px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: var(--primary);
+      color: #000;
+    }
+    h1 {
+      font-size: 28px;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 18px;
+      color: var(--primary);
+      margin: 28px 0 12px 0;
+      border-left: 3px solid var(--primary);
+      padding-left: 10px;
+    }
+    p, li {
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    ul { padding-left: 20px; margin-bottom: 16px; }
+    .alert-box {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .alert-box h3 {
+      font-size: 15px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .footer-note {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 30px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">⚡ VORTEX ESPORTS</div>
+      <a href="/" class="back-btn">← Back to App</a>
+    </div>
+
+    <h1>Privacy Policy</h1>
+    <p><em>Last updated: August 19, 2026</em></p>
+
+    <p>Welcome to <strong>Vortex Esports</strong> ("we", "our", or "us"). We are committed to protecting your privacy and providing transparent information on how we handle information across our tournament management platform.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>When you use Vortex Esports as an organizer or player, we may collect:</p>
+    <ul>
+      <li><strong>Account Details:</strong> Name, Email address, and Gamer UID (In-Game Name/UID).</li>
+      <li><strong>Tournament Data:</strong> Squad names, player roster lineups, match standings, and custom room schedules.</li>
+      <li><strong>Payment Reference Details:</strong> Submitted 12-digit UPI UTR numbers and receipt verification references for entry fee auditing.</li>
+    </ul>
+
+    <h2>2. Google API Data & Gmail Readonly Access</h2>
+    <div class="alert-box">
+      <h3>🔒 Google API Services User Data Policy Compliance</h3>
+      <p>Vortex Esports uses the <code>https://www.googleapis.com/auth/gmail.readonly</code> scope exclusively for tournament organizers who voluntarily connect their Google accounts.</p>
+    </div>
+    <p><strong>How we use Google Data:</strong></p>
+    <ul>
+      <li><strong>Specific Purpose:</strong> We read incoming transactional bank/UPI payment alert emails (from FamPay, PhonePe, SBI, Paytm, HDFC) to extract the 12-digit UTR reference code and credit amount.</li>
+      <li><strong>Limited Scope:</strong> We do NOT read, store, or process personal emails, contacts, attachments, or private communications.</li>
+      <li><strong>No Data Sharing:</strong> We do NOT transfer, sell, or disclose Google user data to any third parties or advertisers.</li>
+      <li><strong>Compliance:</strong> Vortex Esports' use and transfer of information received from Google APIs to any other app will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" style="color:var(--primary);" target="_blank">Google API Services User Data Policy</a>, including the <strong>Limited Use</strong> requirements.</li>
+    </ul>
+
+    <h2>3. Data Storage & Security</h2>
+    <p>All database records are securely stored via encrypted Supabase PostgreSQL instances with Row-Level Security (RLS) policies. Access tokens are stored encrypted and can be disconnected by organizers at any time with a single click.</p>
+
+    <h2>4. User Rights & Data Deletion</h2>
+    <p>Users have the right to request deletion of their account data, tournament history, and OAuth connections at any time by contacting developer support.</p>
+
+    <h2>5. Developer & Support Contact</h2>
+    <p>For any privacy questions, data deletion requests, or developer inquiries, please contact:</p>
+    <p><strong>Developer:</strong> Spandan Prayas Patra<br>
+       <strong>Email:</strong> <a href="mailto:spandanpatra1234@gmail.com" style="color:var(--primary);">spandanpatra1234@gmail.com</a><br>
+       <strong>Platform:</strong> Vortex Esports Platform (<a href="https://tournament-app-bay-seven.vercel.app" style="color:var(--primary);">tournament-app-bay-seven.vercel.app</a>)
+    </p>
+
+    <div class="footer-note">
+      © 2026 Vortex Esports Platform. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
