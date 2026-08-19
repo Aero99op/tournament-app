@@ -20,14 +20,19 @@ export async function processPaymentText(rawText, source = "Cloud_Worker") {
   const utrMatch = rawText.match(utrRegex) || rawText.match(generic12Digits);
   const utr = utrMatch ? utrMatch[1] : null;
 
-  // 2. Extract Amount
+  // 2. Extract Unique NPCI Transaction Reference Code (e.g. VTX-TR-829104 or VTX829104)
+  const trRegex = /(?:VTX-?TR-?|VTX-?)([0-9]{5,8})/i;
+  const trMatch = rawText.match(trRegex);
+  const trCode = trMatch ? ("VTX" + trMatch[1]) : null;
+
+  // 3. Extract Amount
   const amtRegex = /(?:Rs\.?|INR|₹|credited\s*(?:by|with)?\s*(?:Rs\.?|INR|₹)?)\s*([0-9]+(?:\.[0-9]{1,2})?)/i;
   const amtMatch = rawText.match(amtRegex);
   const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
 
-  console.log(`[${source}] Parsed -> UTR: ${utr || 'N/A'}, Amount: ₹${amount}`);
+  console.log(`[${source}] Parsed -> trCode: ${trCode || 'N/A'}, UTR: ${utr || 'N/A'}, Amount: ₹${amount}`);
 
-  // 3. Search and Match Supabase Database
+  // 4. Search and Match Supabase Database
   let matchedSquad = null;
   let matchedTourney = null;
 
@@ -45,8 +50,25 @@ export async function processPaymentText(rawText, source = "Cloud_Worker") {
         if (Array.isArray(t.teams)) {
           let modified = false;
 
-          // Match by UTR
-          if (utr) {
+          // Priority 1: Match by Unique NPCI trCode
+          if (trCode) {
+            for (const tm of t.teams) {
+              if (tm.trCode && String(tm.trCode).toLowerCase().replace(/[^a-z0-9]/g, '') === String(trCode).toLowerCase().replace(/[^a-z0-9]/g, '')) {
+                tm.paymentStatus = "APPROVED";
+                tm.autoVerified = true;
+                tm.verifiedAt = new Date().toISOString();
+                tm.verifiedAmount = amount || tm.paymentAmount || 50;
+                if (utr && !tm.utr) tm.utr = utr;
+                matchedSquad = tm;
+                matchedTourney = t;
+                modified = true;
+                break;
+              }
+            }
+          }
+
+          // Priority 2: Match by 12-Digit UTR
+          if (!modified && utr) {
             for (const tm of t.teams) {
               if (tm.utr && String(tm.utr).trim() === String(utr).trim()) {
                 tm.paymentStatus = "APPROVED";
@@ -61,7 +83,7 @@ export async function processPaymentText(rawText, source = "Cloud_Worker") {
             }
           }
 
-          // Fallback: Match oldest pending squad if amount matches
+          // Priority 3: Fallback Match oldest pending squad if amount matches
           if (!modified && amount > 0) {
             const pendingSquad = t.teams.find(tm => tm.paymentStatus === "PENDING" && Number(tm.paymentAmount || t.entry_fee || 0) === amount);
             if (pendingSquad) {

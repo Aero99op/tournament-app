@@ -53,12 +53,17 @@ export default async function handler(req, res) {
     const utrMatch = rawText.match(utrRegex) || rawText.match(generic12Digits);
     const utr = utrMatch ? utrMatch[1] : null;
 
-    // 2. Amount Extraction Regex (Handles: "₹50", "Rs 50", "50.00 received", "credited with Rs 50")
+    // 2. Extract Unique NPCI Transaction Reference Code (e.g. VTX-TR-829104 or VTX829104)
+    const trRegex = /(?:VTX-?TR-?|VTX-?)([0-9]{5,8})/i;
+    const trMatch = rawText.match(trRegex);
+    const trCode = trMatch ? ("VTX" + trMatch[1]) : null;
+
+    // 3. Amount Extraction Regex (Handles: "₹50", "Rs 50", "50.00 received", "credited with Rs 50")
     const amtRegex = /(?:Rs\.?|INR|₹|credited\s*(?:by|with)?\s*(?:Rs\.?|INR|₹)?)\s*([0-9]+(?:\.[0-9]{1,2})?)/i;
     const amtMatch = rawText.match(amtRegex);
     const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
 
-    // 3. Search and Auto-Update Supabase Database directly
+    // 4. Search and Auto-Update Supabase Database directly
     let matchedSquad = null;
     let matchedTourney = null;
 
@@ -76,8 +81,25 @@ export default async function handler(req, res) {
           if (Array.isArray(t.teams)) {
             let modified = false;
             
-            // Priority 1: Exact UTR Match
-            if (utr) {
+            // Priority 1: Exact Unique NPCI trCode Match
+            if (trCode) {
+              for (const tm of t.teams) {
+                if (tm.trCode && String(tm.trCode).toLowerCase().replace(/[^a-z0-9]/g, '') === String(trCode).toLowerCase().replace(/[^a-z0-9]/g, '')) {
+                  tm.paymentStatus = "APPROVED";
+                  tm.autoVerified = true;
+                  tm.verifiedAt = new Date().toISOString();
+                  tm.verifiedAmount = amount || tm.paymentAmount || 50;
+                  if (utr && !tm.utr) tm.utr = utr;
+                  matchedSquad = tm;
+                  matchedTourney = t;
+                  modified = true;
+                  break;
+                }
+              }
+            }
+
+            // Priority 2: Exact 12-digit UTR Match
+            if (!modified && utr) {
               for (const tm of t.teams) {
                 if (tm.utr && String(tm.utr).trim() === String(utr).trim()) {
                   tm.paymentStatus = "APPROVED";
@@ -92,7 +114,7 @@ export default async function handler(req, res) {
               }
             }
 
-            // Priority 2: PhonePe Instant Notification Amount Match for oldest pending squad
+            // Priority 3: PhonePe Instant Notification Amount Match for oldest pending squad
             if (!modified && amount > 0) {
               const pendingSquad = t.teams.find(tm => tm.paymentStatus === "PENDING");
               if (pendingSquad) {

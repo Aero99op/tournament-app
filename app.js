@@ -29,6 +29,7 @@ let currentUser = { id: null, email: "", name: "Guest", uid: "", role: "Organize
 let currentAuthTab = "login";
 
 let tournamentsDb = [];
+let currentActiveRegTrCode = "";
 
 const SUPABASE_URL = "https://vufeeywjdrxxxdkwwkzx.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1ZmVleXdqZHJ4eHhka3d3a3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjI1ODQsImV4cCI6MjEwMjUzODU4NH0.kKTxCwYDaDuVEcanoEn33F_et3RCfHTyIlZyBqq_XNs";
@@ -748,7 +749,8 @@ function openSquadRegistrationModal(tourneyId, isEdit = false, teamIdx = -1) {
       const upiId = tourney.upiId || "7848033183@fam";
       const upiName = tourney.upiName || "Spandan Prayas";
       // Unique NPCI Transaction Reference Code (tr)
-      const uniqueTrCode = "VTX" + Math.floor(100000 + Math.random() * 900000);
+      currentActiveRegTrCode = "VTX" + Math.floor(100000 + Math.random() * 900000);
+      const uniqueTrCode = currentActiveRegTrCode;
       const upiIntentUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(upiName) + "&am=" + tourney.entryFee + "&cu=INR&tr=" + encodeURIComponent(uniqueTrCode) + "&tn=" + encodeURIComponent("Vortex " + uniqueTrCode);
       const payLinkBtn = document.getElementById("btn-upi-intent-pay");
       if (payLinkBtn) payLinkBtn.href = upiIntentUrl;
@@ -924,7 +926,8 @@ async function handleSquadRegistrationSubmit() {
     paymentAmount: isPaidTourney ? tourney.entryFee : 0,
     utr: paymentUtr,
     paymentProof: paymentProof,
-    registeredAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    registeredAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    trCode: currentActiveRegTrCode || ("VTX" + Math.floor(100000 + Math.random() * 900000))
   };
 
   tourney.teams.push(newRegisteredSquad);
@@ -1723,33 +1726,54 @@ function processIncomingBankSms(rawSms, source = "Bank_SMS_Engine") {
   const utrMatch = rawSms.match(utrRegex) || rawSms.match(generic12Digits);
   const utr = utrMatch ? utrMatch[1] : null;
 
-  // 2. Extract Amount
+  // 2. Extract Unique NPCI Transaction Reference Code (e.g. VTX-TR-829104 or VTX829104)
+  const trRegex = /(?:VTX-?TR-?|VTX-?)([0-9]{5,8})/i;
+  const trMatch = rawSms.match(trRegex);
+  const trCode = trMatch ? ("VTX" + trMatch[1]) : null;
+
+  // 3. Extract Amount
   const amtRegex = /(?:Rs\.?|INR|₹|credited\s*(?:by|with)?\s*(?:Rs\.?|INR|₹)?)\s*([0-9]+(?:\.[0-9]{1,2})?)/i;
   const amtMatch = rawSms.match(amtRegex);
   const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
 
-  if (!utr) {
-    showToast("⚠️ Could not find a 12-digit UPI UTR in the provided SMS text.");
-    return { success: false, error: "No 12-digit UTR found" };
+  if (!utr && !trCode && amount <= 0) {
+    showToast("⚠️ Could not find a valid UTR, Transaction Ref, or Amount in SMS.");
+    return { success: false, error: "No identifiers found" };
   }
 
-  loadVerifiedBankUtrs();
-  if (!verifiedBankUtrsCache.includes(utr)) {
-    verifiedBankUtrsCache.push(utr);
-    saveVerifiedBankUtrs();
+  if (utr) {
+    loadVerifiedBankUtrs();
+    if (!verifiedBankUtrsCache.includes(utr)) {
+      verifiedBankUtrsCache.push(utr);
+      saveVerifiedBankUtrs();
+    }
   }
 
-  // Search across tournamentsDb for matching squad with this UTR or pending registration
+  // Search across tournamentsDb for matching squad with this trCode or UTR or pending registration
   let matchedSquad = null;
   let targetTourney = null;
 
   for (const tourney of tournamentsDb) {
     if (Array.isArray(tourney.teams)) {
-      for (const team of tourney.teams) {
-        if (team.utr && team.utr.trim() === utr.trim()) {
-          matchedSquad = team;
-          targetTourney = tourney;
-          break;
+      // Priority 1: Match by Unique trCode
+      if (trCode) {
+        for (const team of tourney.teams) {
+          if (team.trCode && String(team.trCode).toLowerCase().replace(/[^a-z0-9]/g, '') === String(trCode).toLowerCase().replace(/[^a-z0-9]/g, '')) {
+            matchedSquad = team;
+            targetTourney = tourney;
+            break;
+          }
+        }
+      }
+
+      // Priority 2: Match by UTR
+      if (!matchedSquad && utr) {
+        for (const team of tourney.teams) {
+          if (team.utr && team.utr.trim() === utr.trim()) {
+            matchedSquad = team;
+            targetTourney = tourney;
+            break;
+          }
         }
       }
     }
@@ -1761,17 +1785,18 @@ function processIncomingBankSms(rawSms, source = "Bank_SMS_Engine") {
     matchedSquad.autoVerified = true;
     matchedSquad.verifiedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     matchedSquad.verifiedAmount = amount || matchedSquad.paymentAmount || 50;
+    if (utr && !matchedSquad.utr) matchedSquad.utr = utr;
 
     saveStateToStorage();
     renderWorkspacePayments();
     renderWorkspaceTeams();
     renderWorkspaceOverview();
 
-    showToast("⚡ 🤖 AUTO-APPROVED! Matched Bank SMS: ₹" + (amount || matchedSquad.paymentAmount || 50) + " for Squad '" + matchedSquad.name + "' (UTR: " + utr + ")!");
-    return { success: true, matched: true, squad: matchedSquad.name, utr: utr, amount: amount };
+    showToast("⚡ 🤖 AUTO-APPROVED! Matched: ₹" + (amount || matchedSquad.paymentAmount || 50) + " for Squad '" + matchedSquad.name + "'!");
+    return { success: true, matched: true, squad: matchedSquad.name, utr: utr, trCode: trCode, amount: amount };
   } else {
-    showToast("📥 Bank SMS Verified & Cached: UTR " + utr + " (₹" + amount + "). Will auto-approve when squad submits!");
-    return { success: true, matched: false, utr: utr, amount: amount };
+    showToast("📥 Alert Cached: " + (trCode || ("UTR " + utr)) + " (₹" + amount + "). Will auto-approve when squad submits!");
+    return { success: true, matched: false, utr: utr, trCode: trCode, amount: amount };
   }
 }
 
