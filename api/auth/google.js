@@ -9,10 +9,21 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "1082910482910-vortexesports.apps.googleusercontent.com";
-  const host = req.headers['x-forwarded-host'] || req.headers.host || "localhost:3000";
-  const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
-  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${proto}://${host}/api/auth/callback`;
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "1030679144152-9o499o7dpfoo5u7o9eir9hn4hplq6k61.apps.googleusercontent.com";
+  
+  // Intelligent Redirect URI resolver
+  let REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+  if (!REDIRECT_URI) {
+    const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : null);
+    if (origin) {
+      REDIRECT_URI = `${origin}/api/auth/callback`;
+    } else {
+      const host = req.headers['x-forwarded-host'] || req.headers.host || "localhost:3000";
+      const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https');
+      REDIRECT_URI = `${proto}://${host}/api/auth/callback`;
+    }
+  }
+
   const SCOPES = encodeURIComponent("https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile");
   const organizerId = req.query.organizer_id || req.query.tourney_id || "vortex_org";
 
@@ -22,7 +33,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       authUrl: googleAuthUrl,
-      clientIdConfigured: Boolean(process.env.GOOGLE_CLIENT_ID)
+      clientIdConfigured: Boolean(CLIENT_ID),
+      redirectUri: REDIRECT_URI
     });
   }
 
