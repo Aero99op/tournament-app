@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     if (origin) {
       REDIRECT_URI = `${origin}/api/auth/callback`;
     } else {
-      const host = req.headers['x-forwarded-host'] || req.headers.host || "localhost:3000";
+      const host = req.headers['x-forwarded-host'] || req.headers.host || "tournament-app-bay-seven.vercel.app";
       const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https');
       REDIRECT_URI = `${proto}://${host}/api/auth/callback`;
     }

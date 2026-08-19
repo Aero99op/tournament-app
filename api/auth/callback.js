@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const organizerId = req.query.state || 'vortex_org';
   const error = req.query.error;
 
-  const host = req.headers['x-forwarded-host'] || req.headers.host || "localhost:3000";
+  const host = req.headers['x-forwarded-host'] || req.headers.host || "tournament-app-bay-seven.vercel.app";
   const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
   const returnUrl = `${proto}://${host}/?action=gmail_connected&organizer=${encodeURIComponent(organizerId)}`;
 
