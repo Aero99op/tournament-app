@@ -5160,38 +5160,47 @@ function initSlotPresetButtons() {
   }
 }
 
-function initThemeToggle() {
-  const toggleBtn = document.getElementById("btn-theme-toggle");
-  const savedTheme = localStorage.getItem("vortex_theme");
-  
-  if (savedTheme === "anime-sketch") {
+function applyTheme(isManga) {
+  const deskBtn = document.getElementById("btn-theme-toggle");
+  const mobBtn = document.getElementById("mob-btn-theme-toggle");
+  if (isManga) {
     document.body.classList.add("theme-anime-sketch");
-    if (toggleBtn) toggleBtn.innerHTML = "🌙 DARK CYBER";
+    document.documentElement.setAttribute("data-theme", "sketch");
+    if (deskBtn) deskBtn.innerHTML = "🌙 DARK CYBER";
+    if (mobBtn) mobBtn.innerHTML = "🌙 SWITCH TO DARK CYBER";
   } else {
     document.body.classList.remove("theme-anime-sketch");
-    if (toggleBtn) toggleBtn.innerHTML = "🖋️ MANGA SKETCH";
+    document.documentElement.setAttribute("data-theme", "dark");
+    if (deskBtn) deskBtn.innerHTML = "🖋️ MANGA SKETCH";
+    if (mobBtn) mobBtn.innerHTML = "🖋️ SWITCH TO MANGA SKETCH";
   }
+}
 
-  if (toggleBtn) {
-    toggleBtn.addEventListener("click", function() {
-      const isManga = document.body.classList.toggle("theme-anime-sketch");
-      if (isManga) {
-        localStorage.setItem("vortex_theme", "anime-sketch");
-        toggleBtn.innerHTML = "🌙 DARK CYBER";
-        showToast("🖋️ Manga Sketched Light Theme Activated!");
-      } else {
-        localStorage.setItem("vortex_theme", "dark-cyber");
-        toggleBtn.innerHTML = "🖋️ MANGA SKETCH";
-        showToast("🌙 Cyber Dark Theme Activated!");
-      }
-    });
-  }
+function initThemeToggle() {
+  const savedTheme = localStorage.getItem("vortex_theme");
+  const isManga = savedTheme === "anime-sketch";
+  applyTheme(isManga);
+
+  const deskBtn = document.getElementById("btn-theme-toggle");
+  const mobBtn = document.getElementById("mob-btn-theme-toggle");
+
+  const toggleHandler = (e) => {
+    e.stopPropagation();
+    const currentlyManga = document.body.classList.contains("theme-anime-sketch");
+    const nextManga = !currentlyManga;
+    localStorage.setItem("vortex_theme", nextManga ? "anime-sketch" : "dark-cyber");
+    applyTheme(nextManga);
+    showToast(nextManga ? "🖋️ Manga Sketched Light Theme Activated!" : "🌙 Cyber Dark Theme Activated!");
+  };
+
+  if (deskBtn) deskBtn.addEventListener("click", toggleHandler);
+  if (mobBtn) mobBtn.addEventListener("click", toggleHandler);
 }
 
 /* ========================================================
    HEAVY PHYSICS 3D INTERACTIVE COMBAT ENGINE (120+ FPS)
    - Realtime Spring-Damper Inertia Physics
-   - Aim-at-Cursor 3D Gun Alignment & Direction Tracking
+   - Left & Right Horizontal Body & Gun Flipping & 3D Aim
    - 3D Laser Plasma Bullet Shoot On Click Anywhere
    - Recoil Kickback, Muzzle Flash & Target Impact Detonations
    - Synthesized Web Audio Cybernetic Blaster FX
@@ -5234,7 +5243,7 @@ function initHero3DPhysicsEngine() {
     window.addEventListener("resize", resizeCombat);
   }
 
-  // Synthesized Cyber Laser Audio FX (Web Audio API - Zero lag, zero network)
+  // Synthesized Cyber Laser Audio FX (Web Audio API)
   let audioCtx = null;
   function playCyberLaserSound() {
     try {
@@ -5277,10 +5286,12 @@ function initHero3DPhysicsEngine() {
   function createThrusterParticle() {
     const w = thrusterCanvas ? thrusterCanvas.width : 400;
     const h = thrusterCanvas ? thrusterCanvas.height : 400;
+    const isFacingRight = facingDir === 1;
+    const emitX = isFacingRight ? (w * 0.55 + (Math.random() - 0.5) * 50) : (w * 0.45 + (Math.random() - 0.5) * 50);
     return {
-      x: w * 0.45 + (Math.random() - 0.5) * 70,
+      x: emitX,
       y: h * 0.72 + (Math.random() - 0.5) * 40,
-      vx: (Math.random() - 0.5) * 2.2 - 0.5,
+      vx: (Math.random() - 0.5) * 2.2 + (isFacingRight ? 0.5 : -0.5),
       vy: Math.random() * 2.8 + 1.2,
       size: Math.random() * 3.5 + 1.5,
       alpha: 1.0,
@@ -5305,6 +5316,11 @@ function initHero3DPhysicsEngine() {
   let velRotX = 0;
   let velRotY = 0;
 
+  // Direction Facing State (-1 = Left, 1 = Right)
+  let facingDir = -1;
+  let targetScaleX = 1.02;
+  let currScaleX = 1.02;
+
   // Recoil Kickback Physics
   let recoilX = 0;
   let recoilY = 0;
@@ -5318,33 +5334,51 @@ function initHero3DPhysicsEngine() {
   let pointerY = window.innerHeight * 0.45;
 
   // Physics Constants for 120 FPS Spring Motion
-  const spring = 0.11;
-  const friction = 0.80;
+  const spring = 0.12;
+  const friction = 0.78;
 
   // Get Gun Barrel Muzzle Position in Viewport Space
   function getMuzzlePos() {
     const rect = character.getBoundingClientRect();
-    // Gun muzzle is located at normalized (0.22, 0.28) of warrior image
+    const muzzleRelX = facingDir === 1 ? 0.78 : 0.22;
     return {
-      x: rect.left + rect.width * 0.22,
-      y: rect.top + rect.height * 0.28
+      x: rect.left + rect.width * muzzleRelX + currTransX + recoilX,
+      y: rect.top + rect.height * 0.28 + currTransY + recoilY
     };
   }
 
-  // Aim Direction Calculation
+  // Aim Direction Calculation (Supports full Left & Right turning)
   function updateAim(px, py) {
     pointerX = px;
     pointerY = py;
+
+    const rect = character.getBoundingClientRect();
+    const charCenterX = rect.left + rect.width / 2;
+
+    // Check if target is on the Right or Left of character
+    if (px >= charCenterX) {
+      facingDir = 1;
+      targetScaleX = -1.02; // Flip horizontally to aim Right
+    } else {
+      facingDir = -1;
+      targetScaleX = 1.02; // Normal pose to aim Left
+    }
 
     const muzzle = getMuzzlePos();
     const deltaX = px - muzzle.x;
     const deltaY = py - muzzle.y;
     const aimAngle = Math.atan2(deltaY, deltaX);
 
-    // Aim Warrior Body & Rifle in 3D Space
-    targetRotY = Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
-    targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
-    targetRotZ = Math.sin(aimAngle) * 5;
+    // 3D Tilt & Gun Aiming calculation based on facing direction
+    if (facingDir === 1) {
+      targetRotY = -Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
+      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
+      targetRotZ = -Math.sin(aimAngle) * 6;
+    } else {
+      targetRotY = Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
+      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
+      targetRotZ = Math.sin(aimAngle) * 6;
+    }
 
     targetTransX = Math.max(-25, Math.min(25, (deltaX / window.innerWidth) * 28));
     targetTransY = Math.max(-20, Math.min(20, (deltaY / window.innerHeight) * 22));
@@ -5358,7 +5392,7 @@ function initHero3DPhysicsEngine() {
     const angle = Math.atan2(deltaY, deltaX);
     const dist = Math.hypot(deltaX, deltaY);
 
-    if (dist < 15) return;
+    if (dist < 10) return;
 
     // 1. Play Synthesized Sound
     playCyberLaserSound();
@@ -5388,7 +5422,7 @@ function initHero3DPhysicsEngine() {
       angle: angle,
       dist: dist,
       progress: 0,
-      speed: Math.max(0.08, Math.min(0.20, 95 / dist)) // High supersonic speed
+      speed: Math.max(0.08, Math.min(0.22, 105 / dist)) // Supersonic velocity
     });
   }
 
@@ -5399,6 +5433,7 @@ function initHero3DPhysicsEngine() {
 
   // Shoot On Click / Tap Anywhere on Page
   window.addEventListener("pointerdown", (e) => {
+    // Check if clicked inside form inputs or buttons (allow default behavior while still shooting)
     updateAim(e.clientX, e.clientY);
     shootAt(e.clientX, e.clientY);
   });
@@ -5454,6 +5489,9 @@ function initHero3DPhysicsEngine() {
     currTransX += (targetTransX - currTransX) * spring;
     currTransY += (targetTransY - currTransY) * spring;
 
+    // Smooth Flip Turning
+    currScaleX += (targetScaleX - currScaleX) * 0.18;
+
     // Smooth Recoil Recovery
     recoilX += (0 - recoilX) * 0.18;
     recoilY += (0 - recoilY) * 0.18;
@@ -5463,13 +5501,14 @@ function initHero3DPhysicsEngine() {
     const floatY = Math.sin(now * 0.0024) * 14 + Math.cos(now * 0.0012) * 6;
     const floatRotZ = Math.sin(now * 0.0018) * 3.2;
 
-    // Apply Dynamic 3D Combat Transforms (Rotation + Aim + Recoil)
+    // Apply Dynamic 3D Combat Transforms (Rotation + Aim + Recoil + Left/Right Direction)
     character.style.transform = `
       translate3d(${currTransX + recoilX}px, ${currTransY + floatY + recoilY}px, ${60 + recoilZ}px)
       rotateX(${currRotX}deg)
       rotateY(${currRotY}deg)
-      rotateZ(${currRotZ + floatRotZ}deg)
-      scale(1.02)
+      rotateZ(${currRotZ + (facingDir === 1 ? -floatRotZ : floatRotZ)}deg)
+      scaleX(${currScaleX})
+      scaleY(1.02)
     `;
 
     // Dynamic Glow Follow
