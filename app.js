@@ -5312,6 +5312,9 @@ function initHero3DPhysicsEngine() {
   let targetScaleX = 1.02;
   let currScaleX = 1.02;
 
+  // Aim Pitch Angle in Radians (-PI/2 to +PI/2)
+  let currentPitchAngle = 0;
+
   // Recoil Kickback Physics
   let recoilX = 0;
   let recoilY = 0;
@@ -5325,55 +5328,78 @@ function initHero3DPhysicsEngine() {
   let pointerY = window.innerHeight * 0.45;
 
   // Physics Constants for 120 FPS Spring Motion
-  const spring = 0.12;
-  const friction = 0.78;
+  const spring = 0.14;
+  const friction = 0.76;
 
-  // Get Gun Barrel Muzzle Position in Viewport Space
+  // Get Gun Barrel Muzzle Position in Viewport Space (Rotated dynamically with gun pitch)
   function getMuzzlePos() {
     const rect = character.getBoundingClientRect();
-    // Base asset rifle muzzle is at normalized (0.84, 0.25). When flipped left, it is at (0.16, 0.25).
-    const muzzleRelX = facingDir === 1 ? 0.84 : 0.16;
-    return {
-      x: rect.left + rect.width * muzzleRelX + currTransX + recoilX,
-      y: rect.top + rect.height * 0.25 + currTransY + recoilY
-    };
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.55;
+
+    // Base barrel vector from chest center
+    const rx = rect.width * 0.38;
+    const ry = -rect.height * 0.22;
+
+    // Rotate by current vertical pitch angle
+    const rotPitch = facingDir === 1 ? currentPitchAngle : -currentPitchAngle;
+    const vx = rx * Math.cos(rotPitch) - ry * Math.sin(rotPitch);
+    const vy = rx * Math.sin(rotPitch) + ry * Math.cos(rotPitch);
+
+    if (facingDir === 1) {
+      return {
+        x: cx + vx + currTransX + recoilX,
+        y: cy + vy + currTransY + recoilY
+      };
+    } else {
+      return {
+        x: cx - vx + currTransX + recoilX,
+        y: cy + vy + currTransY + recoilY
+      };
+    }
   }
 
-  // Aim Direction Calculation (Correctly points right when tapped right, left when tapped left)
+  // Aim Direction Calculation (Full 360° Omnidirectional Aim: Up, Down, Left, Right, All Corners)
   function updateAim(px, py) {
     pointerX = px;
     pointerY = py;
 
     const rect = character.getBoundingClientRect();
-    const charCenterX = rect.left + rect.width / 2;
+    const charCenterX = rect.left + rect.width * 0.5;
+    const charCenterY = rect.top + rect.height * 0.55;
 
-    // Check if target is to the Right or Left of warrior center
-    if (px >= charCenterX) {
+    const deltaX = px - charCenterX;
+    const deltaY = py - charCenterY;
+
+    // Horizontal direction
+    if (deltaX >= 0) {
       facingDir = 1; // Facing Right
-      targetScaleX = 1.02; // Normal orientation (points Right)
+      targetScaleX = 1.02;
     } else {
       facingDir = -1; // Facing Left
-      targetScaleX = -1.02; // Flipped orientation (points Left)
+      targetScaleX = -1.02;
     }
 
-    const muzzle = getMuzzlePos();
-    const deltaX = px - muzzle.x;
-    const deltaY = py - muzzle.y;
-    const aimAngle = Math.atan2(deltaY, deltaX);
+    // Vertical pitch angle calculation (Up = negative, Down = positive)
+    const horizDist = Math.max(35, Math.abs(deltaX));
+    const pitch = Math.atan2(deltaY, horizDist);
+    currentPitchAngle = pitch;
 
-    // 3D Tilt & Gun Aiming calculation based on facing direction
+    const pitchDeg = (pitch * 180) / Math.PI;
+
+    // 3D Rotations (Gun tilts directly towards target in all directions and corners)
     if (facingDir === 1) {
-      targetRotY = Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
-      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
-      targetRotZ = Math.sin(aimAngle) * 6;
+      targetRotZ = Math.max(-65, Math.min(55, pitchDeg * 0.92));
+      targetRotX = -Math.sin(pitch) * 28;
+      targetRotY = Math.max(-32, Math.min(32, (deltaX / (window.innerWidth / 2)) * 26));
     } else {
-      targetRotY = -Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
-      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
-      targetRotZ = -Math.sin(aimAngle) * 6;
+      targetRotZ = -Math.max(-65, Math.min(55, pitchDeg * 0.92));
+      targetRotX = -Math.sin(pitch) * 28;
+      targetRotY = -Math.max(-32, Math.min(32, (-deltaX / (window.innerWidth / 2)) * 26));
     }
 
-    targetTransX = Math.max(-25, Math.min(25, (deltaX / window.innerWidth) * 28));
-    targetTransY = Math.max(-20, Math.min(20, (deltaY / window.innerHeight) * 22));
+    targetTransX = Math.max(-28, Math.min(28, (deltaX / window.innerWidth) * 32));
+    targetTransY = Math.max(-22, Math.min(22, (deltaY / window.innerHeight) * 26));
   }
 
   // Shoot Bullet Function
@@ -5389,16 +5415,16 @@ function initHero3DPhysicsEngine() {
     // 1. Play Synthesized Sound
     playCyberLaserSound();
 
-    // 2. Recoil Kickback
-    recoilX = -Math.cos(angle) * 22;
-    recoilY = -Math.sin(angle) * 16;
-    recoilZ = -24;
+    // 2. Recoil Kickback directly opposite to fire vector
+    recoilX = -Math.cos(angle) * 24;
+    recoilY = -Math.sin(angle) * 20;
+    recoilZ = -25;
 
-    // 3. Muzzle Flash Explosion
+    // 3. Muzzle Flash Explosion pointing along shot vector
     muzzleFlashes.push({
       x: muzzle.x,
       y: muzzle.y,
-      radius: 34,
+      radius: 36,
       alpha: 1.0,
       angle: angle
     });
@@ -5414,7 +5440,7 @@ function initHero3DPhysicsEngine() {
       angle: angle,
       dist: dist,
       progress: 0,
-      speed: Math.max(0.08, Math.min(0.22, 105 / dist)) // Supersonic velocity
+      speed: Math.max(0.08, Math.min(0.24, 115 / dist)) // Supersonic velocity
     });
   }
 
