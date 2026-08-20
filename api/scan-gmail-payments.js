@@ -20,17 +20,29 @@ export default async function handler(req, res) {
 
     let scannedAlerts = [];
 
-    // 1. If accessToken provided, query Gmail REST API
+    // 1. If accessToken provided, query Gmail REST API across all official UPI & Bank senders
     if (accessToken) {
       try {
-        const query = encodeURIComponent("from:(alerts@sbi.co.in OR alerts@hdfcbank.net OR noreply@phonepe.com OR alerts@fampay.in OR alerts@paytm.com) credited");
-        const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=10`, {
+        const senders = [
+          "no-reply@famapp.in", "alerts@famapp.in", "payments@famapp.in", "support@famapp.in", "alerts@fampay.in", "payments@fampay.in", "no-reply@fampay.in",
+          "noreply@phonepe.com", "alerts@phonepe.com", "support@phonepe.com", "transactions@phonepe.com",
+          "payments-noreply@google.com", "googlepay-noreply@google.com",
+          "alerts@paytm.com", "no-reply@paytm.com", "care@paytm.com", "payment-alerts@paytm.com",
+          "alerts@sbi.co.in", "donotreply@sbi.co.in", "onlinesbi@sbi.co.in",
+          "alerts@hdfcbank.net", "instamail@hdfcbank.net", "alerts@hdfcbank.bank.in",
+          "alerts@icicibank.com", "transactionalerts@icicibank.com",
+          "alerts@axisbank.com", "alerts@kotak.com", "alerts@pnb.co.in", "alerts@bankofbaroda.com",
+          "alerts@cred.club", "alerts@jupiter.money", "alerts@fi.money"
+        ];
+        const fromClause = `from:(${senders.join(" OR ")})`;
+        const query = encodeURIComponent(`(${fromClause} OR (credited OR received OR payment OR "Money Received" OR FamApp OR FamPay OR PhonePe OR Paytm OR UPI))`);
+        const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=15`, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         const listData = await listRes.json();
 
         if (Array.isArray(listData.messages)) {
-          for (const msgItem of listData.messages.slice(0, 5)) {
+          for (const msgItem of listData.messages.slice(0, 10)) {
             const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgItem.id}?format=full`, {
               headers: { Authorization: `Bearer ${accessToken}` }
             });

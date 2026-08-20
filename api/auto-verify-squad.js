@@ -53,10 +53,22 @@ export default async function handler(req, res) {
     const teams = Array.isArray(tourney.teams) ? tourney.teams : [];
     let verifiedAlerts = Array.isArray(tourney.verifiedAlerts) ? tourney.verifiedAlerts : [];
 
-    // 2. Scan Organizer's Gmail if access token is available
+    // 2. Scan Organizer's Gmail for payment alerts from all official UPI & Bank senders
     if (googleAccessToken) {
       try {
-        const query = encodeURIComponent("from:(alerts@sbi.co.in OR alerts@hdfcbank.net OR noreply@phonepe.com OR alerts@fampay.in OR payments@fampay.in OR alerts@paytm.com) " + utr);
+        const senders = [
+          "no-reply@famapp.in", "alerts@famapp.in", "payments@famapp.in", "support@famapp.in", "alerts@fampay.in", "payments@fampay.in", "no-reply@fampay.in",
+          "noreply@phonepe.com", "alerts@phonepe.com", "support@phonepe.com", "transactions@phonepe.com",
+          "payments-noreply@google.com", "googlepay-noreply@google.com",
+          "alerts@paytm.com", "no-reply@paytm.com", "care@paytm.com", "payment-alerts@paytm.com",
+          "alerts@sbi.co.in", "donotreply@sbi.co.in", "onlinesbi@sbi.co.in",
+          "alerts@hdfcbank.net", "instamail@hdfcbank.net", "alerts@hdfcbank.bank.in",
+          "alerts@icicibank.com", "transactionalerts@icicibank.com",
+          "alerts@axisbank.com", "alerts@kotak.com", "alerts@pnb.co.in", "alerts@bankofbaroda.com",
+          "alerts@cred.club", "alerts@jupiter.money", "alerts@fi.money"
+        ];
+        const fromClause = `from:(${senders.join(" OR ")})`;
+        const query = encodeURIComponent(`(${fromClause} OR (credited OR received OR payment OR "Money Received" OR FamApp OR FamPay OR PhonePe OR Paytm OR UPI)) ${utr}`);
         const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=5`, {
           headers: { Authorization: `Bearer ${googleAccessToken}` }
         });
