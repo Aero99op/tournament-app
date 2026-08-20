@@ -3246,15 +3246,22 @@ function deleteTeam(teamIdx) {
     showToast("⛔ Permission Denied: Only the tournament organizer can delete squads.");
     return;
   }
-  if (activeT.teams[teamIdx] != undefined) {
+  if (activeT.teams && activeT.teams[teamIdx] !== undefined) {
     let name = activeT.teams[teamIdx].name;
     activeT.teams.splice(teamIdx, 1);
-    saveStateToStorage();
+    // Re-index remaining squad slots
+    activeT.teams.forEach((t, i) => {
+      t.slot = i + 1;
+    });
+    saveStateToStorage(true);
     renderWorkspaceOverview();
     renderWorkspaceTeams();
+    renderWorkspacePayments();
     renderWorkspaceMatchStandings();
     renderWorkspaceOverallStandings();
-    showToast("Removed squad '" + name + "' from tournament.");
+    renderLandingFeatured();
+    renderManageList();
+    showToast("🗑️ Squad '" + name + "' removed. Slots successfully re-indexed & synced!");
   }
 }
 
