@@ -2985,7 +2985,7 @@ body.theme-anime-sketch .canvas-container-responsive {
 
 @media (max-width: 992px) {
   .app-viewport {
-    padding: 16px 12px;
+    padding: 14px 12px 80px 12px;
   }
 }
 
@@ -3001,15 +3001,20 @@ body.theme-anime-sketch .canvas-container-responsive {
   }
 
   .anime-header {
-    padding: 8px 14px;
+    padding: 8px 12px;
   }
 
   .nav-container {
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .logo-slash {
+    font-size: 18px;
   }
 
   .logo-text {
-    font-size: 17px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
   }
 
   .logo-badge {
@@ -3017,46 +3022,81 @@ body.theme-anime-sketch .canvas-container-responsive {
   }
 
   .db-sync-badge {
-    padding: 4px 8px;
+    padding: 3px 8px;
     font-size: 10px;
+    letter-spacing: 0px;
   }
 
   .btn-auth-pill {
-    padding: 6px 10px;
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 14px;
+  }
+
+  .user-profile-badge {
+    padding: 4px 8px;
     font-size: 11px;
   }
 
   /* BODY BOTTOM PADDING FOR MOBILE BOTTOM NAV */
   body {
-    padding-bottom: 72px;
+    padding-bottom: 76px;
+  }
+
+  /* RUNNING TICKER STRIP */
+  .official-ticker-strip {
+    margin-bottom: 14px;
+    padding: 6px 0;
+    border-radius: 6px;
+  }
+
+  .ticker-item {
+    font-size: 11.5px;
+    gap: 6px;
   }
 
   /* HERO SECTION */
   .hero-official-container {
     grid-template-columns: 1fr;
-    padding: 24px 16px;
-    gap: 24px;
+    padding: 20px 14px;
+    gap: 20px;
     text-align: center;
+    border-radius: 16px;
+    margin-bottom: 20px;
   }
 
   .hero-left-col {
     align-items: center;
   }
 
+  .hero-pill-badge {
+    padding: 4px 12px;
+    margin-bottom: 14px;
+  }
+
+  .hero-pill-badge .badge-text {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
+
   .hero-headline-modern {
-    font-size: clamp(32px, 8vw, 44px);
-    line-height: 1.1;
+    font-size: clamp(28px, 7.5vw, 40px);
+    line-height: 1.08;
+    margin-bottom: 12px;
   }
 
   .hero-desc-modern {
-    font-size: 13px;
+    font-size: 12.5px;
+    line-height: 1.55;
     margin-bottom: 20px;
+    max-width: 100%;
   }
 
   .hero-action-buttons-group {
     flex-direction: column;
     width: 100%;
     gap: 10px;
+    margin-bottom: 20px;
   }
 
   .btn-hero-primary,
@@ -3064,70 +3104,158 @@ body.theme-anime-sketch .canvas-container-responsive {
     min-width: 100%;
     width: 100%;
     padding: 12px 16px;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .btn-hero-primary .btn-hero-text strong,
+  .btn-hero-secondary .btn-hero-text strong {
+    font-size: 14px;
+  }
+
+  .btn-hero-primary .btn-hero-text small,
+  .btn-hero-secondary .btn-hero-text small {
+    font-size: 10.5px;
   }
 
   .hero-stats-strip {
-    justify-content: center;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    gap: 6px;
   }
 
   .stat-pill {
-    padding: 6px 12px;
+    padding: 6px 4px;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    border-radius: 6px;
   }
 
   .stat-pill .stat-val {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .stat-pill .stat-lbl {
+    font-size: 9.5px;
+    letter-spacing: 0px;
   }
 
   .hero-3d-wrapper {
-    max-width: 280px;
-    margin: 0 auto;
+    max-width: 240px;
+    margin: 8px auto 0 auto;
+  }
+
+  .hero-glow-backdrop {
+    width: 200px;
+    height: 200px;
   }
 
   .hero-3d-character {
-    border-radius: 16px;
+    border-radius: 14px;
+    max-height: 240px;
   }
 
   .floating-chip {
     display: none;
   }
 
-  /* TICKER STRIP */
-  .official-ticker-strip {
-    margin-bottom: 16px;
-    padding: 6px 0;
-  }
-
-  .ticker-item {
-    font-size: 11px;
-    gap: 6px;
-  }
-
   /* TOURNAMENT CARDS & GRID */
   .tourney-cards-grid {
     grid-template-columns: 1fr;
     gap: 14px;
+    width: 100%;
   }
 
   .tourney-card-item {
-    padding: 16px 14px;
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+
+  .card-top-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
   }
 
   .t-card-title {
-    font-size: 16px;
+    font-size: 15.5px;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .t-card-meta {
+    font-size: 11px;
+    margin-bottom: 12px;
   }
 
   .t-card-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .tm-label {
+    font-size: 9.5px;
+  }
+
+  .tm-val {
+    font-size: 13px;
+  }
+
+  .card-action-btns-row {
+    display: flex;
     gap: 6px;
-    padding: 8px 10px;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .btn-card-register {
+    flex: 1.4;
+    font-size: 11.5px;
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: 6px;
+  }
+
+  .btn-action-primary-sm {
+    flex: 1;
+    font-size: 11.5px;
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: 6px;
+  }
+
+  .btn-card-share,
+  .btn-card-del-t {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 6px;
   }
 
   /* WORKSPACE RESPONSIVENESS */
   .ws-header {
+    padding: 14px 12px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+
+  .ws-title-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+  }
+
+  #ws-tourney-title {
+    font-size: 18px;
   }
 
   .ws-tab-navigation {
@@ -3137,8 +3265,9 @@ body.theme-anime-sketch .canvas-container-responsive {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     gap: 6px;
-    padding-bottom: 4px;
-    margin-bottom: 16px;
+    padding: 4px 0 10px 0;
+    margin-bottom: 14px;
+    width: 100%;
   }
 
   .ws-tab-navigation::-webkit-scrollbar {
@@ -3147,65 +3276,133 @@ body.theme-anime-sketch .canvas-container-responsive {
 
   .ws-tab-btn {
     flex-shrink: 0;
-    padding: 8px 14px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    border-radius: 8px;
   }
 
   .stats-cards-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 8px;
   }
 
-  /* FORMS & MODALS */
+  .stat-card {
+    padding: 12px 10px;
+    border-radius: 8px;
+  }
+
+  .stat-card .stat-val {
+    font-size: 16px;
+  }
+
+  /* FORMS & INPUTS (PREVENT IOS ZOOM ON FOCUS) */
   .form-row-2,
   .form-row-3 {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .modal-content {
-    width: 95% !important;
-    max-width: 95% !important;
-    margin: 10px auto;
-    max-height: 90vh;
+  .form-input,
+  .form-select {
+    font-size: 15px;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .form-card {
+    padding: 16px 12px;
     border-radius: 12px;
   }
 
-  .modal-body {
-    padding: 14px;
+  /* MODALS ON MOBILE */
+  .modal-overlay {
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 88vh;
+    border-radius: 14px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .modal-header {
     padding: 12px 14px;
+    position: sticky;
+    top: 0;
+    background: #0d0f18;
+    z-index: 10;
+    border-bottom: 1px solid #242436;
+  }
+
+  .modal-title {
+    font-size: 15px;
+  }
+
+  .modal-body {
+    padding: 14px 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
   }
 
   .modal-footer {
-    padding: 10px 14px;
-    flex-wrap: wrap;
+    padding: 10px 12px;
+    position: sticky;
+    bottom: 0;
+    background: #0d0f18;
+    z-index: 10;
+    border-top: 1px solid #242436;
+    display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   .modal-footer button {
     flex: 1;
+    min-height: 38px;
+    font-size: 12px;
   }
 
-  /* TABLES */
+  /* TABLES & LEADERBOARD */
   .custom-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
   }
 
   .anime-table th,
   .anime-table td {
-    padding: 8px 10px;
+    padding: 8px 6px;
     font-size: 11px;
     white-space: nowrap;
+  }
+
+  /* STANDINGS GRAPHIC STUDIO CANVAS ON MOBILE */
+  .canvas-container-responsive {
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  #esports-standings-canvas {
+    width: 100% !important;
+    height: auto !important;
   }
 }
 
 @media (max-width: 480px) {
+  .nav-container {
+    gap: 4px;
+  }
+
   .logo-text {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .db-sync-badge {
@@ -3213,10 +3410,18 @@ body.theme-anime-sketch .canvas-container-responsive {
   }
 
   .hero-headline-modern {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .stats-cards-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stat-pill .stat-val {
+    font-size: 13.5px;
+  }
+
+  .stat-pill .stat-lbl {
+    font-size: 8.5px;
   }
 }
