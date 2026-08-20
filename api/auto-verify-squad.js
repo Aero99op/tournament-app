@@ -53,18 +53,24 @@ export default async function handler(req, res) {
     const teams = Array.isArray(tourney.teams) ? tourney.teams : [];
     let verifiedAlerts = Array.isArray(tourney.verifiedAlerts) ? tourney.verifiedAlerts : [];
 
-    // 2. Scan Organizer's Gmail for payment alerts from all official UPI & Bank senders
+    // 2. Scan Organizer's Gmail for payment alerts from all official UPI & Bank senders (Verified via official records)
     if (googleAccessToken) {
       try {
         const senders = [
-          "no-reply@famapp.in", "alerts@famapp.in", "payments@famapp.in", "support@famapp.in", "alerts@fampay.in", "payments@fampay.in", "no-reply@fampay.in",
+          // FamApp & FamPay (Official & TrioTech Parent Domain)
+          "no-reply@famapp.in", "alerts@famapp.in", "payments@famapp.in", "support@famapp.in", "support@triotech.co.in", "alerts@fampay.in", "payments@fampay.in", "no-reply@fampay.in",
+          // PhonePe
           "noreply@phonepe.com", "alerts@phonepe.com", "support@phonepe.com", "transactions@phonepe.com",
+          // Google Pay / Google Payments
           "payments-noreply@google.com", "googlepay-noreply@google.com",
+          // Paytm
           "alerts@paytm.com", "no-reply@paytm.com", "care@paytm.com", "payment-alerts@paytm.com",
+          // Major Indian Banks
           "alerts@sbi.co.in", "donotreply@sbi.co.in", "onlinesbi@sbi.co.in",
-          "alerts@hdfcbank.net", "instamail@hdfcbank.net", "alerts@hdfcbank.bank.in",
+          "alerts@hdfcbank.net", "instamail@hdfcbank.net", "alerts@hdfcbank.com", "alerts@hdfcbank.bank.in",
           "alerts@icicibank.com", "transactionalerts@icicibank.com",
           "alerts@axisbank.com", "alerts@kotak.com", "alerts@pnb.co.in", "alerts@bankofbaroda.com",
+          // Neo-Banks
           "alerts@cred.club", "alerts@jupiter.money", "alerts@fi.money"
         ];
         const fromClause = `from:(${senders.join(" OR ")})`;
