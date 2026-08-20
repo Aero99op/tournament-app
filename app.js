@@ -1082,23 +1082,57 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
 
   if (liveVerificationInterval) clearInterval(liveVerificationInterval);
 
+  async function triggerInstantServerlessAutoVerify() {
+    if (!registeredSquad.utr || registeredSquad.utr.length < 8) return false;
+    try {
+      const res = await fetch("/api/auto-verify-squad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourneyId: tourney.id,
+          utr: registeredSquad.utr,
+          squadName: registeredSquad.name,
+          amount: tourney.entryFee || 0
+        })
+      });
+      const data = await res.json();
+      if (data && data.approved) {
+        registeredSquad.paymentStatus = "APPROVED";
+        registeredSquad.autoVerified = true;
+        registeredSquad.verifiedAt = data.verifiedAt || new Date().toISOString();
+        saveStateToStorage(false);
+        return true;
+      }
+    } catch (e) {
+      console.warn("Auto-verify API call note:", e);
+    }
+    return false;
+  }
+
   async function checkOnce() {
     attempts++;
 
-    // 0. Check verified bank alert cache
-    loadVerifiedBankUtrs();
-    if (registeredSquad.utr && verifiedBankUtrsCache.includes(registeredSquad.utr.trim())) {
-      registeredSquad.paymentStatus = "APPROVED";
-      registeredSquad.autoVerified = true;
-      registeredSquad.verifiedAt = new Date().toISOString();
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('tournaments').update(buildSupabasePayload(tourney)).eq('id', tourney.id);
-        } catch (e) {}
+    // 0. Trigger Real-Time Instant Serverless Auto-Verify
+    if (registeredSquad.paymentStatus !== "APPROVED") {
+      await triggerInstantServerlessAutoVerify();
+    }
+
+    // 1. Check verified bank alert cache
+    if (registeredSquad.paymentStatus !== "APPROVED") {
+      loadVerifiedBankUtrs();
+      if (registeredSquad.utr && verifiedBankUtrsCache.includes(registeredSquad.utr.trim())) {
+        registeredSquad.paymentStatus = "APPROVED";
+        registeredSquad.autoVerified = true;
+        registeredSquad.verifiedAt = new Date().toISOString();
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('tournaments').update(buildSupabasePayload(tourney)).eq('id', tourney.id);
+          } catch (e) {}
+        }
       }
     }
 
-    // 1. Fetch latest squad state from Supabase
+    // 2. Fetch latest squad state from Supabase
     if (registeredSquad.paymentStatus !== "APPROVED" && supabaseClient) {
       try {
         const { data } = await supabaseClient.from('tournaments').select('teams').eq('id', tourney.id);
@@ -1126,10 +1160,10 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
         msgEl.innerHTML = `🎉 <strong>PAYMENT VERIFIED!</strong> ₹${registeredSquad.paymentAmount || tourney.entryFee} for UTR <strong style="color:#ffd700;">${registeredSquad.utr}</strong> confirmed! Slot #${registeredSquad.slot} is permanently locked & approved.`;
       }
       if (emojiEl) emojiEl.textContent = "💥";
-      if (headingEl) headingEl.textContent = "✅ SQUAD APPROVED & LOCKED!";
+      if (headingEl) headingEl.textContent = "✅ SQUAD AUTO-APPROVED & LOCKED!";
       if (recheckBtn) recheckBtn.style.display = "none";
-      if (timerTxt) timerTxt.textContent = "⚡ Verified live!";
-      showToast("🎉 ⚡ PAYMENT VERIFIED! Squad '" + registeredSquad.name + "' is APPROVED!");
+      if (timerTxt) timerTxt.textContent = "⚡ Verified live in real-time!";
+      showToast("🎉 ⚡ PAYMENT VERIFIED! Squad '" + registeredSquad.name + "' is AUTO-APPROVED!");
       renderLandingFeatured();
       renderManageList();
       return true;
@@ -1164,6 +1198,7 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
   if (recheckBtn) {
     recheckBtn.onclick = async function() {
       showToast("⚡ Querying Bank Gateway records for UTR " + registeredSquad.utr + "...");
+      await triggerInstantServerlessAutoVerify();
       await checkOnce();
     };
   }
