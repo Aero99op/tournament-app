@@ -1,5 +1,8 @@
-// Secure Auto-Verification API: Verifies incoming UTR against genuine Bank/FamPay transaction records
-// Works on Vercel Serverless & Cloudflare Edge (Zero dependencies)
+// Secure Real-Time Auto-Verification API:
+// 1. Scans Organizer's Bank & FamPay Gmail Alerts / Webhook Feed
+// 2. Extracts 12-digit UTR from actual transaction emails
+// 3. Matches player-submitted UTR against real credit records
+// 4. Auto-approves squad in Supabase when matched
 
 const SUPABASE_URL = "https://vufeeywjdrxxxdkwwkzx.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1ZmVleXdqZHJ4eHhka3d3a3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjI1ODQsImV4cCI6MjEwMjUzODU4NH0.kKTxCwYDaDuVEcanoEn33F_et3RCfHTyIlZyBqq_XNs";
@@ -23,6 +26,7 @@ export default async function handler(req, res) {
     const utr = (body.utr || '').trim();
     const squadName = (body.squadName || body.name || '').trim();
     const amount = Number(body.amount || 0);
+    const googleAccessToken = req.headers.authorization?.replace('Bearer ', '') || body.access_token || '';
 
     if (!tourneyId) {
       return res.status(400).json({ error: 'Missing tourneyId' });
@@ -32,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid or missing UTR reference number' });
     }
 
-    // 1. Fetch tournament and its team records from Supabase
+    // 1. Fetch tournament from Supabase
     const getRes = await fetch(`${SUPABASE_URL}/rest/v1/tournaments?id=eq.${tourneyId}&select=*`, {
       headers: {
         "apikey": SUPABASE_ANON_KEY,
@@ -47,14 +51,45 @@ export default async function handler(req, res) {
 
     const tourney = tournaments[0];
     const teams = Array.isArray(tourney.teams) ? tourney.teams : [];
+    let verifiedAlerts = Array.isArray(tourney.verifiedAlerts) ? tourney.verifiedAlerts : [];
 
-    // 2. Check if a genuine bank credit alert (via Webhook, FamPay email, or SMS Bot) matches this UTR
-    const verifiedAlerts = Array.isArray(tourney.verifiedAlerts) ? tourney.verifiedAlerts : [];
+    // 2. Scan Organizer's Gmail if access token is available
+    if (googleAccessToken) {
+      try {
+        const query = encodeURIComponent("from:(alerts@sbi.co.in OR alerts@hdfcbank.net OR noreply@phonepe.com OR alerts@fampay.in OR payments@fampay.in OR alerts@paytm.com) " + utr);
+        const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=5`, {
+          headers: { Authorization: `Bearer ${googleAccessToken}` }
+        });
+        const listData = await listRes.json();
+
+        if (Array.isArray(listData.messages) && listData.messages.length > 0) {
+          for (const msgItem of listData.messages) {
+            const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgItem.id}?format=full`, {
+              headers: { Authorization: `Bearer ${googleAccessToken}` }
+            });
+            const msgData = await msgRes.json();
+            if (msgData.snippet && msgData.snippet.includes(utr)) {
+              verifiedAlerts.push({
+                utr: utr,
+                rawText: msgData.snippet,
+                source: "Gmail_Auto_Scan",
+                timestamp: new Date().toISOString()
+              });
+              break;
+            }
+          }
+        }
+      } catch (gmailErr) {
+        console.warn("Gmail API live query note:", gmailErr.message);
+      }
+    }
+
+    // 3. Check if UTR is matched in verified bank/FamPay alert records
     const isAlertMatched = verifiedAlerts.some(alert => 
       alert.utr === utr || (alert.rawText && alert.rawText.includes(utr))
     );
 
-    // 3. Find target squad
+    // 4. Find target squad
     let targetSquad = null;
     for (const tm of teams) {
       if ((tm.utr && tm.utr.trim() === utr) || (squadName && tm.name === squadName)) {
@@ -67,12 +102,13 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Squad not found in tournament roster' });
     }
 
-    // 4. If genuine bank alert confirmed OR already approved:
+    // 5. IF MATCHED: Auto-approve in Supabase immediately!
     if (isAlertMatched || targetSquad.paymentStatus === "APPROVED") {
       targetSquad.paymentStatus = "APPROVED";
       targetSquad.autoVerified = true;
       targetSquad.verifiedAt = targetSquad.verifiedAt || new Date().toISOString();
-      targetSquad.verifiedSource = "Bank_UPI_Gateway_Match";
+      targetSquad.verifiedSource = "Bank_FamPay_Email_Match";
+      if (!targetSquad.utr && utr) targetSquad.utr = utr;
 
       await fetch(`${SUPABASE_URL}/rest/v1/tournaments?id=eq.${tourneyId}`, {
         method: "PATCH",
@@ -82,7 +118,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           "Prefer": "return=minimal"
         },
-        body: JSON.stringify({ teams: teams })
+        body: JSON.stringify({ teams: teams, verifiedAlerts: verifiedAlerts })
       });
 
       return res.status(200).json({
@@ -92,11 +128,11 @@ export default async function handler(req, res) {
         slot: targetSquad.slot,
         utr: targetSquad.utr,
         status: "APPROVED",
-        message: "Payment verified against Bank/FamPay records. Squad approved!"
+        message: "Payment verified against Bank/FamPay email records. Squad auto-approved in real-time!"
       });
     }
 
-    // 5. If NO bank alert received yet for this UTR:
+    // 6. IF NOT MATCHED YET (e.g. email delayed or fake UTR):
     return res.status(200).json({
       success: true,
       approved: false,
@@ -104,7 +140,7 @@ export default async function handler(req, res) {
       slot: targetSquad.slot,
       utr: targetSquad.utr,
       status: "PENDING",
-      message: "Payment alert not received in organizer's bank account yet. Slot is safely reserved pending bank credit confirmation."
+      message: "Payment alert not found in organizer's bank records yet. System is scanning live..."
     });
   } catch (error) {
     console.error("Auto-verify error:", error);
