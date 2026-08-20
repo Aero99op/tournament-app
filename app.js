@@ -5188,9 +5188,232 @@ function initThemeToggle() {
   }
 }
 
+/* ========================================================
+   HEAVY PHYSICS 3D INTERACTIVE HERO ENGINE (120+ FPS)
+   - Realtime Spring-Damper Inertia Physics
+   - Gyroscopic & Mouse Tilt 3D Parallax
+   - Multi-Harmonic Zero-G Floating Motion
+   - Hardware-Accelerated Jet Thruster Canvas Particles
+   ======================================================== */
+function initHero3DPhysicsEngine() {
+  const stage = document.getElementById("hero-3d-stage");
+  const wrapper = document.getElementById("hero-3d-wrapper");
+  const character = document.getElementById("hero-3d-character");
+  const glow = document.getElementById("hero-glow-backdrop");
+  const canvas = document.getElementById("hero-particles-canvas");
+  const chipTopRight = document.getElementById("chip-top-right");
+  const chipBottomLeft = document.getElementById("chip-bottom-left");
+  const chipBottomRight = document.getElementById("chip-bottom-right");
+
+  if (!character || !wrapper) return;
+
+  // Particle Canvas Setup
+  let ctx = null;
+  if (canvas) {
+    ctx = canvas.getContext("2d");
+    const resizeCanvas = () => {
+      canvas.width = wrapper.clientWidth || 400;
+      canvas.height = wrapper.clientHeight || 400;
+    };
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  // Particle System
+  const particles = [];
+  const maxParticles = 45;
+
+  function createParticle() {
+    const w = canvas ? canvas.width : 400;
+    const h = canvas ? canvas.height : 400;
+    return {
+      x: w * 0.45 + (Math.random() - 0.5) * 70,
+      y: h * 0.72 + (Math.random() - 0.5) * 40,
+      vx: (Math.random() - 0.5) * 2.2 - 0.5,
+      vy: Math.random() * 2.8 + 1.2,
+      size: Math.random() * 3.5 + 1.5,
+      alpha: 1.0,
+      decay: Math.random() * 0.025 + 0.015,
+      hue: Math.random() > 0.3 ? 185 : 45
+    };
+  }
+
+  // Physics State Variables
+  let targetRotX = 0;
+  let targetRotY = 0;
+  let targetTransX = 0;
+  let targetTransY = 0;
+
+  let currRotX = 0;
+  let currRotY = 0;
+  let currTransX = 0;
+  let currTransY = 0;
+
+  let velRotX = 0;
+  let velRotY = 0;
+
+  let isDragging = false;
+  let startDragX = 0;
+  let startDragY = 0;
+
+  // Physics constants for super responsive 120 FPS spring motion
+  const spring = 0.09;
+  const friction = 0.82;
+
+  // Mouse & Pointer Listeners (Whole viewport tracking for maximum immersion)
+  window.addEventListener("mousemove", (e) => {
+    const rect = wrapper.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
+    const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
+
+    targetRotY = deltaX * 24; // +/- 24 deg
+    targetRotX = -deltaY * 20; // +/- 20 deg
+    targetTransX = deltaX * 22;
+    targetTransY = deltaY * 18;
+  });
+
+  // Touch / Mobile Gyroscope & Dragging Listeners
+  wrapper.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startDragX = e.touches[0].clientX;
+      startDragY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  window.addEventListener("touchmove", (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const deltaX = (e.touches[0].clientX - startDragX) * 0.18;
+    const deltaY = (e.touches[0].clientY - startDragY) * 0.18;
+    targetRotY = Math.max(-28, Math.min(28, deltaX));
+    targetRotX = Math.max(-24, Math.min(24, -deltaY));
+    targetTransX = deltaX * 0.8;
+    targetTransY = deltaY * 0.8;
+  }, { passive: true });
+
+  window.addEventListener("touchend", () => {
+    isDragging = false;
+    targetRotX = 0;
+    targetRotY = 0;
+    targetTransX = 0;
+    targetTransY = 0;
+  });
+
+  // Mobile DeviceOrientation (Gyroscope Tilt)
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", (e) => {
+      if (e.gamma !== null && e.beta !== null && !isDragging) {
+        targetRotY = Math.max(-25, Math.min(25, e.gamma * 0.8));
+        targetRotX = Math.max(-20, Math.min(20, (e.beta - 45) * 0.6));
+      }
+    }, { passive: true });
+  }
+
+  // 120+ FPS Hardware-Accelerated Animation Loop
+  let lastTime = performance.now();
+
+  function physicsLoop(now) {
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    // Spring-Damper Inertia Equations
+    const forceRotX = (targetRotX - currRotX) * spring;
+    velRotX = (velRotX + forceRotX) * friction;
+    currRotX += velRotX;
+
+    const forceRotY = (targetRotY - currRotY) * spring;
+    velRotY = (velRotY + forceRotY) * friction;
+    currRotY += velRotY;
+
+    currTransX += (targetTransX - currTransX) * spring;
+    currTransY += (targetTransY - currTransY) * spring;
+
+    // Multi-Harmonic Zero-G Levitation Math
+    const floatY = Math.sin(now * 0.0024) * 14 + Math.cos(now * 0.0012) * 6;
+    const floatRotZ = Math.sin(now * 0.0018) * 3.2;
+
+    // Apply 3D Transforms to Character
+    character.style.transform = `
+      translate3d(${currTransX}px, ${currTransY + floatY}px, 60px)
+      rotateX(${currRotX}deg)
+      rotateY(${currRotY}deg)
+      rotateZ(${floatRotZ}deg)
+      scale(1.02)
+    `;
+
+    // Glow Backdrop Dynamic Light Follow
+    if (glow) {
+      glow.style.transform = `translate3d(${currTransX * 0.5}px, ${currTransY * 0.5 + floatY * 0.6}px, 0px) scale(${1 + Math.sin(now * 0.003) * 0.08})`;
+    }
+
+    // Parallax Depth on Floating Chips
+    if (chipTopRight) {
+      chipTopRight.style.transform = `
+        translate3d(${currTransX * 1.5 + 10}px, ${currTransY * 1.5 - floatY * 0.6}px, 110px)
+        rotateX(${currRotX * 0.8}deg)
+        rotateY(${currRotY * 0.8}deg)
+      `;
+    }
+    if (chipBottomLeft) {
+      chipBottomLeft.style.transform = `
+        translate3d(${currTransX * 1.8 - 15}px, ${currTransY * 1.8 + floatY * 0.8}px, 130px)
+        rotateX(${currRotX * 0.6}deg)
+        rotateY(${currRotY * 0.6}deg)
+      `;
+    }
+    if (chipBottomRight) {
+      chipBottomRight.style.transform = `
+        translate3d(${currTransX * 1.3 + 12}px, ${currTransY * 1.3 - floatY * 0.5}px, 95px)
+        rotateX(${currRotX * 0.7}deg)
+        rotateY(${currRotY * 0.7}deg)
+      `;
+    }
+
+    // Render Thruster Particles at 120 FPS
+    if (ctx && canvas) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (particles.length < maxParticles && Math.random() > 0.25) {
+        particles.push(createParticle());
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx + (currTransX * 0.04);
+        p.y += p.vy;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0 || p.y > canvas.height) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.hue === 185 
+          ? `rgba(0, 240, 255, ${p.alpha * 0.85})` 
+          : `rgba(255, 215, 0, ${p.alpha * 0.75})`;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = p.hue === 185 ? "#00f0ff" : "#ffd700";
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    requestAnimationFrame(physicsLoop);
+  }
+
+  requestAnimationFrame(physicsLoop);
+}
+
 initSlotPresetButtons();
 initThemeToggle();
 initMobileNavigation();
+initHero3DPhysicsEngine();
 loadStateFromStorage();
 initSupabase();
 

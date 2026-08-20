@@ -160,14 +160,15 @@
           </div>
         </div>
 
-        <!-- RIGHT COLUMN: 3D FLOATING HERO CHARACTER & FLOATING CHIPS -->
-        <div class="hero-right-col">
-          <div class="hero-3d-wrapper">
-            <div class="hero-glow-backdrop"></div>
-            <img src="assets/hero-character.jpg" alt="Vortex 3D Esports Warrior" class="hero-3d-character">
+        <!-- RIGHT COLUMN: 3D FLOATING HERO CHARACTER & 120FPS PHYSICS STAGE -->
+        <div class="hero-right-col" id="hero-3d-stage">
+          <div class="hero-3d-wrapper" id="hero-3d-wrapper">
+            <canvas id="hero-particles-canvas" class="hero-particles-canvas"></canvas>
+            <div class="hero-glow-backdrop" id="hero-glow-backdrop"></div>
+            <img src="assets/hero-character.png" alt="Vortex 3D Esports Warrior" class="hero-3d-character" id="hero-3d-character">
             
-            <!-- FLOATING GLASS STATS CHIPS -->
-            <div class="floating-chip chip-top-right">
+            <!-- FLOATING 3D GLASS STATS CHIPS -->
+            <div class="floating-chip chip-top-right" id="chip-top-right">
               <span class="chip-icon">⚡</span>
               <div>
                 <strong>1-Click Auto-Verify</strong>
@@ -175,7 +176,7 @@
               </div>
             </div>
 
-            <div class="floating-chip chip-bottom-left">
+            <div class="floating-chip chip-bottom-left" id="chip-bottom-left">
               <span class="chip-icon">🏆</span>
               <div>
                 <strong>Live Point Tables</strong>
@@ -183,7 +184,7 @@
               </div>
             </div>
 
-            <div class="floating-chip chip-bottom-right">
+            <div class="floating-chip chip-bottom-right" id="chip-bottom-right">
               <span class="chip-icon">🛡️</span>
               <div>
                 <strong>Anti-Cheat Roster</strong>
