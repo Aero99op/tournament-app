@@ -5444,19 +5444,46 @@ function initHero3DPhysicsEngine() {
     });
   }
 
-  // Pointer Movement & Aiming
+  const heroContainer = document.querySelector(".hero-official-container");
+
+  // Pointer Movement & Aiming (Only when cursor is near the hero area on Landing page)
   window.addEventListener("pointermove", (e) => {
-    updateAim(e.clientX, e.clientY);
+    const landingView = document.getElementById("view-landing");
+    if (!landingView || !landingView.classList.contains("active") || !heroContainer) return;
+    
+    const hRect = heroContainer.getBoundingClientRect();
+    // Only aim if cursor is within/near the hero arena
+    if (e.clientY >= hRect.top - 80 && e.clientY <= hRect.bottom + 120 && e.clientX >= hRect.left - 80 && e.clientX <= hRect.right + 80) {
+      updateAim(e.clientX, e.clientY);
+    } else {
+      // Neutral relaxed stance when cursor leaves hero area
+      targetRotX = 0;
+      targetRotY = 0;
+      targetRotZ = 0;
+      targetTransX = 0;
+      targetTransY = 0;
+    }
   });
 
-  // Shoot On Click / Tap Anywhere on Page
+  // Shoot ONLY inside Hero Character Arena (Never on buttons, forms, navbars or outside hero)
   window.addEventListener("pointerdown", (e) => {
-    // Check if clicked inside form inputs or buttons (allow default behavior while still shooting)
+    const landingView = document.getElementById("view-landing");
+    if (!landingView || !landingView.classList.contains("active") || !heroContainer) return;
+
+    // Check if clicked inside Hero Container
+    const isInsideHero = heroContainer.contains(e.target) || e.target === heroContainer;
+    if (!isInsideHero) return;
+
+    // Do NOT shoot if clicking interactive elements (buttons, inputs, links, pills)
+    if (e.target.closest("button, a, input, select, textarea, .nav-link, .btn-hero-primary, .btn-hero-secondary, .modal-content, .mobile-bottom-nav, .theme-toggle-btn")) {
+      return;
+    }
+
     updateAim(e.clientX, e.clientY);
     shootAt(e.clientX, e.clientY);
   });
 
-  // Touch / Mobile Dragging
+  // Touch / Mobile Dragging (Scoped to 3D Character Stage)
   wrapper.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) {
       isDragging = true;
@@ -5467,7 +5494,7 @@ function initHero3DPhysicsEngine() {
     }
   }, { passive: true });
 
-  window.addEventListener("touchmove", (e) => {
+  wrapper.addEventListener("touchmove", (e) => {
     if (e.touches.length > 0) {
       updateAim(e.touches[0].clientX, e.touches[0].clientY);
     }
