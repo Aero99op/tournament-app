@@ -129,6 +129,12 @@ export default async function handler(req, res) {
               }
             }
 
+            t.verifiedAlerts = Array.isArray(t.verifiedAlerts) ? t.verifiedAlerts : [];
+            if (utr && !t.verifiedAlerts.some(a => a.utr === utr)) {
+              t.verifiedAlerts.push({ utr: utr, amount: amount, rawText: rawText, timestamp: new Date().toISOString() });
+              modified = true;
+            }
+
             if (modified) {
               await fetch(`${SUPABASE_URL}/rest/v1/tournaments?id=eq.${t.id}`, {
                 method: "PATCH",
@@ -138,7 +144,7 @@ export default async function handler(req, res) {
                   "Content-Type": "application/json",
                   "Prefer": "return=minimal"
                 },
-                body: JSON.stringify({ teams: t.teams })
+                body: JSON.stringify({ teams: t.teams, verifiedAlerts: t.verifiedAlerts })
               });
               break;
             }
