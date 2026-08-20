@@ -730,6 +730,8 @@ body {
   align-items: center;
   perspective: 1200px;
   transform-style: preserve-3d;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .hero-particles-canvas {
@@ -740,6 +742,7 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 1;
+  transform: translateZ(0);
 }
 
 .hero-glow-backdrop {
@@ -748,10 +751,11 @@ body {
   height: 340px;
   background: radial-gradient(circle, rgba(0, 240, 255, 0.3) 0%, rgba(56, 189, 248, 0.12) 40%, transparent 70%);
   border-radius: 50%;
-  filter: blur(45px);
+  filter: blur(35px);
   z-index: 0;
   pointer-events: none;
-  transition: transform 0.15s ease-out;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .hero-3d-character {
@@ -759,9 +763,12 @@ body {
   height: 100%;
   object-fit: contain;
   z-index: 2;
-  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 25px rgba(0, 240, 255, 0.4));
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 15px rgba(0, 240, 255, 0.35));
   transform-style: preserve-3d;
-  will-change: transform, filter;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
   pointer-events: auto;
   cursor: grab;
 }
@@ -3506,9 +3513,13 @@ body.theme-anime-sketch .canvas-container-responsive {
   /* MODALS ON MOBILE */
   .modal-overlay {
     padding: 8px;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
+  }
+
+  .modal-overlay.show {
+    display: flex;
   }
 
   .modal-content {

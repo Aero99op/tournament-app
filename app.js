@@ -5487,11 +5487,16 @@ function initHero3DPhysicsEngine() {
     }, { passive: true });
   }
 
-  // 120+ FPS Hardware-Accelerated Physics & Combat Render Loop
+  // 120/240+ FPS Hardware-Accelerated Physics & Combat Render Loop
   let lastTime = performance.now();
+  let combatCanvasIsClean = true;
+
+  // Detect Mobile for high-performance tuning
+  const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const maxActiveThrusters = isMobile ? 22 : 45;
 
   function physicsCombatLoop(now) {
-    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
 
     // Smooth Spring Inertia on Aim Rotation
@@ -5508,12 +5513,12 @@ function initHero3DPhysicsEngine() {
     currTransY += (targetTransY - currTransY) * spring;
 
     // Smooth Flip Turning
-    currScaleX += (targetScaleX - currScaleX) * 0.18;
+    currScaleX += (targetScaleX - currScaleX) * 0.20;
 
     // Smooth Recoil Recovery
-    recoilX += (0 - recoilX) * 0.18;
-    recoilY += (0 - recoilY) * 0.18;
-    recoilZ += (0 - recoilZ) * 0.18;
+    recoilX += (0 - recoilX) * 0.22;
+    recoilY += (0 - recoilY) * 0.22;
+    recoilZ += (0 - recoilZ) * 0.22;
 
     // Zero-G Levitation Floating Math
     const floatY = Math.sin(now * 0.0024) * 14 + Math.cos(now * 0.0012) * 6;
@@ -5524,7 +5529,7 @@ function initHero3DPhysicsEngine() {
       translate3d(${currTransX + recoilX}px, ${currTransY + floatY + recoilY}px, ${60 + recoilZ}px)
       rotateX(${currRotX}deg)
       rotateY(${currRotY}deg)
-      rotateZ(${currRotZ + (facingDir === 1 ? -floatRotZ : floatRotZ)}deg)
+      rotateZ(${currRotZ + (facingDir === 1 ? floatRotZ : -floatRotZ)}deg)
       scaleX(${currScaleX})
       scaleY(1.02)
     `;
@@ -5557,11 +5562,11 @@ function initHero3DPhysicsEngine() {
       `;
     }
 
-    // 1. Render Thruster Particles (Canvas 1)
+    // 1. Ultra-Fast Thruster Particles (Canvas 1 - Zero shadowBlur, pure hardware accelerated)
     if (tCtx && thrusterCanvas) {
       tCtx.clearRect(0, 0, thrusterCanvas.width, thrusterCanvas.height);
 
-      if (thrusterParticles.length < maxThrusters && Math.random() > 0.25) {
+      if (thrusterParticles.length < maxActiveThrusters && Math.random() > 0.3) {
         thrusterParticles.push(createThrusterParticle());
       }
 
@@ -5576,190 +5581,190 @@ function initHero3DPhysicsEngine() {
           continue;
         }
 
-        tCtx.save();
+        // Fast 2-pass concentric glowing particle (10x faster than shadowBlur)
+        tCtx.beginPath();
+        tCtx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        tCtx.fillStyle = p.hue === 185 
+          ? `rgba(0, 240, 255, ${p.alpha * 0.25})` 
+          : `rgba(255, 215, 0, ${p.alpha * 0.20})`;
+        tCtx.fill();
+
         tCtx.beginPath();
         tCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         tCtx.fillStyle = p.hue === 185 
-          ? `rgba(0, 240, 255, ${p.alpha * 0.85})` 
-          : `rgba(255, 215, 0, ${p.alpha * 0.75})`;
-        tCtx.shadowBlur = 12;
-        tCtx.shadowColor = p.hue === 185 ? "#00f0ff" : "#ffd700";
+          ? `rgba(0, 240, 255, ${p.alpha * 0.9})` 
+          : `rgba(255, 215, 0, ${p.alpha * 0.85})`;
         tCtx.fill();
-        tCtx.restore();
       }
     }
 
-    // 2. Render Full-Screen Combat Shooting (Canvas 2)
+    // 2. High-Performance Full-Screen Combat Engine (Canvas 2)
+    const hasCombatEntities = bullets.length > 0 || muzzleFlashes.length > 0 || impactRings.length > 0 || impactSparks.length > 0 || scorchDecals.length > 0;
+
     if (cCtx && combatCanvas) {
-      cCtx.clearRect(0, 0, combatCanvas.width, combatCanvas.height);
-
-      // Render Scorch Decals
-      for (let i = scorchDecals.length - 1; i >= 0; i--) {
-        const d = scorchDecals[i];
-        d.alpha -= 0.012;
-        if (d.alpha <= 0) {
-          scorchDecals.splice(i, 1);
-          continue;
+      if (!hasCombatEntities) {
+        if (!combatCanvasIsClean) {
+          cCtx.clearRect(0, 0, combatCanvas.width, combatCanvas.height);
+          combatCanvasIsClean = true;
         }
-        cCtx.save();
-        cCtx.beginPath();
-        cCtx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
-        cCtx.fillStyle = `rgba(0, 240, 255, ${d.alpha * 0.4})`;
-        cCtx.shadowBlur = 15;
-        cCtx.shadowColor = "#00f0ff";
-        cCtx.fill();
+      } else {
+        combatCanvasIsClean = false;
+        cCtx.clearRect(0, 0, combatCanvas.width, combatCanvas.height);
 
-        // Inner glowing core
-        cCtx.beginPath();
-        cCtx.arc(d.x, d.y, d.radius * 0.4, 0, Math.PI * 2);
-        cCtx.fillStyle = `rgba(255, 255, 255, ${d.alpha * 0.8})`;
-        cCtx.fill();
-        cCtx.restore();
-      }
+        // Render Scorch Decals
+        for (let i = scorchDecals.length - 1; i >= 0; i--) {
+          const d = scorchDecals[i];
+          d.alpha -= 0.015;
+          if (d.alpha <= 0) {
+            scorchDecals.splice(i, 1);
+            continue;
+          }
+          cCtx.beginPath();
+          cCtx.arc(d.x, d.y, d.radius * 1.5, 0, Math.PI * 2);
+          cCtx.fillStyle = `rgba(0, 240, 255, ${d.alpha * 0.2})`;
+          cCtx.fill();
 
-      // Render Muzzle Flashes
-      for (let i = muzzleFlashes.length - 1; i >= 0; i--) {
-        const mf = muzzleFlashes[i];
-        mf.alpha -= 0.15;
-        mf.radius += 3.5;
-        if (mf.alpha <= 0) {
-          muzzleFlashes.splice(i, 1);
-          continue;
+          cCtx.beginPath();
+          cCtx.arc(d.x, d.y, d.radius * 0.5, 0, Math.PI * 2);
+          cCtx.fillStyle = `rgba(255, 255, 255, ${d.alpha * 0.7})`;
+          cCtx.fill();
         }
-        cCtx.save();
-        cCtx.beginPath();
-        cCtx.arc(mf.x, mf.y, mf.radius, 0, Math.PI * 2);
-        cCtx.fillStyle = `rgba(0, 240, 255, ${mf.alpha * 0.9})`;
-        cCtx.shadowBlur = 25;
-        cCtx.shadowColor = "#00f0ff";
-        cCtx.fill();
 
-        // Directional flash burst spike
-        const fx = mf.x + Math.cos(mf.angle) * (mf.radius * 1.6);
-        const fy = mf.y + Math.sin(mf.angle) * (mf.radius * 1.6);
-        cCtx.beginPath();
-        cCtx.moveTo(mf.x, mf.y);
-        cCtx.lineTo(fx, fy);
-        cCtx.strokeStyle = `rgba(255, 255, 255, ${mf.alpha})`;
-        cCtx.lineWidth = 4;
-        cCtx.stroke();
-        cCtx.restore();
-      }
+        // Render Muzzle Flashes
+        for (let i = muzzleFlashes.length - 1; i >= 0; i--) {
+          const mf = muzzleFlashes[i];
+          mf.alpha -= 0.18;
+          mf.radius += 4.0;
+          if (mf.alpha <= 0) {
+            muzzleFlashes.splice(i, 1);
+            continue;
+          }
+          cCtx.beginPath();
+          cCtx.arc(mf.x, mf.y, mf.radius * 1.6, 0, Math.PI * 2);
+          cCtx.fillStyle = `rgba(0, 240, 255, ${mf.alpha * 0.35})`;
+          cCtx.fill();
 
-      // Render 3D Laser Plasma Bullets
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        b.progress += b.speed;
+          cCtx.beginPath();
+          cCtx.arc(mf.x, mf.y, mf.radius * 0.8, 0, Math.PI * 2);
+          cCtx.fillStyle = `rgba(255, 255, 255, ${mf.alpha * 0.9})`;
+          cCtx.fill();
 
-        const prevX = b.currentX;
-        const prevY = b.currentY;
+          // Directional flash burst spike
+          const fx = mf.x + Math.cos(mf.angle) * (mf.radius * 1.8);
+          const fy = mf.y + Math.sin(mf.angle) * (mf.radius * 1.8);
+          cCtx.beginPath();
+          cCtx.moveTo(mf.x, mf.y);
+          cCtx.lineTo(fx, fy);
+          cCtx.strokeStyle = `rgba(255, 255, 255, ${mf.alpha})`;
+          cCtx.lineWidth = 3.5;
+          cCtx.stroke();
+        }
 
-        b.currentX = b.startX + (b.targetX - b.startX) * Math.min(1.0, b.progress);
-        b.currentY = b.startY + (b.targetY - b.startY) * Math.min(1.0, b.progress);
+        // Render 3D Laser Plasma Bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const b = bullets[i];
+          b.progress += b.speed;
 
-        // Draw Laser Tracer Beam Streak
-        cCtx.save();
-        cCtx.beginPath();
-        cCtx.moveTo(prevX, prevY);
-        cCtx.lineTo(b.currentX, b.currentY);
-        cCtx.strokeStyle = "#00f0ff";
-        cCtx.lineWidth = 5;
-        cCtx.lineCap = "round";
-        cCtx.shadowBlur = 18;
-        cCtx.shadowColor = "#00f0ff";
-        cCtx.stroke();
+          const prevX = b.currentX;
+          const prevY = b.currentY;
 
-        // Bright White Inner Core
-        cCtx.beginPath();
-        cCtx.moveTo(prevX, prevY);
-        cCtx.lineTo(b.currentX, b.currentY);
-        cCtx.strokeStyle = "#ffffff";
-        cCtx.lineWidth = 2.5;
-        cCtx.stroke();
-        cCtx.restore();
+          b.currentX = b.startX + (b.targetX - b.startX) * Math.min(1.0, b.progress);
+          b.currentY = b.startY + (b.targetY - b.startY) * Math.min(1.0, b.progress);
 
-        // Bullet Hit Target Event!
-        if (b.progress >= 1.0) {
-          bullets.splice(i, 1);
+          // Outer Glow Line
+          cCtx.beginPath();
+          cCtx.moveTo(prevX, prevY);
+          cCtx.lineTo(b.currentX, b.currentY);
+          cCtx.strokeStyle = "rgba(0, 240, 255, 0.45)";
+          cCtx.lineWidth = 7;
+          cCtx.lineCap = "round";
+          cCtx.stroke();
 
-          // 1. Shockwave Ring
-          impactRings.push({
-            x: b.targetX,
-            y: b.targetY,
-            radius: 4,
-            maxRadius: 42,
-            alpha: 1.0
-          });
+          // Inner Bright Core
+          cCtx.beginPath();
+          cCtx.moveTo(prevX, prevY);
+          cCtx.lineTo(b.currentX, b.currentY);
+          cCtx.strokeStyle = "#ffffff";
+          cCtx.lineWidth = 2.5;
+          cCtx.lineCap = "round";
+          cCtx.stroke();
 
-          // 2. Scorch Decal
-          scorchDecals.push({
-            x: b.targetX,
-            y: b.targetY,
-            radius: 12,
-            alpha: 1.0
-          });
+          // Bullet Hit Target Event!
+          if (b.progress >= 1.0) {
+            bullets.splice(i, 1);
 
-          // 3. Blast 22+ Physics Sparks
-          for (let s = 0; s < 22; s++) {
-            const sparkAngle = Math.random() * Math.PI * 2;
-            const sparkSpeed = Math.random() * 8.5 + 2.5;
-            impactSparks.push({
+            // 1. Shockwave Ring
+            impactRings.push({
               x: b.targetX,
               y: b.targetY,
-              vx: Math.cos(sparkAngle) * sparkSpeed,
-              vy: Math.sin(sparkAngle) * sparkSpeed - Math.random() * 2.5,
-              size: Math.random() * 3 + 1.5,
-              alpha: 1.0,
-              decay: Math.random() * 0.04 + 0.02,
-              hue: Math.random() > 0.35 ? 185 : 45
+              radius: 4,
+              maxRadius: 36,
+              alpha: 1.0
             });
+
+            // 2. Scorch Decal
+            scorchDecals.push({
+              x: b.targetX,
+              y: b.targetY,
+              radius: 10,
+              alpha: 1.0
+            });
+
+            // 3. Blast Physics Sparks (Tuned for 240 FPS)
+            const sparkCount = isMobile ? 12 : 20;
+            for (let s = 0; s < sparkCount; s++) {
+              const sparkAngle = Math.random() * Math.PI * 2;
+              const sparkSpeed = Math.random() * 8.0 + 2.0;
+              impactSparks.push({
+                x: b.targetX,
+                y: b.targetY,
+                vx: Math.cos(sparkAngle) * sparkSpeed,
+                vy: Math.sin(sparkAngle) * sparkSpeed - Math.random() * 2.0,
+                size: Math.random() * 2.8 + 1.2,
+                alpha: 1.0,
+                decay: Math.random() * 0.05 + 0.025,
+                hue: Math.random() > 0.35 ? 185 : 45
+              });
+            }
           }
         }
-      }
 
-      // Render Impact Shockwave Rings
-      for (let i = impactRings.length - 1; i >= 0; i--) {
-        const ring = impactRings[i];
-        ring.radius += 3.2;
-        ring.alpha -= 0.06;
-        if (ring.alpha <= 0 || ring.radius >= ring.maxRadius) {
-          impactRings.splice(i, 1);
-          continue;
-        }
-        cCtx.save();
-        cCtx.beginPath();
-        cCtx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
-        cCtx.strokeStyle = `rgba(0, 240, 255, ${ring.alpha * 0.9})`;
-        cCtx.lineWidth = 2.5;
-        cCtx.shadowBlur = 15;
-        cCtx.shadowColor = "#00f0ff";
-        cCtx.stroke();
-        cCtx.restore();
-      }
-
-      // Render Impact Sparks
-      for (let i = impactSparks.length - 1; i >= 0; i--) {
-        const sp = impactSparks[i];
-        sp.x += sp.vx;
-        sp.y += sp.vy;
-        sp.vy += 0.22; // Gravity
-        sp.alpha -= sp.decay;
-
-        if (sp.alpha <= 0) {
-          impactSparks.splice(i, 1);
-          continue;
+        // Render Impact Shockwave Rings
+        for (let i = impactRings.length - 1; i >= 0; i--) {
+          const ring = impactRings[i];
+          ring.radius += 3.5;
+          ring.alpha -= 0.07;
+          if (ring.alpha <= 0 || ring.radius >= ring.maxRadius) {
+            impactRings.splice(i, 1);
+            continue;
+          }
+          cCtx.beginPath();
+          cCtx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+          cCtx.strokeStyle = `rgba(0, 240, 255, ${ring.alpha * 0.85})`;
+          cCtx.lineWidth = 2.5;
+          cCtx.stroke();
         }
 
-        cCtx.save();
-        cCtx.beginPath();
-        cCtx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
-        cCtx.fillStyle = sp.hue === 185 
-          ? `rgba(0, 240, 255, ${sp.alpha})` 
-          : `rgba(255, 215, 0, ${sp.alpha})`;
-        cCtx.shadowBlur = 10;
-        cCtx.shadowColor = sp.hue === 185 ? "#00f0ff" : "#ffd700";
-        cCtx.fill();
-        cCtx.restore();
+        // Render Impact Sparks
+        for (let i = impactSparks.length - 1; i >= 0; i--) {
+          const sp = impactSparks[i];
+          sp.x += sp.vx;
+          sp.y += sp.vy;
+          sp.vy += 0.22; // Gravity
+          sp.alpha -= sp.decay;
+
+          if (sp.alpha <= 0) {
+            impactSparks.splice(i, 1);
+            continue;
+          }
+
+          cCtx.beginPath();
+          cCtx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+          cCtx.fillStyle = sp.hue === 185 
+            ? `rgba(0, 240, 255, ${sp.alpha})` 
+            : `rgba(255, 215, 0, ${sp.alpha})`;
+          cCtx.fill();
+        }
       }
     }
 
