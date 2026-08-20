@@ -3627,49 +3627,55 @@ body.theme-anime-sketch .canvas-container-responsive {
 }
 
 /* ========================================================
-   AUTHENTIC MANGA SKETCHED LIGHT THEME
-   - Hand-Inked Comic Panel Borders (2.5px solid #09090b)
-   - Manga Screentone Halftone Dot Paper Texture
-   - Hard Offset Manga Box-Shadows (4px 4px 0px #09090b)
-   - High-Contrast Shonen Typography & Crisp Cards
+   WORLD-LEVEL STUDIO TIER MANGA SKETCHED THEME
+   - Hand-Inked Comic Panels (3px solid #09090b)
+   - Shonen Radial Action Speedline Burst (漫画集中線)
+   - Japanese Kanji Micro-Tags & Screentone Halftone Paper
+   - Hard Offset Brutalist Shadows (5px - 8px solid #09090b)
+   - High-Contrast Inked Typography & Punchy Action Buttons
    ======================================================== */
 body.theme-anime-sketch {
-  background-color: #f8fafc !important;
+  background-color: #fafbfc !important;
   background-image: 
     radial-gradient(#94a3b8 1.1px, transparent 1.1px),
-    radial-gradient(#94a3b8 1.1px, #f8fafc 1.1px) !important;
-  background-size: 24px 24px !important;
-  background-position: 0 0, 12px 12px !important;
+    radial-gradient(#94a3b8 1.1px, #fafbfc 1.1px) !important;
+  background-size: 20px 20px !important;
+  background-position: 0 0, 10px 10px !important;
   color: #09090b !important;
 }
 
 body.theme-anime-sketch .anime-header {
   background: rgba(255, 255, 255, 0.98) !important;
-  border-bottom: 2.5px solid #09090b !important;
-  box-shadow: 0 4px 0px #09090b !important;
+  border-bottom: 3px solid #09090b !important;
+  box-shadow: 0 5px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .brand-logo .logo-slash {
-  color: #dc2626 !important;
+  color: #ef4444 !important;
   text-shadow: none !important;
+  font-weight: 900 !important;
 }
 
 body.theme-anime-sketch .logo-text {
   color: #09090b !important;
+  font-family: "Space Grotesk", "Outfit", sans-serif !important;
   font-weight: 900 !important;
-  letter-spacing: 1px !important;
+  letter-spacing: 1.5px !important;
   text-shadow: none !important;
 }
 
 body.theme-anime-sketch .main-nav {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 2px 2px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 3px 3px 0px #09090b !important;
+  padding: 4px 6px !important;
 }
 
 body.theme-anime-sketch .nav-link {
   color: #334155 !important;
+  font-family: "Outfit", sans-serif !important;
   font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .nav-link:hover {
@@ -3681,59 +3687,75 @@ body.theme-anime-sketch .nav-link.active {
   background: #09090b !important;
   color: #00f0ff !important;
   border-radius: 6px !important;
+  box-shadow: 2px 2px 0px #ef4444 !important;
 }
 
 body.theme-anime-sketch .btn-auth-pill {
   background: #ffffff !important;
   color: #09090b !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 3px 3px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 4px 4px 0px #09090b !important;
   font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
 }
 
-body.theme-anime-sketch .btn-auth-pill:hover {
+body.theme-anime-sketch .btn-auth-pill:hover,
+body.theme-anime-sketch .btn-auth-pill:active {
   background: #09090b !important;
   color: #ffffff !important;
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .theme-toggle-btn {
   background: #09090b !important;
   color: #ffffff !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 3px 3px 0px #dc2626 !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 4px 4px 0px #ef4444 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
+}
+
+body.theme-anime-sketch .theme-toggle-btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0px #ef4444 !important;
 }
 
 body.theme-anime-sketch .user-profile-badge {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
+  border: 2.5px solid #09090b !important;
   color: #09090b !important;
-  box-shadow: 3px 3px 0px #09090b !important;
+  box-shadow: 4px 4px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .user-name {
   color: #09090b !important;
+  font-weight: 800 !important;
 }
 
 body.theme-anime-sketch .db-sync-badge {
   background: #f0fdf4 !important;
-  border: 1.5px solid #16a34a !important;
+  border: 2px solid #16a34a !important;
   color: #15803d !important;
+  box-shadow: 2px 2px 0px #16a34a !important;
 }
 
 /* MARQUEE TICKER IN MANGA MODE */
 body.theme-anime-sketch .official-ticker-strip {
   background: #ffffff !important;
   border: 2.5px solid #09090b !important;
-  box-shadow: 4px 4px 0px #09090b !important;
+  box-shadow: 5px 5px 0px #09090b !important;
+  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02) 2px, transparent 2px, transparent 8px) !important;
 }
 
 body.theme-anime-sketch .ticker-item {
   color: #09090b !important;
   font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .ticker-dot {
-  color: #dc2626 !important;
+  color: #ef4444 !important;
 }
 
 /* HERO CONTAINER IN MANGA MODE */
@@ -3741,106 +3763,164 @@ body.theme-anime-sketch .hero-official-container {
   background: #ffffff !important;
   border: 3px solid #09090b !important;
   box-shadow: 8px 8px 0px #09090b !important;
-  border-radius: 16px !important;
+  border-radius: 18px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.theme-anime-sketch .hero-official-container::before {
+  content: "⚡ OFFICIAL MANGA EDITION // 公式エディション" !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  background: #09090b !important;
+  color: #00f0ff !important;
+  font-size: 9.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1px !important;
+  padding: 4px 14px !important;
+  border-bottom-left-radius: 10px !important;
+  z-index: 10 !important;
 }
 
 body.theme-anime-sketch .hero-pill-badge {
   background: #eff6ff !important;
   border: 2px solid #09090b !important;
-  box-shadow: 2px 2px 0px #09090b !important;
+  box-shadow: 3px 3px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .hero-pill-badge .badge-text {
   color: #0284c7 !important;
-  font-weight: 800 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .badge-live-radar {
-  background: #0284c7 !important;
-  box-shadow: 0 0 8px #0284c7 !important;
+  background: #ef4444 !important;
+  box-shadow: 0 0 10px #ef4444 !important;
 }
 
 body.theme-anime-sketch .hero-headline-modern {
+  font-family: "Bebas Neue", "Outfit", sans-serif !important;
+  font-size: 58px !important;
+  line-height: 0.95 !important;
+  letter-spacing: 1.5px !important;
   color: #09090b !important;
-  font-weight: 900 !important;
-  text-shadow: none !important;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.12) !important;
 }
 
 body.theme-anime-sketch .headline-gradient {
-  background: linear-gradient(135deg, #09090b 0%, #0284c7 50%, #dc2626 100%) !important;
+  background: linear-gradient(135deg, #09090b 0%, #0284c7 45%, #ef4444 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
 
 body.theme-anime-sketch .hero-desc-modern {
   color: #334155 !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
 }
 
 body.theme-anime-sketch .btn-hero-primary {
   background: #09090b !important;
   color: #00f0ff !important;
-  border: 2.5px solid #09090b !important;
-  box-shadow: 5px 5px 0px #0284c7 !important;
+  border: 3px solid #09090b !important;
+  box-shadow: 6px 6px 0px #0284c7 !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+body.theme-anime-sketch .btn-hero-primary:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 3px 3px 0px #0284c7 !important;
 }
 
 body.theme-anime-sketch .btn-hero-primary .btn-hero-text strong {
   color: #00f0ff !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .btn-hero-primary .btn-hero-text small {
   color: #94a3b8 !important;
+  font-weight: 600 !important;
 }
 
 body.theme-anime-sketch .btn-hero-secondary {
   background: #ffffff !important;
   color: #09090b !important;
-  border: 2.5px solid #09090b !important;
-  box-shadow: 5px 5px 0px #09090b !important;
+  border: 3px solid #09090b !important;
+  box-shadow: 6px 6px 0px #09090b !important;
+  transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+}
+
+body.theme-anime-sketch .btn-hero-secondary:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 3px 3px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .btn-hero-secondary .btn-hero-text strong {
   color: #09090b !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .btn-hero-secondary .btn-hero-text small {
   color: #64748b !important;
+  font-weight: 600 !important;
 }
 
 body.theme-anime-sketch .stat-pill {
   background: #f8fafc !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 3px 3px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 4px 4px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .stat-pill .stat-val {
   color: #09090b !important;
+  font-family: "Space Grotesk", sans-serif !important;
   font-weight: 900 !important;
 }
 
 body.theme-anime-sketch .stat-pill .stat-lbl {
   color: #475569 !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
 }
 
+/* SHONEN RADIAL SPEEDLINE BURST AURA */
+body.theme-anime-sketch .hero-glow-backdrop {
+  background: 
+    radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, rgba(239, 68, 68, 0.12) 45%, transparent 70%),
+    repeating-conic-gradient(from 0deg, rgba(9, 9, 11, 0.06) 0deg 2.5deg, transparent 2.5deg 8deg) !important;
+  filter: blur(15px) !important;
+  border-radius: 50% !important;
+  animation: mangaSpinBurst 25s linear infinite !important;
+}
+
+@keyframes mangaSpinBurst {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* MANGA COMIC FLOATING CHIPS */
 body.theme-anime-sketch .floating-chip {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 4px 4px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 5px 5px 0px #09090b !important;
+  border-radius: 12px !important;
 }
 
 body.theme-anime-sketch .floating-chip strong {
   color: #09090b !important;
-  font-weight: 800 !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.3px !important;
 }
 
 body.theme-anime-sketch .floating-chip small {
   color: #0284c7 !important;
-  font-weight: 700 !important;
-}
-
-body.theme-anime-sketch .hero-glow-backdrop {
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, rgba(220, 38, 38, 0.12) 45%, transparent 70%) !important;
+  font-weight: 800 !important;
 }
 
 /* CARDS & PANELS IN MANGA MODE */
@@ -3850,9 +3930,9 @@ body.theme-anime-sketch .form-card,
 body.theme-anime-sketch .manage-card-box,
 body.theme-anime-sketch .ws-panel-box {
   background: #ffffff !important;
-  border: 2.5px solid #09090b !important;
-  box-shadow: 5px 5px 0px #09090b !important;
-  border-radius: 12px !important;
+  border: 3px solid #09090b !important;
+  box-shadow: 6px 6px 0px #09090b !important;
+  border-radius: 14px !important;
 }
 
 body.theme-anime-sketch .hero-action-card .card-heading,
@@ -3860,27 +3940,33 @@ body.theme-anime-sketch .t-card-title,
 body.theme-anime-sketch .section-title-modern,
 body.theme-anime-sketch .form-card-title {
   color: #09090b !important;
+  font-family: "Space Grotesk", sans-serif !important;
   font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
 }
 
 body.theme-anime-sketch .hero-action-card .card-desc,
 body.theme-anime-sketch .t-card-meta,
 body.theme-anime-sketch .section-desc-modern {
   color: #475569 !important;
+  font-weight: 500 !important;
 }
 
 body.theme-anime-sketch .t-card-metrics {
-  background: #f1f5f9 !important;
-  border: 1.5px solid #cbd5e1 !important;
+  background: #f8fafc !important;
+  border: 2px solid #09090b !important;
+  box-shadow: 2px 2px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .tm-label {
   color: #64748b !important;
+  font-weight: 700 !important;
 }
 
 body.theme-anime-sketch .tm-val {
   color: #09090b !important;
-  font-weight: 800 !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  font-weight: 900 !important;
 }
 
 body.theme-anime-sketch .btn-card-launch,
@@ -3888,30 +3974,39 @@ body.theme-anime-sketch .btn-submit-action,
 body.theme-anime-sketch .btn-primary-action {
   background: #09090b !important;
   color: #00f0ff !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 3px 3px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 4px 4px 0px #09090b !important;
+  font-weight: 800 !important;
 }
 
-body.theme-anime-sketch .btn-card-launch:hover {
+body.theme-anime-sketch .btn-card-launch:hover,
+body.theme-anime-sketch .btn-submit-action:hover {
   background: #0284c7 !important;
   color: #ffffff !important;
+}
+
+body.theme-anime-sketch .btn-card-launch:active,
+body.theme-anime-sketch .btn-submit-action:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0px #09090b !important;
 }
 
 /* WORKSPACE IN MANGA MODE */
 body.theme-anime-sketch .ws-header {
   background: #ffffff !important;
-  border: 2.5px solid #09090b !important;
-  box-shadow: 5px 5px 0px #09090b !important;
+  border: 3px solid #09090b !important;
+  box-shadow: 6px 6px 0px #09090b !important;
 }
 
 body.theme-anime-sketch #ws-tourney-title {
   color: #09090b !important;
+  font-family: "Space Grotesk", sans-serif !important;
   font-weight: 900 !important;
 }
 
 body.theme-anime-sketch .ws-tab {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
+  border: 2.5px solid #09090b !important;
   color: #334155 !important;
   font-weight: 800 !important;
 }
@@ -3925,7 +4020,7 @@ body.theme-anime-sketch .ws-tab.active {
   background: #09090b !important;
   color: #00f0ff !important;
   border-color: #09090b !important;
-  box-shadow: 3px 3px 0px #09090b !important;
+  box-shadow: 4px 4px 0px #ef4444 !important;
 }
 
 /* FORMS & INPUTS IN MANGA MODE */
@@ -3933,29 +4028,33 @@ body.theme-anime-sketch .form-input,
 body.theme-anime-sketch .form-select,
 body.theme-anime-sketch .form-textarea {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
+  border: 2.5px solid #09090b !important;
   color: #09090b !important;
-  font-weight: 700 !important;
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.08) !important;
+  font-weight: 800 !important;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
 }
 
 body.theme-anime-sketch .form-input:focus,
 body.theme-anime-sketch .form-select:focus {
   border-color: #0284c7 !important;
+  box-shadow: 3px 3px 0px #0284c7 !important;
   outline: none !important;
 }
 
 body.theme-anime-sketch .form-label {
   color: #09090b !important;
-  font-weight: 800 !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
 }
 
 /* MODALS IN MANGA MODE */
 body.theme-anime-sketch .modal-content {
   background: #ffffff !important;
-  border: 3px solid #09090b !important;
-  box-shadow: 8px 8px 0px #09090b !important;
+  border: 3.5px solid #09090b !important;
+  box-shadow: 10px 10px 0px #09090b !important;
   color: #09090b !important;
+  border-radius: 16px !important;
 }
 
 body.theme-anime-sketch .modal-header,
@@ -3966,38 +4065,41 @@ body.theme-anime-sketch .modal-footer {
 
 body.theme-anime-sketch .modal-title {
   color: #09090b !important;
+  font-family: "Space Grotesk", sans-serif !important;
   font-weight: 900 !important;
 }
 
 /* TABLES IN MANGA MODE */
 body.theme-anime-sketch .anime-table {
   background: #ffffff !important;
-  border: 2px solid #09090b !important;
-  box-shadow: 4px 4px 0px #09090b !important;
+  border: 2.5px solid #09090b !important;
+  box-shadow: 5px 5px 0px #09090b !important;
 }
 
 body.theme-anime-sketch .anime-table th {
   background: #09090b !important;
   color: #ffffff !important;
+  font-family: "Space Grotesk", sans-serif !important;
   font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
   border-color: #09090b !important;
 }
 
 body.theme-anime-sketch .anime-table td {
   border-bottom: 1.5px solid #e2e8f0 !important;
   color: #09090b !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
 body.theme-anime-sketch .anime-table tr:hover td {
-  background: #f1f5f9 !important;
+  background: #eff6ff !important;
 }
 
 /* MOBILE BOTTOM NAV IN MANGA MODE */
 body.theme-anime-sketch .mobile-bottom-nav {
   background: rgba(255, 255, 255, 0.98) !important;
-  border-top: 2.5px solid #09090b !important;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.08) !important;
+  border-top: 3px solid #09090b !important;
+  box-shadow: 0 -5px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 body.theme-anime-sketch .bottom-nav-item {
@@ -4010,7 +4112,7 @@ body.theme-anime-sketch .bottom-nav-item.active {
 }
 
 body.theme-anime-sketch .app-footer {
-  background: #f1f5f9 !important;
-  border-top: 2px solid #09090b !important;
+  background: #f8fafc !important;
+  border-top: 2.5px solid #09090b !important;
   color: #475569 !important;
 }
