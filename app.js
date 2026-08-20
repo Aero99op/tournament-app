@@ -5307,8 +5307,8 @@ function initHero3DPhysicsEngine() {
   let velRotX = 0;
   let velRotY = 0;
 
-  // Direction Facing State (-1 = Left, 1 = Right)
-  let facingDir = -1;
+  // Direction Facing State (-1 = Left, 1 = Right, Base asset naturally faces Right)
+  let facingDir = 1;
   let targetScaleX = 1.02;
   let currScaleX = 1.02;
 
@@ -5321,7 +5321,7 @@ function initHero3DPhysicsEngine() {
   let startDragX = 0;
   let startDragY = 0;
 
-  let pointerX = window.innerWidth * 0.35;
+  let pointerX = window.innerWidth * 0.65;
   let pointerY = window.innerHeight * 0.45;
 
   // Physics Constants for 120 FPS Spring Motion
@@ -5331,14 +5331,15 @@ function initHero3DPhysicsEngine() {
   // Get Gun Barrel Muzzle Position in Viewport Space
   function getMuzzlePos() {
     const rect = character.getBoundingClientRect();
-    const muzzleRelX = facingDir === 1 ? 0.78 : 0.22;
+    // Base asset rifle muzzle is at normalized (0.84, 0.25). When flipped left, it is at (0.16, 0.25).
+    const muzzleRelX = facingDir === 1 ? 0.84 : 0.16;
     return {
       x: rect.left + rect.width * muzzleRelX + currTransX + recoilX,
-      y: rect.top + rect.height * 0.28 + currTransY + recoilY
+      y: rect.top + rect.height * 0.25 + currTransY + recoilY
     };
   }
 
-  // Aim Direction Calculation (Supports full Left & Right turning)
+  // Aim Direction Calculation (Correctly points right when tapped right, left when tapped left)
   function updateAim(px, py) {
     pointerX = px;
     pointerY = py;
@@ -5346,13 +5347,13 @@ function initHero3DPhysicsEngine() {
     const rect = character.getBoundingClientRect();
     const charCenterX = rect.left + rect.width / 2;
 
-    // Check if target is on the Right or Left of character
+    // Check if target is to the Right or Left of warrior center
     if (px >= charCenterX) {
-      facingDir = 1;
-      targetScaleX = -1.02; // Flip horizontally to aim Right
+      facingDir = 1; // Facing Right
+      targetScaleX = 1.02; // Normal orientation (points Right)
     } else {
-      facingDir = -1;
-      targetScaleX = 1.02; // Normal pose to aim Left
+      facingDir = -1; // Facing Left
+      targetScaleX = -1.02; // Flipped orientation (points Left)
     }
 
     const muzzle = getMuzzlePos();
@@ -5362,13 +5363,13 @@ function initHero3DPhysicsEngine() {
 
     // 3D Tilt & Gun Aiming calculation based on facing direction
     if (facingDir === 1) {
-      targetRotY = -Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
-      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
-      targetRotZ = -Math.sin(aimAngle) * 6;
-    } else {
       targetRotY = Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
       targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
       targetRotZ = Math.sin(aimAngle) * 6;
+    } else {
+      targetRotY = -Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
+      targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
+      targetRotZ = -Math.sin(aimAngle) * 6;
     }
 
     targetTransX = Math.max(-25, Math.min(25, (deltaX / window.innerWidth) * 28));
