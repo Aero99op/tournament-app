@@ -4823,6 +4823,77 @@ function handleUrlRouting() {
     });
   }
 
+  // Wire Standings CSV & Reports Export
+  const exportFullCsvBtn = document.getElementById("btn-export-full-csv");
+  if (exportFullCsvBtn) {
+    exportFullCsvBtn.addEventListener('click', () => {
+      const activeT = getActiveTourney();
+      if (!activeT) return;
+      const overall = computeOverallStandings(activeT);
+      let csv = "Rank,Team Name,Matches Played,Wins (WWCD),Total Kills,Kill Points,Placement Points,Total Points\n";
+      overall.forEach((row, idx) => {
+        csv += `${idx + 1},"${row.team.replace(/"/g, '""')}",${row.played},${row.wwcd},${row.kills},${row.killPts},${row.placePts},${row.totalPts}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(activeT.title || "Tourney").replace(/\s+/g, "_")}_Overall_Standings.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("📥 Exported overall standings CSV successfully!");
+    });
+  }
+
+  const exportMatchCsvBtn = document.getElementById("btn-export-match-csv");
+  if (exportMatchCsvBtn) {
+    exportMatchCsvBtn.addEventListener('click', () => {
+      const activeT = getActiveTourney();
+      if (!activeT) return;
+      const activeMatch = activeT.matches?.[activeMatchIdx] || activeT.matches?.[0];
+      if (!activeMatch) {
+        showToast("⚠️ No match found to export.");
+        return;
+      }
+      let csv = "Rank,Team Name,Placement,Kills,Kill Points,Placement Points,Bonus,Penalty,Total Points\n";
+      (activeMatch.scores || []).forEach((row, idx) => {
+        const pKey = String(row.place);
+        const placePts = activeT.placementPoints?.[pKey] || 0;
+        const killPts = Number(row.kills || 0) * Number(activeT.killMultiplier || 1);
+        const totalPts = placePts + killPts + Number(row.bonus || 0) - Number(row.penalty || 0);
+        csv += `${idx + 1},"${(row.team || "").replace(/"/g, '""')}",${row.place},${row.kills},${killPts},${placePts},${row.bonus || 0},${row.penalty || 0},${totalPts}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(activeT.title || "Tourney").replace(/\s+/g, "_")}_${(activeMatch.title || "Match").replace(/\s+/g, "_")}_Scoresheet.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("📥 Exported match scoresheet CSV successfully!");
+    });
+  }
+
+  const exportTextReportBtn = document.getElementById("btn-export-text-report");
+  if (exportTextReportBtn) {
+    exportTextReportBtn.addEventListener('click', () => {
+      const activeT = getActiveTourney();
+      if (!activeT) return;
+      const overall = computeOverallStandings(activeT);
+      let text = `🏆 *${activeT.title || "VORTEX ESPORTS TOURNAMENT"}* 🏆\n`;
+      text += `🎮 Game: ${activeT.game || "Free Fire MAX"} | 💰 Prize: ${activeT.prize || "TBD"}\n`;
+      text += `═════════════════════════════\n`;
+      overall.forEach((row, idx) => {
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🔹";
+        text += `${medal} *#${idx + 1} ${row.team}* — ${row.totalPts} PTS (${row.kills} Kills | ${row.wwcd} WWCD)\n`;
+      });
+      text += `═════════════════════════════\n`;
+      text += `⚡ Powered by Vortex Esports (https://tournament-app-bay-seven.vercel.app)`;
+      navigator.clipboard.writeText(text);
+      showToast("📋 Emoji Leaderboard copied to clipboard! Ready to paste on WhatsApp / Discord.");
+    });
+  }
+
   const simulateSmsBtn = document.getElementById("btn-simulate-sms-verify");
   if (simulateSmsBtn) {
     simulateSmsBtn.addEventListener('click', () => {
