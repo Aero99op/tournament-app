@@ -707,6 +707,8 @@ body {
   align-items: center;
   position: relative;
   z-index: 1;
+}
+
 .hero-combat-canvas {
   position: fixed;
   top: 0;
@@ -715,6 +717,7 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 998;
+  display: block;
 }
 
 .hero-3d-wrapper {

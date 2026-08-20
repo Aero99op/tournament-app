@@ -462,15 +462,6 @@ function initMobileNavigation() {
   document.getElementById("mob-nav-create")?.addEventListener('click', () => switchView("view-create"));
   document.getElementById("mob-nav-manage")?.addEventListener('click', () => switchView("view-manage"));
 
-  // Mobile Drawer Theme Button
-  const mobThemeBtn = document.getElementById("mob-btn-theme-toggle");
-  if (mobThemeBtn) {
-    mobThemeBtn.addEventListener('click', () => {
-      const deskThemeBtn = document.getElementById("btn-theme-toggle");
-      if (deskThemeBtn) deskThemeBtn.click();
-    });
-  }
-
   // Mobile Bottom Nav items
   document.getElementById("bnav-home")?.addEventListener('click', () => switchView("view-landing"));
   document.getElementById("bnav-create")?.addEventListener('click', () => switchView("view-create"));
