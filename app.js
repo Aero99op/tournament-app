@@ -1078,14 +1078,28 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
   if (utrEl) utrEl.textContent = registeredSquad.utr || "N/A";
 
   let attempts = 0;
-  const maxAttempts = 15; // 45 seconds polling loop
+  const maxAttempts = 12; // 36 seconds polling loop
 
   if (liveVerificationInterval) clearInterval(liveVerificationInterval);
 
   async function checkOnce() {
     attempts++;
+
+    // 0. Check verified bank alert cache
+    loadVerifiedBankUtrs();
+    if (registeredSquad.utr && verifiedBankUtrsCache.includes(registeredSquad.utr.trim())) {
+      registeredSquad.paymentStatus = "APPROVED";
+      registeredSquad.autoVerified = true;
+      registeredSquad.verifiedAt = new Date().toISOString();
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('tournaments').update(buildSupabasePayload(tourney)).eq('id', tourney.id);
+        } catch (e) {}
+      }
+    }
+
     // 1. Fetch latest squad state from Supabase
-    if (supabaseClient) {
+    if (registeredSquad.paymentStatus !== "APPROVED" && supabaseClient) {
       try {
         const { data } = await supabaseClient.from('tournaments').select('teams').eq('id', tourney.id);
         if (data && data[0] && Array.isArray(data[0].teams)) {
@@ -1109,13 +1123,13 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
         pill.style.borderColor = "#34d399";
       }
       if (msgEl) {
-        msgEl.innerHTML = `🎉 <strong>PAYMENT VERIFIED!</strong> ₹${registeredSquad.paymentAmount || tourney.entryFee} for UTR <strong style="color:#ffd700;">${registeredSquad.utr}</strong> confirmed by Bank Gateway! Slot #${registeredSquad.slot} is permanently locked & approved.`;
+        msgEl.innerHTML = `🎉 <strong>PAYMENT VERIFIED!</strong> ₹${registeredSquad.paymentAmount || tourney.entryFee} for UTR <strong style="color:#ffd700;">${registeredSquad.utr}</strong> confirmed! Slot #${registeredSquad.slot} is permanently locked & approved.`;
       }
       if (emojiEl) emojiEl.textContent = "💥";
-      if (headingEl) headingEl.textContent = "✅ SQUAD AUTO-APPROVED & LOCKED!";
+      if (headingEl) headingEl.textContent = "✅ SQUAD APPROVED & LOCKED!";
       if (recheckBtn) recheckBtn.style.display = "none";
-      if (timerTxt) timerTxt.textContent = "⚡ Verified live in real-time!";
-      showToast("🎉 ⚡ PAYMENT VERIFIED! Squad '" + registeredSquad.name + "' is AUTO-APPROVED!");
+      if (timerTxt) timerTxt.textContent = "⚡ Verified live!";
+      showToast("🎉 ⚡ PAYMENT VERIFIED! Squad '" + registeredSquad.name + "' is APPROVED!");
       renderLandingFeatured();
       renderManageList();
       return true;
@@ -1131,7 +1145,16 @@ async function runLivePaymentVerificationCheck(tourney, registeredSquad) {
       }
       if (attempts >= maxAttempts) {
         if (liveVerificationInterval) clearInterval(liveVerificationInterval);
-        if (timerTxt) timerTxt.textContent = "Slot reserved (Under Review)";
+        if (pill) {
+          pill.textContent = "⏳ SLOT RESERVED (PENDING)";
+          pill.style.background = "#1e1e38";
+          pill.style.color = "#38bdf8";
+          pill.style.borderColor = "#38bdf8";
+        }
+        if (msgEl) {
+          msgEl.innerHTML = `📝 UTR <strong style="color:#ffd700;">${registeredSquad.utr}</strong> is safely recorded! Slot #${registeredSquad.slot} is <strong>RESERVED</strong> for your squad. The organizer will verify with bank records and confirm your slot shortly.`;
+        }
+        if (timerTxt) timerTxt.textContent = "Slot Reserved (Pending Confirmation)";
       }
       return false;
     }
