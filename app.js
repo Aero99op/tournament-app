@@ -5189,10 +5189,12 @@ function initThemeToggle() {
 }
 
 /* ========================================================
-   HEAVY PHYSICS 3D INTERACTIVE HERO ENGINE (120+ FPS)
+   HEAVY PHYSICS 3D INTERACTIVE COMBAT ENGINE (120+ FPS)
    - Realtime Spring-Damper Inertia Physics
-   - Gyroscopic & Mouse Tilt 3D Parallax
-   - Multi-Harmonic Zero-G Floating Motion
+   - Aim-at-Cursor 3D Gun Alignment & Direction Tracking
+   - 3D Laser Plasma Bullet Shoot On Click Anywhere
+   - Recoil Kickback, Muzzle Flash & Target Impact Detonations
+   - Synthesized Web Audio Cybernetic Blaster FX
    - Hardware-Accelerated Jet Thruster Canvas Particles
    ======================================================== */
 function initHero3DPhysicsEngine() {
@@ -5200,32 +5202,81 @@ function initHero3DPhysicsEngine() {
   const wrapper = document.getElementById("hero-3d-wrapper");
   const character = document.getElementById("hero-3d-character");
   const glow = document.getElementById("hero-glow-backdrop");
-  const canvas = document.getElementById("hero-particles-canvas");
+  const thrusterCanvas = document.getElementById("hero-particles-canvas");
+  const combatCanvas = document.getElementById("hero-combat-canvas");
   const chipTopRight = document.getElementById("chip-top-right");
   const chipBottomLeft = document.getElementById("chip-bottom-left");
   const chipBottomRight = document.getElementById("chip-bottom-right");
 
   if (!character || !wrapper) return;
 
-  // Particle Canvas Setup
-  let ctx = null;
-  if (canvas) {
-    ctx = canvas.getContext("2d");
-    const resizeCanvas = () => {
-      canvas.width = wrapper.clientWidth || 400;
-      canvas.height = wrapper.clientHeight || 400;
+  // Setup Thruster Canvas
+  let tCtx = null;
+  if (thrusterCanvas) {
+    tCtx = thrusterCanvas.getContext("2d");
+    const resizeThrusters = () => {
+      thrusterCanvas.width = wrapper.clientWidth || 400;
+      thrusterCanvas.height = wrapper.clientHeight || 400;
     };
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    resizeThrusters();
+    window.addEventListener("resize", resizeThrusters);
   }
 
-  // Particle System
-  const particles = [];
-  const maxParticles = 45;
+  // Setup Full-Screen Combat Canvas
+  let cCtx = null;
+  if (combatCanvas) {
+    cCtx = combatCanvas.getContext("2d");
+    const resizeCombat = () => {
+      combatCanvas.width = window.innerWidth;
+      combatCanvas.height = window.innerHeight;
+    };
+    resizeCombat();
+    window.addEventListener("resize", resizeCombat);
+  }
 
-  function createParticle() {
-    const w = canvas ? canvas.width : 400;
-    const h = canvas ? canvas.height : 400;
+  // Synthesized Cyber Laser Audio FX (Web Audio API - Zero lag, zero network)
+  let audioCtx = null;
+  function playCyberLaserSound() {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(950, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.13);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch (e) {}
+  }
+
+  // Combat Entities Lists
+  const bullets = [];
+  const muzzleFlashes = [];
+  const impactRings = [];
+  const impactSparks = [];
+  const scorchDecals = [];
+
+  // Thruster Particle System
+  const thrusterParticles = [];
+  const maxThrusters = 45;
+
+  function createThrusterParticle() {
+    const w = thrusterCanvas ? thrusterCanvas.width : 400;
+    const h = thrusterCanvas ? thrusterCanvas.height : 400;
     return {
       x: w * 0.45 + (Math.random() - 0.5) * 70,
       y: h * 0.72 + (Math.random() - 0.5) * 40,
@@ -5241,85 +5292,156 @@ function initHero3DPhysicsEngine() {
   // Physics State Variables
   let targetRotX = 0;
   let targetRotY = 0;
+  let targetRotZ = 0;
   let targetTransX = 0;
   let targetTransY = 0;
 
   let currRotX = 0;
   let currRotY = 0;
+  let currRotZ = 0;
   let currTransX = 0;
   let currTransY = 0;
 
   let velRotX = 0;
   let velRotY = 0;
 
+  // Recoil Kickback Physics
+  let recoilX = 0;
+  let recoilY = 0;
+  let recoilZ = 0;
+
   let isDragging = false;
   let startDragX = 0;
   let startDragY = 0;
 
-  // Physics constants for super responsive 120 FPS spring motion
-  const spring = 0.09;
-  const friction = 0.82;
+  let pointerX = window.innerWidth * 0.35;
+  let pointerY = window.innerHeight * 0.45;
 
-  // Mouse & Pointer Listeners (Whole viewport tracking for maximum immersion)
-  window.addEventListener("mousemove", (e) => {
-    const rect = wrapper.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+  // Physics Constants for 120 FPS Spring Motion
+  const spring = 0.11;
+  const friction = 0.80;
 
-    const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
-    const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
+  // Get Gun Barrel Muzzle Position in Viewport Space
+  function getMuzzlePos() {
+    const rect = character.getBoundingClientRect();
+    // Gun muzzle is located at normalized (0.22, 0.28) of warrior image
+    return {
+      x: rect.left + rect.width * 0.22,
+      y: rect.top + rect.height * 0.28
+    };
+  }
 
-    targetRotY = deltaX * 24; // +/- 24 deg
-    targetRotX = -deltaY * 20; // +/- 20 deg
-    targetTransX = deltaX * 22;
-    targetTransY = deltaY * 18;
+  // Aim Direction Calculation
+  function updateAim(px, py) {
+    pointerX = px;
+    pointerY = py;
+
+    const muzzle = getMuzzlePos();
+    const deltaX = px - muzzle.x;
+    const deltaY = py - muzzle.y;
+    const aimAngle = Math.atan2(deltaY, deltaX);
+
+    // Aim Warrior Body & Rifle in 3D Space
+    targetRotY = Math.max(-38, Math.min(38, (deltaX / (window.innerWidth / 2)) * 32));
+    targetRotX = Math.max(-30, Math.min(30, -(deltaY / (window.innerHeight / 2)) * 26));
+    targetRotZ = Math.sin(aimAngle) * 5;
+
+    targetTransX = Math.max(-25, Math.min(25, (deltaX / window.innerWidth) * 28));
+    targetTransY = Math.max(-20, Math.min(20, (deltaY / window.innerHeight) * 22));
+  }
+
+  // Shoot Bullet Function
+  function shootAt(targetX, targetY) {
+    const muzzle = getMuzzlePos();
+    const deltaX = targetX - muzzle.x;
+    const deltaY = targetY - muzzle.y;
+    const angle = Math.atan2(deltaY, deltaX);
+    const dist = Math.hypot(deltaX, deltaY);
+
+    if (dist < 15) return;
+
+    // 1. Play Synthesized Sound
+    playCyberLaserSound();
+
+    // 2. Recoil Kickback
+    recoilX = -Math.cos(angle) * 22;
+    recoilY = -Math.sin(angle) * 16;
+    recoilZ = -24;
+
+    // 3. Muzzle Flash Explosion
+    muzzleFlashes.push({
+      x: muzzle.x,
+      y: muzzle.y,
+      radius: 34,
+      alpha: 1.0,
+      angle: angle
+    });
+
+    // 4. Spawn 3D Plasma Laser Bullet
+    bullets.push({
+      startX: muzzle.x,
+      startY: muzzle.y,
+      currentX: muzzle.x,
+      currentY: muzzle.y,
+      targetX: targetX,
+      targetY: targetY,
+      angle: angle,
+      dist: dist,
+      progress: 0,
+      speed: Math.max(0.08, Math.min(0.20, 95 / dist)) // High supersonic speed
+    });
+  }
+
+  // Pointer Movement & Aiming
+  window.addEventListener("pointermove", (e) => {
+    updateAim(e.clientX, e.clientY);
   });
 
-  // Touch / Mobile Gyroscope & Dragging Listeners
+  // Shoot On Click / Tap Anywhere on Page
+  window.addEventListener("pointerdown", (e) => {
+    updateAim(e.clientX, e.clientY);
+    shootAt(e.clientX, e.clientY);
+  });
+
+  // Touch / Mobile Dragging
   wrapper.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) {
       isDragging = true;
       startDragX = e.touches[0].clientX;
       startDragY = e.touches[0].clientY;
+      updateAim(startDragX, startDragY);
+      shootAt(startDragX, startDragY);
     }
   }, { passive: true });
 
   window.addEventListener("touchmove", (e) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    const deltaX = (e.touches[0].clientX - startDragX) * 0.18;
-    const deltaY = (e.touches[0].clientY - startDragY) * 0.18;
-    targetRotY = Math.max(-28, Math.min(28, deltaX));
-    targetRotX = Math.max(-24, Math.min(24, -deltaY));
-    targetTransX = deltaX * 0.8;
-    targetTransY = deltaY * 0.8;
+    if (e.touches.length > 0) {
+      updateAim(e.touches[0].clientX, e.touches[0].clientY);
+    }
   }, { passive: true });
 
   window.addEventListener("touchend", () => {
     isDragging = false;
-    targetRotX = 0;
-    targetRotY = 0;
-    targetTransX = 0;
-    targetTransY = 0;
   });
 
-  // Mobile DeviceOrientation (Gyroscope Tilt)
+  // Mobile Gyroscope Support
   if (window.DeviceOrientationEvent) {
     window.addEventListener("deviceorientation", (e) => {
       if (e.gamma !== null && e.beta !== null && !isDragging) {
-        targetRotY = Math.max(-25, Math.min(25, e.gamma * 0.8));
-        targetRotX = Math.max(-20, Math.min(20, (e.beta - 45) * 0.6));
+        targetRotY = Math.max(-28, Math.min(28, e.gamma * 0.9));
+        targetRotX = Math.max(-24, Math.min(24, (e.beta - 45) * 0.7));
       }
     }, { passive: true });
   }
 
-  // 120+ FPS Hardware-Accelerated Animation Loop
+  // 120+ FPS Hardware-Accelerated Physics & Combat Render Loop
   let lastTime = performance.now();
 
-  function physicsLoop(now) {
+  function physicsCombatLoop(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    // Spring-Damper Inertia Equations
+    // Smooth Spring Inertia on Aim Rotation
     const forceRotX = (targetRotX - currRotX) * spring;
     velRotX = (velRotX + forceRotX) * friction;
     currRotX += velRotX;
@@ -5328,23 +5450,29 @@ function initHero3DPhysicsEngine() {
     velRotY = (velRotY + forceRotY) * friction;
     currRotY += velRotY;
 
+    currRotZ += (targetRotZ - currRotZ) * spring;
     currTransX += (targetTransX - currTransX) * spring;
     currTransY += (targetTransY - currTransY) * spring;
 
-    // Multi-Harmonic Zero-G Levitation Math
+    // Smooth Recoil Recovery
+    recoilX += (0 - recoilX) * 0.18;
+    recoilY += (0 - recoilY) * 0.18;
+    recoilZ += (0 - recoilZ) * 0.18;
+
+    // Zero-G Levitation Floating Math
     const floatY = Math.sin(now * 0.0024) * 14 + Math.cos(now * 0.0012) * 6;
     const floatRotZ = Math.sin(now * 0.0018) * 3.2;
 
-    // Apply 3D Transforms to Character
+    // Apply Dynamic 3D Combat Transforms (Rotation + Aim + Recoil)
     character.style.transform = `
-      translate3d(${currTransX}px, ${currTransY + floatY}px, 60px)
+      translate3d(${currTransX + recoilX}px, ${currTransY + floatY + recoilY}px, ${60 + recoilZ}px)
       rotateX(${currRotX}deg)
       rotateY(${currRotY}deg)
-      rotateZ(${floatRotZ}deg)
+      rotateZ(${currRotZ + floatRotZ}deg)
       scale(1.02)
     `;
 
-    // Glow Backdrop Dynamic Light Follow
+    // Dynamic Glow Follow
     if (glow) {
       glow.style.transform = `translate3d(${currTransX * 0.5}px, ${currTransY * 0.5 + floatY * 0.6}px, 0px) scale(${1 + Math.sin(now * 0.003) * 0.08})`;
     }
@@ -5372,42 +5500,216 @@ function initHero3DPhysicsEngine() {
       `;
     }
 
-    // Render Thruster Particles at 120 FPS
-    if (ctx && canvas) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 1. Render Thruster Particles (Canvas 1)
+    if (tCtx && thrusterCanvas) {
+      tCtx.clearRect(0, 0, thrusterCanvas.width, thrusterCanvas.height);
 
-      if (particles.length < maxParticles && Math.random() > 0.25) {
-        particles.push(createParticle());
+      if (thrusterParticles.length < maxThrusters && Math.random() > 0.25) {
+        thrusterParticles.push(createThrusterParticle());
       }
 
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
+      for (let i = thrusterParticles.length - 1; i >= 0; i--) {
+        const p = thrusterParticles[i];
         p.x += p.vx + (currTransX * 0.04);
         p.y += p.vy;
         p.alpha -= p.decay;
 
-        if (p.alpha <= 0 || p.y > canvas.height) {
-          particles.splice(i, 1);
+        if (p.alpha <= 0 || p.y > thrusterCanvas.height) {
+          thrusterParticles.splice(i, 1);
           continue;
         }
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.hue === 185 
+        tCtx.save();
+        tCtx.beginPath();
+        tCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        tCtx.fillStyle = p.hue === 185 
           ? `rgba(0, 240, 255, ${p.alpha * 0.85})` 
           : `rgba(255, 215, 0, ${p.alpha * 0.75})`;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = p.hue === 185 ? "#00f0ff" : "#ffd700";
-        ctx.fill();
-        ctx.restore();
+        tCtx.shadowBlur = 12;
+        tCtx.shadowColor = p.hue === 185 ? "#00f0ff" : "#ffd700";
+        tCtx.fill();
+        tCtx.restore();
       }
     }
 
-    requestAnimationFrame(physicsLoop);
+    // 2. Render Full-Screen Combat Shooting (Canvas 2)
+    if (cCtx && combatCanvas) {
+      cCtx.clearRect(0, 0, combatCanvas.width, combatCanvas.height);
+
+      // Render Scorch Decals
+      for (let i = scorchDecals.length - 1; i >= 0; i--) {
+        const d = scorchDecals[i];
+        d.alpha -= 0.012;
+        if (d.alpha <= 0) {
+          scorchDecals.splice(i, 1);
+          continue;
+        }
+        cCtx.save();
+        cCtx.beginPath();
+        cCtx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        cCtx.fillStyle = `rgba(0, 240, 255, ${d.alpha * 0.4})`;
+        cCtx.shadowBlur = 15;
+        cCtx.shadowColor = "#00f0ff";
+        cCtx.fill();
+
+        // Inner glowing core
+        cCtx.beginPath();
+        cCtx.arc(d.x, d.y, d.radius * 0.4, 0, Math.PI * 2);
+        cCtx.fillStyle = `rgba(255, 255, 255, ${d.alpha * 0.8})`;
+        cCtx.fill();
+        cCtx.restore();
+      }
+
+      // Render Muzzle Flashes
+      for (let i = muzzleFlashes.length - 1; i >= 0; i--) {
+        const mf = muzzleFlashes[i];
+        mf.alpha -= 0.15;
+        mf.radius += 3.5;
+        if (mf.alpha <= 0) {
+          muzzleFlashes.splice(i, 1);
+          continue;
+        }
+        cCtx.save();
+        cCtx.beginPath();
+        cCtx.arc(mf.x, mf.y, mf.radius, 0, Math.PI * 2);
+        cCtx.fillStyle = `rgba(0, 240, 255, ${mf.alpha * 0.9})`;
+        cCtx.shadowBlur = 25;
+        cCtx.shadowColor = "#00f0ff";
+        cCtx.fill();
+
+        // Directional flash burst spike
+        const fx = mf.x + Math.cos(mf.angle) * (mf.radius * 1.6);
+        const fy = mf.y + Math.sin(mf.angle) * (mf.radius * 1.6);
+        cCtx.beginPath();
+        cCtx.moveTo(mf.x, mf.y);
+        cCtx.lineTo(fx, fy);
+        cCtx.strokeStyle = `rgba(255, 255, 255, ${mf.alpha})`;
+        cCtx.lineWidth = 4;
+        cCtx.stroke();
+        cCtx.restore();
+      }
+
+      // Render 3D Laser Plasma Bullets
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.progress += b.speed;
+
+        const prevX = b.currentX;
+        const prevY = b.currentY;
+
+        b.currentX = b.startX + (b.targetX - b.startX) * Math.min(1.0, b.progress);
+        b.currentY = b.startY + (b.targetY - b.startY) * Math.min(1.0, b.progress);
+
+        // Draw Laser Tracer Beam Streak
+        cCtx.save();
+        cCtx.beginPath();
+        cCtx.moveTo(prevX, prevY);
+        cCtx.lineTo(b.currentX, b.currentY);
+        cCtx.strokeStyle = "#00f0ff";
+        cCtx.lineWidth = 5;
+        cCtx.lineCap = "round";
+        cCtx.shadowBlur = 18;
+        cCtx.shadowColor = "#00f0ff";
+        cCtx.stroke();
+
+        // Bright White Inner Core
+        cCtx.beginPath();
+        cCtx.moveTo(prevX, prevY);
+        cCtx.lineTo(b.currentX, b.currentY);
+        cCtx.strokeStyle = "#ffffff";
+        cCtx.lineWidth = 2.5;
+        cCtx.stroke();
+        cCtx.restore();
+
+        // Bullet Hit Target Event!
+        if (b.progress >= 1.0) {
+          bullets.splice(i, 1);
+
+          // 1. Shockwave Ring
+          impactRings.push({
+            x: b.targetX,
+            y: b.targetY,
+            radius: 4,
+            maxRadius: 42,
+            alpha: 1.0
+          });
+
+          // 2. Scorch Decal
+          scorchDecals.push({
+            x: b.targetX,
+            y: b.targetY,
+            radius: 12,
+            alpha: 1.0
+          });
+
+          // 3. Blast 22+ Physics Sparks
+          for (let s = 0; s < 22; s++) {
+            const sparkAngle = Math.random() * Math.PI * 2;
+            const sparkSpeed = Math.random() * 8.5 + 2.5;
+            impactSparks.push({
+              x: b.targetX,
+              y: b.targetY,
+              vx: Math.cos(sparkAngle) * sparkSpeed,
+              vy: Math.sin(sparkAngle) * sparkSpeed - Math.random() * 2.5,
+              size: Math.random() * 3 + 1.5,
+              alpha: 1.0,
+              decay: Math.random() * 0.04 + 0.02,
+              hue: Math.random() > 0.35 ? 185 : 45
+            });
+          }
+        }
+      }
+
+      // Render Impact Shockwave Rings
+      for (let i = impactRings.length - 1; i >= 0; i--) {
+        const ring = impactRings[i];
+        ring.radius += 3.2;
+        ring.alpha -= 0.06;
+        if (ring.alpha <= 0 || ring.radius >= ring.maxRadius) {
+          impactRings.splice(i, 1);
+          continue;
+        }
+        cCtx.save();
+        cCtx.beginPath();
+        cCtx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2);
+        cCtx.strokeStyle = `rgba(0, 240, 255, ${ring.alpha * 0.9})`;
+        cCtx.lineWidth = 2.5;
+        cCtx.shadowBlur = 15;
+        cCtx.shadowColor = "#00f0ff";
+        cCtx.stroke();
+        cCtx.restore();
+      }
+
+      // Render Impact Sparks
+      for (let i = impactSparks.length - 1; i >= 0; i--) {
+        const sp = impactSparks[i];
+        sp.x += sp.vx;
+        sp.y += sp.vy;
+        sp.vy += 0.22; // Gravity
+        sp.alpha -= sp.decay;
+
+        if (sp.alpha <= 0) {
+          impactSparks.splice(i, 1);
+          continue;
+        }
+
+        cCtx.save();
+        cCtx.beginPath();
+        cCtx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+        cCtx.fillStyle = sp.hue === 185 
+          ? `rgba(0, 240, 255, ${sp.alpha})` 
+          : `rgba(255, 215, 0, ${sp.alpha})`;
+        cCtx.shadowBlur = 10;
+        cCtx.shadowColor = sp.hue === 185 ? "#00f0ff" : "#ffd700";
+        cCtx.fill();
+        cCtx.restore();
+      }
+    }
+
+    requestAnimationFrame(physicsCombatLoop);
   }
 
-  requestAnimationFrame(physicsLoop);
+  requestAnimationFrame(physicsCombatLoop);
 }
 
 initSlotPresetButtons();
